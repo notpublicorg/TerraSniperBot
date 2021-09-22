@@ -1,0 +1,377 @@
+{
+  "infos": [
+    [
+      [
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1lgj09qz53vw6kw9dx5l4w9e0lpe78hjg6afvt5",
+            "contract": "terra1kc87mu460fwkqte29rquh4hc20m54fxwtsx7gp",
+            "execute_msg": {
+              "increase_allowance": {
+                "amount": "6031181",
+                "spender": "terra1jxazgm67et0ce260kvrpfv50acuushpjsz2y0p"
+              }
+            },
+            "coins": []
+          }
+        },
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1lgj09qz53vw6kw9dx5l4w9e0lpe78hjg6afvt5",
+            "contract": "terra1jxazgm67et0ce260kvrpfv50acuushpjsz2y0p",
+            "execute_msg": {
+              "provide_liquidity": {
+                "assets": [
+                  { "amount": "5981920", "info": { "native_token": { "denom": "uluna" } } },
+                  {
+                    "amount": "6031181",
+                    "info": {
+                      "token": { "contract_addr": "terra1kc87mu460fwkqte29rquh4hc20m54fxwtsx7gp" }
+                    }
+                  }
+                ],
+                "slippage_tolerance": "0.005"
+              }
+            },
+            "coins": [{ "denom": "uluna", "amount": "5981920" }]
+          }
+        }
+      ],
+      [
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1jxvq5ta7rahqc7vw0kvec8kwv6t6vautwzxndu",
+            "contract": "terra14z56l0fp2lsf86zy3hty2z47ezkhnthtr9yq76",
+            "execute_msg": {
+              "increase_allowance": {
+                "spender": "terra1gm5p3ner9x9xpwugn9sp6gvhd0lwrtkyrecdn3",
+                "amount": "5309874134",
+                "expires": { "never": {} }
+              }
+            },
+            "coins": []
+          }
+        },
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1jxvq5ta7rahqc7vw0kvec8kwv6t6vautwzxndu",
+            "contract": "terra1gm5p3ner9x9xpwugn9sp6gvhd0lwrtkyrecdn3",
+            "execute_msg": {
+              "provide_liquidity": {
+                "assets": [
+                  {
+                    "info": {
+                      "token": { "contract_addr": "terra14z56l0fp2lsf86zy3hty2z47ezkhnthtr9yq76" }
+                    },
+                    "amount": "5309874134"
+                  },
+                  { "info": { "native_token": { "denom": "uusd" } }, "amount": "15000000000" }
+                ],
+                "slippage_tolerance": "0.01"
+              }
+            },
+            "coins": [{ "denom": "uusd", "amount": "15000000000" }]
+          }
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1lgj09qz53vw6kw9dx5l4w9e0lpe78hjg6afvt5",
+            "contract": "terra1kc87mu460fwkqte29rquh4hc20m54fxwtsx7gp",
+            "execute_msg": {
+              "increase_allowance": {
+                "amount": "6031181",
+                "spender": "terra1jxazgm67et0ce260kvrpfv50acuushpjsz2y0p"
+              }
+            },
+            "coins": []
+          }
+        },
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1lgj09qz53vw6kw9dx5l4w9e0lpe78hjg6afvt5",
+            "contract": "terra1jxazgm67et0ce260kvrpfv50acuushpjsz2y0p",
+            "execute_msg": {
+              "provide_liquidity": {
+                "assets": [
+                  { "amount": "5981920", "info": { "native_token": { "denom": "uluna" } } },
+                  {
+                    "amount": "6031181",
+                    "info": {
+                      "token": { "contract_addr": "terra1kc87mu460fwkqte29rquh4hc20m54fxwtsx7gp" }
+                    }
+                  }
+                ],
+                "slippage_tolerance": "0.005"
+              }
+            },
+            "coins": [{ "denom": "uluna", "amount": "5981920" }]
+          }
+        }
+      ],
+      [
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1jxvq5ta7rahqc7vw0kvec8kwv6t6vautwzxndu",
+            "contract": "terra14z56l0fp2lsf86zy3hty2z47ezkhnthtr9yq76",
+            "execute_msg": {
+              "increase_allowance": {
+                "spender": "terra1gm5p3ner9x9xpwugn9sp6gvhd0lwrtkyrecdn3",
+                "amount": "5309874134",
+                "expires": { "never": {} }
+              }
+            },
+            "coins": []
+          }
+        },
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1jxvq5ta7rahqc7vw0kvec8kwv6t6vautwzxndu",
+            "contract": "terra1gm5p3ner9x9xpwugn9sp6gvhd0lwrtkyrecdn3",
+            "execute_msg": {
+              "provide_liquidity": {
+                "assets": [
+                  {
+                    "info": {
+                      "token": { "contract_addr": "terra14z56l0fp2lsf86zy3hty2z47ezkhnthtr9yq76" }
+                    },
+                    "amount": "5309874134"
+                  },
+                  { "info": { "native_token": { "denom": "uusd" } }, "amount": "15000000000" }
+                ],
+                "slippage_tolerance": "0.01"
+              }
+            },
+            "coins": [{ "denom": "uusd", "amount": "15000000000" }]
+          }
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1jtmpyx3wdpswham92nzatwpwc6h4ulkv2xrdaa",
+            "contract": "terra1kc87mu460fwkqte29rquh4hc20m54fxwtsx7gp",
+            "execute_msg": {
+              "increase_allowance": {
+                "spender": "terra1jxazgm67et0ce260kvrpfv50acuushpjsz2y0p",
+                "amount": "11618000000"
+              }
+            },
+            "coins": []
+          }
+        },
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1jtmpyx3wdpswham92nzatwpwc6h4ulkv2xrdaa",
+            "contract": "terra1jxazgm67et0ce260kvrpfv50acuushpjsz2y0p",
+            "execute_msg": {
+              "provide_liquidity": {
+                "assets": [
+                  {
+                    "info": {
+                      "token": { "contract_addr": "terra1kc87mu460fwkqte29rquh4hc20m54fxwtsx7gp" }
+                    },
+                    "amount": "11618000000"
+                  },
+                  { "info": { "native_token": { "denom": "uluna" } }, "amount": "11523108822" }
+                ],
+                "slippage_tolerance": "0.001"
+              }
+            },
+            "coins": [{ "denom": "uluna", "amount": "11523108822" }]
+          }
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1jtmpyx3wdpswham92nzatwpwc6h4ulkv2xrdaa",
+            "contract": "terra1kc87mu460fwkqte29rquh4hc20m54fxwtsx7gp",
+            "execute_msg": {
+              "increase_allowance": {
+                "spender": "terra1jxazgm67et0ce260kvrpfv50acuushpjsz2y0p",
+                "amount": "11618000000"
+              }
+            },
+            "coins": []
+          }
+        },
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1jtmpyx3wdpswham92nzatwpwc6h4ulkv2xrdaa",
+            "contract": "terra1jxazgm67et0ce260kvrpfv50acuushpjsz2y0p",
+            "execute_msg": {
+              "provide_liquidity": {
+                "assets": [
+                  {
+                    "info": {
+                      "token": { "contract_addr": "terra1kc87mu460fwkqte29rquh4hc20m54fxwtsx7gp" }
+                    },
+                    "amount": "11618000000"
+                  },
+                  { "info": { "native_token": { "denom": "uluna" } }, "amount": "11523108822" }
+                ],
+                "slippage_tolerance": "0.001"
+              }
+            },
+            "coins": [{ "denom": "uluna", "amount": "11523108822" }]
+          }
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra154e0567r580v727n3fr4hx52kw4fkj3aldxx2d",
+            "contract": "terra13xujxcrc9dqft4p9a8ls0w3j0xnzm6y2uvve8n",
+            "execute_msg": {
+              "increase_allowance": {
+                "amount": "11511017",
+                "spender": "terra19pg6d7rrndg4z4t0jhcd7z9nhl3p5ygqttxjll"
+              }
+            },
+            "coins": []
+          }
+        },
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra154e0567r580v727n3fr4hx52kw4fkj3aldxx2d",
+            "contract": "terra19pg6d7rrndg4z4t0jhcd7z9nhl3p5ygqttxjll",
+            "execute_msg": {
+              "provide_liquidity": {
+                "assets": [
+                  {
+                    "amount": "11511017",
+                    "info": {
+                      "token": { "contract_addr": "terra13xujxcrc9dqft4p9a8ls0w3j0xnzm6y2uvve8n" }
+                    }
+                  },
+                  { "amount": "55144279", "info": { "native_token": { "denom": "uusd" } } }
+                ],
+                "slippage_tolerance": "0.2"
+              }
+            },
+            "coins": [{ "denom": "uusd", "amount": "55144279" }]
+          }
+        },
+        {
+          "type": "bank/MsgSend",
+          "value": {
+            "from_address": "terra154e0567r580v727n3fr4hx52kw4fkj3aldxx2d",
+            "to_address": "terra1wp7j9werf8al03225a0gtmavpkdnm44wt9xwcc",
+            "amount": [{ "denom": "uusd", "amount": "1000000" }]
+          }
+        }
+      ]
+    ],
+    [
+      [
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1alk7zde030ks0a50s2zwfn0sxz46750h28x99w",
+            "contract": "terra14z56l0fp2lsf86zy3hty2z47ezkhnthtr9yq76",
+            "execute_msg": {
+              "increase_allowance": {
+                "spender": "terra1gm5p3ner9x9xpwugn9sp6gvhd0lwrtkyrecdn3",
+                "amount": "12629164",
+                "expires": { "never": {} }
+              }
+            },
+            "coins": []
+          }
+        },
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1alk7zde030ks0a50s2zwfn0sxz46750h28x99w",
+            "contract": "terra1gm5p3ner9x9xpwugn9sp6gvhd0lwrtkyrecdn3",
+            "execute_msg": {
+              "provide_liquidity": {
+                "assets": [
+                  {
+                    "info": {
+                      "token": { "contract_addr": "terra14z56l0fp2lsf86zy3hty2z47ezkhnthtr9yq76" }
+                    },
+                    "amount": "12629164"
+                  },
+                  { "info": { "native_token": { "denom": "uusd" } }, "amount": "35674000" }
+                ],
+                "slippage_tolerance": "0.01"
+              }
+            },
+            "coins": [{ "denom": "uusd", "amount": "35674000" }]
+          }
+        }
+      ],
+      [
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1m0wrl3fh55uy7g90fkerleek3w4s4scn5qqcvv",
+            "contract": "terra13xujxcrc9dqft4p9a8ls0w3j0xnzm6y2uvve8n",
+            "execute_msg": {
+              "increase_allowance": {
+                "amount": "1000000",
+                "spender": "terra19pg6d7rrndg4z4t0jhcd7z9nhl3p5ygqttxjll"
+              }
+            },
+            "coins": []
+          }
+        },
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "sender": "terra1m0wrl3fh55uy7g90fkerleek3w4s4scn5qqcvv",
+            "contract": "terra19pg6d7rrndg4z4t0jhcd7z9nhl3p5ygqttxjll",
+            "execute_msg": {
+              "provide_liquidity": {
+                "assets": [
+                  {
+                    "amount": "1000000",
+                    "info": {
+                      "token": { "contract_addr": "terra13xujxcrc9dqft4p9a8ls0w3j0xnzm6y2uvve8n" }
+                    }
+                  },
+                  { "amount": "4790511", "info": { "native_token": { "denom": "uusd" } } }
+                ],
+                "slippage_tolerance": "0.2"
+              }
+            },
+            "coins": [{ "denom": "uusd", "amount": "4790511" }]
+          }
+        },
+        {
+          "type": "bank/MsgSend",
+          "value": {
+            "from_address": "terra1m0wrl3fh55uy7g90fkerleek3w4s4scn5qqcvv",
+            "to_address": "terra1wp7j9werf8al03225a0gtmavpkdnm44wt9xwcc",
+            "amount": [{ "denom": "uusd", "amount": "1000000" }]
+          }
+        }
+      ]
+    ]
+  ]
+}
