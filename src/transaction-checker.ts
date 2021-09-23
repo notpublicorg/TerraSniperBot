@@ -17,12 +17,13 @@ export type ProvideLiquidityParam = {
   };
 };
 
-type BuyCondition = { greaterOrEqual: number };
+type BuyCondition = { greaterOrEqual: number; buy: number };
 export type BuyConditionsByDenom = Record<string, BuyCondition[]>;
 export type TransactionFilter = {
   contract: string;
   chosenCoins: string[];
   conditions: BuyConditionsByDenom;
+  maxTokenPrice?: number;
 };
 
 export function checkTransaction(filter: TransactionFilter, transaction: TxInfo.Data) {
@@ -41,17 +42,33 @@ export function checkTransaction(filter: TransactionFilter, transaction: TxInfo.
           const currencyAmount = parsedExecuteMsg.provide_liquidity.assets.find(
             (a) => 'native_token' in a.info,
           ) as LiquidityCurrencyAmount;
+          const tokenAmount = parsedExecuteMsg.provide_liquidity.assets.find(
+            (a) => 'token' in a.info,
+          ) as LiquidityTokenAmount;
 
           const denom = currencyAmount.info.native_token.denom;
-
-          return Boolean(
+          const satisfiedCondition =
             filter.chosenCoins.includes(denom) &&
-              filter.conditions[denom]?.some(
-                (condition) => +currencyAmount.amount >= condition.greaterOrEqual,
-              ),
-          );
+            filter.conditions[denom]?.find(
+              (condition) => +currencyAmount.amount >= condition.greaterOrEqual,
+            );
+
+          if (satisfiedCondition && !filter.maxTokenPrice) {
+            return true;
+          }
+
+          if (satisfiedCondition) {
+            const bougthTokenAmount =
+              (+tokenAmount.amount * satisfiedCondition.buy) /
+              (+currencyAmount.amount + satisfiedCondition.buy);
+            const bougthTokenAmountWithCommission = bougthTokenAmount * 0.997;
+            const averageTokenPrice = satisfiedCondition.buy / bougthTokenAmountWithCommission;
+
+            return filter.maxTokenPrice > averageTokenPrice;
+          }
         }
       }
+      return false;
     })
   ) {
     return true;
