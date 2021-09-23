@@ -14,13 +14,13 @@ const DEFAULT_FILTER: TransactionFilter = {
   conditions: DEFAULT_CONDITIONS,
 };
 
-it('should reject non-execute transaction', () => {
+it('should reject non-execute transaction', async () => {
   const TRANSACTION = aTransaction().build();
 
-  expect(checkTransaction(DEFAULT_FILTER, TRANSACTION)).toBe(false);
+  await expect(checkTransaction(DEFAULT_FILTER, TRANSACTION)).resolves.toEqual([]);
 });
 
-it('should reject transaction with unknown contract', () => {
+it('should reject transaction with unknown contract', async () => {
   const TRANSACTION = aTransaction()
     .withMsgs([
       createWasmExecuteMsg({
@@ -29,10 +29,10 @@ it('should reject transaction with unknown contract', () => {
     ])
     .build();
 
-  expect(checkTransaction(DEFAULT_FILTER, TRANSACTION)).toBe(false);
+  await expect(checkTransaction(DEFAULT_FILTER, TRANSACTION)).resolves.toEqual([]);
 });
 
-it('should reject transaction without liquidity message', () => {
+it('should reject transaction without liquidity message', async () => {
   const TRANSACTION = aTransaction()
     .withMsgs([
       createWasmExecuteMsg({
@@ -42,10 +42,10 @@ it('should reject transaction without liquidity message', () => {
     ])
     .build();
 
-  expect(checkTransaction(DEFAULT_FILTER, TRANSACTION)).toBe(false);
+  await expect(checkTransaction(DEFAULT_FILTER, TRANSACTION)).resolves.toEqual([]);
 });
 
-it('should reject transaction without chosen coin', () => {
+it('should reject transaction without chosen coin', async () => {
   const TRANSACTION = aTransaction()
     .withMsgs([
       createWasmExecuteMsg({
@@ -59,7 +59,7 @@ it('should reject transaction without chosen coin', () => {
     ])
     .build();
 
-  expect(
+  await expect(
     checkTransaction(
       {
         ...DEFAULT_FILTER,
@@ -67,10 +67,10 @@ it('should reject transaction without chosen coin', () => {
       },
       TRANSACTION,
     ),
-  ).toBe(false);
+  ).resolves.toEqual([]);
 });
 
-it('should reject if coin amount is less than amount given in condition', () => {
+it('should reject if coin amount is less than amount given in condition', async () => {
   const TRANSACTION = aTransaction()
     .withMsgs([
       createWasmExecuteMsg({
@@ -84,7 +84,7 @@ it('should reject if coin amount is less than amount given in condition', () => 
     ])
     .build();
 
-  expect(
+  await expect(
     checkTransaction(
       {
         ...DEFAULT_FILTER,
@@ -92,10 +92,10 @@ it('should reject if coin amount is less than amount given in condition', () => 
       },
       TRANSACTION,
     ),
-  ).toBe(false);
+  ).resolves.toEqual([]);
 });
 
-it("should reject if liquidity's average token price is bigger than given max token price", () => {
+it("should reject if liquidity's average token price is bigger than given max token price", async () => {
   const TRANSACTION = aTransaction()
     .withMsgs([
       createWasmExecuteMsg({
@@ -112,7 +112,7 @@ it("should reject if liquidity's average token price is bigger than given max to
     ])
     .build();
 
-  expect(
+  await expect(
     checkTransaction(
       {
         ...DEFAULT_FILTER,
@@ -124,27 +124,36 @@ it("should reject if liquidity's average token price is bigger than given max to
       },
       TRANSACTION,
     ),
-  ).toBe(false);
+  ).resolves.toEqual([]);
 });
 
-it('should accept valid transaction which satisfies conditions and max token price', () => {
-  const TRANSACTION = aTransaction()
-    .withMsgs([
-      createWasmExecuteMsg({
-        contract: DEFAULT_FILTER.contract,
-        execute_msg: {
-          provide_liquidity: {
-            assets: [
-              { amount: '100000', info: { native_token: { denom: DEFAULT_COIN_DENOM } } },
-              { amount: '5000', info: { token: { contract_addr: '' } } },
-            ],
+it('should accept valid transaction which satisfies conditions and max token price', async () => {
+  const LIQUIDITY_MSG = createWasmExecuteMsg({
+    contract: DEFAULT_FILTER.contract,
+    execute_msg: {
+      provide_liquidity: {
+        assets: [
+          {
+            amount: '100000',
+            info: {
+              native_token: { denom: DEFAULT_COIN_DENOM },
+            },
           },
-        },
-      }),
-    ])
-    .build();
+          {
+            amount: '5000',
+            info: {
+              token: {
+                contract_addr: '',
+              },
+            },
+          },
+        ],
+      },
+    },
+  });
+  const TRANSACTION = aTransaction().withMsgs([LIQUIDITY_MSG]).build();
 
-  expect(
+  await expect(
     checkTransaction(
       {
         ...DEFAULT_FILTER,
@@ -157,27 +166,24 @@ it('should accept valid transaction which satisfies conditions and max token pri
       },
       TRANSACTION,
     ),
-  ).toBe(true);
+  ).resolves.toEqual([LIQUIDITY_MSG]);
 });
 
-it('should accept the transaction which satisfies second condition', () => {
-  const TRANSACTION = aTransaction()
-    .withMsgs([
-      createWasmExecuteMsg({
-        contract: DEFAULT_FILTER.contract,
-        execute_msg: {
-          provide_liquidity: {
-            assets: [
-              { amount: '5000', info: { token: { contract_addr: '' } } },
-              { amount: '1000', info: { native_token: { denom: DEFAULT_COIN_DENOM } } },
-            ],
-          },
-        },
-      }),
-    ])
-    .build();
+it('should accept the transaction which satisfies second condition', async () => {
+  const LIQUIDITY_MSG = createWasmExecuteMsg({
+    contract: DEFAULT_FILTER.contract,
+    execute_msg: {
+      provide_liquidity: {
+        assets: [
+          { amount: '5000', info: { token: { contract_addr: '' } } },
+          { amount: '1000', info: { native_token: { denom: DEFAULT_COIN_DENOM } } },
+        ],
+      },
+    },
+  });
+  const TRANSACTION = aTransaction().withMsgs([LIQUIDITY_MSG]).build();
 
-  expect(
+  await expect(
     checkTransaction(
       {
         ...DEFAULT_FILTER,
@@ -191,5 +197,36 @@ it('should accept the transaction which satisfies second condition', () => {
       },
       TRANSACTION,
     ),
-  ).toBe(true);
+  ).resolves.toEqual([LIQUIDITY_MSG]);
+});
+
+it('should accept the transaction with 2 acceptable messages', async () => {
+  const LIQUIDITY_MSG = createWasmExecuteMsg({
+    contract: DEFAULT_FILTER.contract,
+    execute_msg: {
+      provide_liquidity: {
+        assets: [
+          { amount: '5000', info: { token: { contract_addr: '' } } },
+          { amount: '1000', info: { native_token: { denom: DEFAULT_COIN_DENOM } } },
+        ],
+      },
+    },
+  });
+  const TRANSACTION = aTransaction().withMsgs([LIQUIDITY_MSG, LIQUIDITY_MSG]).build();
+
+  await expect(
+    checkTransaction(
+      {
+        ...DEFAULT_FILTER,
+        chosenCoins: [DEFAULT_COIN_DENOM],
+        conditions: {
+          [DEFAULT_COIN_DENOM]: [
+            { greaterOrEqual: 10000, buy: 10 },
+            { greaterOrEqual: 10, buy: 10 },
+          ],
+        },
+      },
+      TRANSACTION,
+    ),
+  ).resolves.toEqual([LIQUIDITY_MSG, LIQUIDITY_MSG]);
 });

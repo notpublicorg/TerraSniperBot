@@ -1,4 +1,6 @@
-import { TxInfo } from '@terra-money/terra.js';
+import { MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
+import { firstValueFrom, of } from 'rxjs';
+import { filter, toArray } from 'rxjs/operators';
 
 type LiquidityCurrencyAmount = {
   amount: string;
@@ -26,52 +28,55 @@ export type TransactionFilter = {
   maxTokenPrice?: number;
 };
 
-export function checkTransaction(filter: TransactionFilter, transaction: TxInfo.Data) {
-  if (
-    transaction.tx.value.msg.some((m) => {
-      if (
+export async function checkTransaction(
+  transactionFilter: TransactionFilter,
+  transaction: TxInfo.Data,
+) {
+  const source = of(...transaction.tx.value.msg).pipe(
+    filter((m) =>
+      Boolean(
         m.type === 'wasm/MsgExecuteContract' &&
-        filter.contract === m.value.contract &&
-        m.value.execute_msg
-      ) {
-        const parsedExecuteMsg: ProvideLiquidityParam = JSON.parse(
-          Buffer.from(m.value.execute_msg as unknown as string, 'base64').toString('utf8'),
-        );
+          transactionFilter.contract === m.value.contract &&
+          m.value.execute_msg,
+      ),
+    ),
+    filter((m: MsgExecuteContract.Data) => {
+      const parsedExecuteMsg: ProvideLiquidityParam = JSON.parse(
+        Buffer.from(m.value.execute_msg as unknown as string, 'base64').toString('utf8'),
+      );
 
-        if (parsedExecuteMsg && 'provide_liquidity' in parsedExecuteMsg) {
-          const currencyAmount = parsedExecuteMsg.provide_liquidity.assets.find(
-            (a) => 'native_token' in a.info,
-          ) as LiquidityCurrencyAmount;
-          const tokenAmount = parsedExecuteMsg.provide_liquidity.assets.find(
-            (a) => 'token' in a.info,
-          ) as LiquidityTokenAmount;
+      if (parsedExecuteMsg && 'provide_liquidity' in parsedExecuteMsg) {
+        const currencyAmount = parsedExecuteMsg.provide_liquidity.assets.find(
+          (a) => 'native_token' in a.info,
+        ) as LiquidityCurrencyAmount;
+        const tokenAmount = parsedExecuteMsg.provide_liquidity.assets.find(
+          (a) => 'token' in a.info,
+        ) as LiquidityTokenAmount;
 
-          const denom = currencyAmount.info.native_token.denom;
-          const satisfiedCondition =
-            filter.chosenCoins.includes(denom) &&
-            filter.conditions[denom]?.find(
-              (condition) => +currencyAmount.amount >= condition.greaterOrEqual,
-            );
+        const denom = currencyAmount.info.native_token.denom;
+        const satisfiedCondition =
+          transactionFilter.chosenCoins.includes(denom) &&
+          transactionFilter.conditions[denom]?.find(
+            (condition) => +currencyAmount.amount >= condition.greaterOrEqual,
+          );
 
-          if (satisfiedCondition && !filter.maxTokenPrice) {
-            return true;
-          }
+        if (satisfiedCondition && !transactionFilter.maxTokenPrice) {
+          return true;
+        }
 
-          if (satisfiedCondition) {
-            const bougthTokenAmount =
-              (+tokenAmount.amount * satisfiedCondition.buy) /
-              (+currencyAmount.amount + satisfiedCondition.buy);
-            const bougthTokenAmountWithCommission = bougthTokenAmount * 0.997;
-            const averageTokenPrice = satisfiedCondition.buy / bougthTokenAmountWithCommission;
+        if (satisfiedCondition) {
+          const bougthTokenAmount =
+            (+tokenAmount.amount * satisfiedCondition.buy) /
+            (+currencyAmount.amount + satisfiedCondition.buy);
+          const bougthTokenAmountWithCommission = bougthTokenAmount * 0.997;
+          const averageTokenPrice = satisfiedCondition.buy / bougthTokenAmountWithCommission;
 
-            return filter.maxTokenPrice > averageTokenPrice;
-          }
+          return transactionFilter.maxTokenPrice > averageTokenPrice;
         }
       }
-      return false;
-    })
-  ) {
-    return true;
-  }
-  return false;
+    }),
+    toArray(),
+  );
+
+  return firstValueFrom(source);
 }
