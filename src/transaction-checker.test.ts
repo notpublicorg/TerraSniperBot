@@ -1,17 +1,17 @@
 import { Denom } from '@terra-money/terra.js';
 
 import { aTransaction, createWasmExecuteMsg } from './transaction-builder';
-import { BuyCondition, checkTransaction } from './transaction-checker';
+import { BuyConditionsByDenom, checkTransaction, TransactionFilter } from './transaction-checker';
 
 const DEFAULT_COIN_DENOM = Denom.LUNA;
-const DEFAULT_CONDITION: BuyCondition = {
-  [DEFAULT_COIN_DENOM]: { greaterOrEqual: 100 },
+const DEFAULT_CONDITIONS: BuyConditionsByDenom = {
+  [DEFAULT_COIN_DENOM]: [{ greaterOrEqual: 100 }],
 };
 
-const DEFAULT_FILTER = {
+const DEFAULT_FILTER: TransactionFilter = {
   contract: 'knownSmartContractToken',
   chosenCoins: [DEFAULT_COIN_DENOM],
-  condition: DEFAULT_CONDITION,
+  conditions: DEFAULT_CONDITIONS,
 };
 
 it('should reject non-execute transaction', () => {
@@ -50,9 +50,10 @@ it('should reject transaction without chosen coin', () => {
     .withMsgs([
       createWasmExecuteMsg({
         contract: DEFAULT_FILTER.contract,
-        coins: [{ amount: '1000', denom: Denom.USD }],
         execute_msg: {
-          provide_liquidity: {},
+          provide_liquidity: {
+            assets: [{ amount: '1000', info: { native_token: { denom: Denom.USD } } }],
+          },
         },
       }),
     ])
@@ -74,9 +75,10 @@ it('should reject if coin amount is less than amount given in condition', () => 
     .withMsgs([
       createWasmExecuteMsg({
         contract: DEFAULT_FILTER.contract,
-        coins: [{ amount: '1000', denom: DEFAULT_COIN_DENOM }],
         execute_msg: {
-          provide_liquidity: {},
+          provide_liquidity: {
+            assets: [{ amount: '1000', info: { native_token: { denom: DEFAULT_COIN_DENOM } } }],
+          },
         },
       }),
     ])
@@ -86,21 +88,22 @@ it('should reject if coin amount is less than amount given in condition', () => 
     checkTransaction(
       {
         ...DEFAULT_FILTER,
-        condition: { [DEFAULT_COIN_DENOM]: { greaterOrEqual: 10000 } },
+        conditions: { [DEFAULT_COIN_DENOM]: [{ greaterOrEqual: 10000 }] },
       },
       TRANSACTION,
     ),
   ).toBe(false);
 });
 
-it('should accept valid transaction with 1 matching coin', () => {
+it('should accept valid transaction which satisfies first condition', () => {
   const TRANSACTION = aTransaction()
     .withMsgs([
       createWasmExecuteMsg({
         contract: DEFAULT_FILTER.contract,
-        coins: [{ amount: '1000', denom: DEFAULT_COIN_DENOM }],
         execute_msg: {
-          provide_liquidity: {},
+          provide_liquidity: {
+            assets: [{ amount: '1000', info: { native_token: { denom: DEFAULT_COIN_DENOM } } }],
+          },
         },
       }),
     ])
@@ -111,9 +114,9 @@ it('should accept valid transaction with 1 matching coin', () => {
       {
         ...DEFAULT_FILTER,
         chosenCoins: [Denom.USD, DEFAULT_COIN_DENOM],
-        condition: {
-          [Denom.USD]: { greaterOrEqual: 10 },
-          [DEFAULT_COIN_DENOM]: { greaterOrEqual: 10 },
+        conditions: {
+          [Denom.USD]: [{ greaterOrEqual: 10 }],
+          [DEFAULT_COIN_DENOM]: [{ greaterOrEqual: 10 }],
         },
       },
       TRANSACTION,
@@ -121,17 +124,15 @@ it('should accept valid transaction with 1 matching coin', () => {
   ).toBe(true);
 });
 
-it('should accept the transaction with both chosen coins but only second one satisfies the condition', () => {
+it('should accept the transaction which satisfies second condition', () => {
   const TRANSACTION = aTransaction()
     .withMsgs([
       createWasmExecuteMsg({
         contract: DEFAULT_FILTER.contract,
-        coins: [
-          { amount: '5000', denom: Denom.USD },
-          { amount: '1000', denom: DEFAULT_COIN_DENOM },
-        ],
         execute_msg: {
-          provide_liquidity: {},
+          provide_liquidity: {
+            assets: [{ amount: '1000', info: { native_token: { denom: DEFAULT_COIN_DENOM } } }],
+          },
         },
       }),
     ])
@@ -141,10 +142,9 @@ it('should accept the transaction with both chosen coins but only second one sat
     checkTransaction(
       {
         ...DEFAULT_FILTER,
-        chosenCoins: [Denom.USD, DEFAULT_COIN_DENOM],
-        condition: {
-          [Denom.USD]: { greaterOrEqual: 100000000 },
-          [DEFAULT_COIN_DENOM]: { greaterOrEqual: 10 },
+        chosenCoins: [DEFAULT_COIN_DENOM],
+        conditions: {
+          [DEFAULT_COIN_DENOM]: [{ greaterOrEqual: 10000 }, { greaterOrEqual: 10 }],
         },
       },
       TRANSACTION,
