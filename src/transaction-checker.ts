@@ -57,26 +57,34 @@ export async function checkTransaction(
         const satisfiedCondition =
           transactionFilter.chosenCoins.includes(denom) &&
           transactionFilter.conditions[denom]?.find(
-            (condition) => +currencyAmount.amount >= condition.greaterOrEqual,
+            (condition) =>
+              +currencyAmount.amount >= condition.greaterOrEqual &&
+              (!transactionFilter.maxTokenPrice ||
+                transactionFilter.maxTokenPrice >=
+                  calculateAverageTokenPrice(
+                    +tokenAmount.amount,
+                    +currencyAmount.amount,
+                    condition.buy,
+                  )),
           );
 
-        if (satisfiedCondition && !transactionFilter.maxTokenPrice) {
-          return true;
-        }
-
-        if (satisfiedCondition) {
-          const bougthTokenAmount =
-            (+tokenAmount.amount * satisfiedCondition.buy) /
-            (+currencyAmount.amount + satisfiedCondition.buy);
-          const bougthTokenAmountWithCommission = bougthTokenAmount * 0.997;
-          const averageTokenPrice = satisfiedCondition.buy / bougthTokenAmountWithCommission;
-
-          return transactionFilter.maxTokenPrice > averageTokenPrice;
-        }
+        return Boolean(satisfiedCondition);
       }
     }),
     toArray(),
   );
 
   return firstValueFrom(source);
+}
+
+function calculateAverageTokenPrice(
+  totalToken: number,
+  totalCurrency: number,
+  currencyToBuy: number,
+) {
+  const bougthTokenAmount = (totalToken * currencyToBuy) / (totalCurrency + currencyToBuy);
+  const bougthTokenAmountWithCommission = bougthTokenAmount * 0.997;
+  const averageTokenPrice = currencyToBuy / bougthTokenAmountWithCommission;
+
+  return averageTokenPrice;
 }
