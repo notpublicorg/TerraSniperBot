@@ -1,6 +1,6 @@
 import { MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
 import { firstValueFrom, of } from 'rxjs';
-import { filter, toArray } from 'rxjs/operators';
+import { filter, flatMap, map, mergeMap, toArray } from 'rxjs/operators';
 
 type LiquidityCurrencyAmount = {
   amount: string;
@@ -32,50 +32,61 @@ export async function checkTransaction(
   transactionFilter: TransactionFilter,
   transaction: TxInfo.Data,
 ) {
-  const source = of(...transaction.tx.value.msg).pipe(
-    filter((m) =>
-      Boolean(
-        m.type === 'wasm/MsgExecuteContract' &&
-          transactionFilter.contract === m.value.contract &&
-          m.value.execute_msg,
-      ),
-    ),
-    filter((m: MsgExecuteContract.Data) => {
-      const parsedExecuteMsg: ProvideLiquidityParam = JSON.parse(
+  const source = of(transaction).pipe(
+    mergeMap((t) => t.tx.value.msg),
+    filter((m): m is MsgExecuteContract.Data => m.type === 'wasm/MsgExecuteContract'),
+    filter((m) => transactionFilter.contract === m.value.contract),
+    filter((m) => Boolean(m.value.execute_msg)),
+    map((m) => ({
+      ...m.value,
+      execute_msg: JSON.parse(
         Buffer.from(m.value.execute_msg as unknown as string, 'base64').toString('utf8'),
-      );
+      ) as ProvideLiquidityParam,
+    })),
+    filter((m) => m.execute_msg && 'provide_liquidity' in m.execute_msg),
+    map((m) => {
+      const currencyAmount = m.execute_msg.provide_liquidity.assets.find(
+        (a) => 'native_token' in a.info,
+      ) as LiquidityCurrencyAmount;
+      const tokenAmount = m.execute_msg.provide_liquidity.assets.find(
+        (a) => 'token' in a.info,
+      ) as LiquidityTokenAmount;
 
-      if (parsedExecuteMsg && 'provide_liquidity' in parsedExecuteMsg) {
-        const currencyAmount = parsedExecuteMsg.provide_liquidity.assets.find(
-          (a) => 'native_token' in a.info,
-        ) as LiquidityCurrencyAmount;
-        const tokenAmount = parsedExecuteMsg.provide_liquidity.assets.find(
-          (a) => 'token' in a.info,
-        ) as LiquidityTokenAmount;
+      const denom = currencyAmount.info.native_token.denom;
+      const satisfiedCondition =
+        transactionFilter.chosenCoins.includes(denom) &&
+        transactionFilter.conditions[denom]?.find(
+          checkCondition(
+            +tokenAmount.amount,
+            +currencyAmount.amount,
+            transactionFilter.maxTokenPrice,
+          ),
+        );
 
-        const denom = currencyAmount.info.native_token.denom;
-        const satisfiedCondition =
-          transactionFilter.chosenCoins.includes(denom) &&
-          transactionFilter.conditions[denom]?.find(
-            (condition) =>
-              +currencyAmount.amount >= condition.greaterOrEqual &&
-              (!transactionFilter.maxTokenPrice ||
-                transactionFilter.maxTokenPrice >=
-                  calculateAverageTokenPrice(
-                    +tokenAmount.amount,
-                    +currencyAmount.amount,
-                    condition.buy,
-                  )),
-          );
-
-        return Boolean(satisfiedCondition);
-      }
+      return satisfiedCondition
+        ? {
+            contract: m.contract,
+            denom,
+            toBuy: satisfiedCondition.buy,
+            liquidity: { currency: currencyAmount.amount, token: tokenAmount.amount },
+          }
+        : null;
     }),
+    filter(Boolean),
     toArray(),
   );
 
   return firstValueFrom(source);
 }
+
+const checkCondition =
+  (totalToken: number, totalCurrency: number, maxTokenPrice?: number) =>
+  (condition: BuyCondition) => {
+    if (totalCurrency >= condition.greaterOrEqual) {
+      if (!maxTokenPrice) return true;
+      return maxTokenPrice >= calculateAverageTokenPrice(totalToken, totalCurrency, condition.buy);
+    }
+  };
 
 function calculateAverageTokenPrice(
   totalToken: number,
