@@ -40,36 +40,30 @@ export async function checkTransaction(
       of(...transactionFilter).pipe(
         filter((f) => f.contractToSpy === m.value.contract),
         map((f) => ({
-          txFilter: f,
-          msg: {
-            ...m.value,
-            execute_msg: JSON.parse(
-              Buffer.from(m.value.execute_msg as unknown as string, 'base64').toString('utf8'),
-            ) as ProvideLiquidityParam,
-          },
+          chosenCoins: f.chosenCoins,
+          conditions: f.conditions,
+          maxTokenPrice: f.maxTokenPrice,
+          contract: m.value.contract,
+          liquidity: parseLiquidityInfo(m),
         })),
-        filter(({ msg }) => msg.execute_msg && 'provide_liquidity' in msg.execute_msg),
-        map(({ txFilter, msg }) => {
-          const currencyAmount = msg.execute_msg.provide_liquidity.assets.find(
-            (a) => 'native_token' in a.info,
-          ) as LiquidityCurrencyAmount;
-          const tokenAmount = msg.execute_msg.provide_liquidity.assets.find(
-            (a) => 'token' in a.info,
-          ) as LiquidityTokenAmount;
+        filter(({ liquidity }) => Boolean(liquidity)),
+        map(({ chosenCoins, conditions, maxTokenPrice, liquidity, contract }) => {
+          const currencyDenom = liquidity.currency.denom;
+          const currencyAmount = liquidity.currency.amount;
+          const tokenAmount = liquidity.token.amount;
 
-          const denom = currencyAmount.info.native_token.denom;
           const satisfiedCondition =
-            txFilter.chosenCoins.includes(denom) &&
-            txFilter.conditions[denom]?.find(
-              checkCondition(+tokenAmount.amount, +currencyAmount.amount, txFilter.maxTokenPrice),
+            chosenCoins.includes(currencyDenom) &&
+            conditions[currencyDenom]?.find(
+              checkCondition(+tokenAmount, +currencyAmount, maxTokenPrice),
             );
 
           return satisfiedCondition
             ? {
-                contract: msg.contract,
-                denom,
+                contract,
+                denom: currencyDenom,
                 toBuy: satisfiedCondition.buy,
-                liquidity: { currency: currencyAmount.amount, token: tokenAmount.amount },
+                liquidity: { currency: currencyAmount, token: tokenAmount },
               }
             : null;
         }),
@@ -81,6 +75,28 @@ export async function checkTransaction(
   );
 
   return firstValueFrom(source);
+}
+
+function parseLiquidityInfo(txMsg: MsgExecuteContract.Data) {
+  const parsed: ProvideLiquidityParam = JSON.parse(
+    Buffer.from(txMsg.value.execute_msg as unknown as string, 'base64').toString('utf8'),
+  );
+
+  if (!parsed || !parsed.provide_liquidity) return null;
+
+  const currencyInfo = parsed.provide_liquidity.assets.find(
+    (a) => 'native_token' in a.info,
+  ) as LiquidityCurrencyAmount;
+  const tokenInfo = parsed.provide_liquidity.assets.find(
+    (a) => 'token' in a.info,
+  ) as LiquidityTokenAmount;
+
+  if (!currencyInfo || !tokenInfo) return null;
+
+  return {
+    token: { amount: tokenInfo.amount },
+    currency: { amount: currencyInfo.amount, denom: currencyInfo.info.native_token.denom },
+  };
 }
 
 const checkCondition =
