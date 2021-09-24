@@ -1,7 +1,12 @@
-import { Denom } from '@terra-money/terra.js';
+import { Denom, TxInfo } from '@terra-money/terra.js';
+import { firstValueFrom, toArray } from 'rxjs';
 
+import {
+  BuyConditionsByDenom,
+  smartContractWorkflow,
+  TransactionFilter,
+} from './smart-contract-workflow';
 import { aTransaction, createWasmExecuteMsg } from './transaction-builder';
-import { BuyConditionsByDenom, checkTransaction, TransactionFilter } from './transaction-checker';
 
 const DEFAULT_COIN_DENOM = Denom.LUNA;
 const DEFAULT_CONDITIONS: BuyConditionsByDenom = {
@@ -14,10 +19,16 @@ const DEFAULT_FILTER: TransactionFilter = {
   conditions: DEFAULT_CONDITIONS,
 };
 
+function checkTransaction(transactionFilter: TransactionFilter[], transactions: TxInfo.Data[]) {
+  const source = smartContractWorkflow(transactionFilter)(transactions).pipe(toArray());
+
+  return firstValueFrom(source);
+}
+
 it('should reject non-execute transaction', async () => {
   const TRANSACTION = aTransaction().build();
 
-  await expect(checkTransaction([DEFAULT_FILTER], TRANSACTION)).resolves.toEqual([]);
+  await expect(checkTransaction([DEFAULT_FILTER], [TRANSACTION])).resolves.toEqual([]);
 });
 
 it('should reject transaction with unknown contract', async () => {
@@ -29,7 +40,7 @@ it('should reject transaction with unknown contract', async () => {
     ])
     .build();
 
-  await expect(checkTransaction([DEFAULT_FILTER], TRANSACTION)).resolves.toEqual([]);
+  await expect(checkTransaction([DEFAULT_FILTER], [TRANSACTION])).resolves.toEqual([]);
 });
 
 it('should reject transaction without liquidity message', async () => {
@@ -42,7 +53,7 @@ it('should reject transaction without liquidity message', async () => {
     ])
     .build();
 
-  await expect(checkTransaction([DEFAULT_FILTER], TRANSACTION)).resolves.toEqual([]);
+  await expect(checkTransaction([DEFAULT_FILTER], [TRANSACTION])).resolves.toEqual([]);
 });
 
 it('should reject transaction without chosen coin', async () => {
@@ -60,7 +71,7 @@ it('should reject transaction without chosen coin', async () => {
     .build();
 
   await expect(
-    checkTransaction([{ ...DEFAULT_FILTER, chosenCoins: [Denom.LUNA] }], TRANSACTION),
+    checkTransaction([{ ...DEFAULT_FILTER, chosenCoins: [Denom.LUNA] }], [TRANSACTION]),
   ).resolves.toEqual([]);
 });
 
@@ -89,7 +100,7 @@ it('should reject if coin amount is less than amount given in condition', async 
           conditions: { [DEFAULT_COIN_DENOM]: [{ greaterOrEqual: 10000, buy: 10 }] },
         },
       ],
-      TRANSACTION,
+      [TRANSACTION],
     ),
   ).resolves.toEqual([]);
 });
@@ -123,7 +134,7 @@ it("should reject if liquidity's average token price is bigger than given max to
           maxTokenPrice: 20,
         },
       ],
-      TRANSACTION,
+      [TRANSACTION],
     ),
   ).resolves.toEqual([]);
 });
@@ -153,6 +164,7 @@ it('should accept valid transaction which satisfies conditions and max token pri
     },
   });
   const TRANSACTION = aTransaction().withMsgs([LIQUIDITY_MSG]).build();
+  const NOT_APPLICABLE_TRANSACTION = aTransaction().build();
 
   await expect(
     checkTransaction(
@@ -167,7 +179,7 @@ it('should accept valid transaction which satisfies conditions and max token pri
           maxTokenPrice: 23,
         },
       ],
-      TRANSACTION,
+      [NOT_APPLICABLE_TRANSACTION, TRANSACTION],
     ),
   ).resolves.toEqual([
     {
@@ -218,7 +230,7 @@ it('should accept the transaction with 2 acceptable messages', async () => {
           },
         },
       ],
-      TRANSACTION,
+      [TRANSACTION],
     ),
   ).resolves.toEqual([
     {
@@ -276,7 +288,7 @@ it('should accept transaction which satisfies second filter', async () => {
           },
         },
       ],
-      TRANSACTION,
+      [TRANSACTION],
     ),
   ).resolves.toEqual([
     {

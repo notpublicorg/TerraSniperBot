@@ -1,6 +1,6 @@
-import { MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
-import { firstValueFrom, of } from 'rxjs';
-import { filter, map, mergeMap, take, toArray } from 'rxjs/operators';
+import { Msg, MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
+import { of } from 'rxjs';
+import { filter, map, mergeMap, take } from 'rxjs/operators';
 
 type LiquidityCurrencyAmount = {
   amount: string;
@@ -28,53 +28,51 @@ export type TransactionFilter = {
   maxTokenPrice?: number;
 };
 
-export async function checkTransaction(
-  transactionFilter: TransactionFilter[],
-  transaction: TxInfo.Data,
-) {
-  const source = of(transaction).pipe(
-    mergeMap((t) => t.tx.value.msg),
-    filter((m): m is MsgExecuteContract.Data => m.type === 'wasm/MsgExecuteContract'),
-    filter((m) => Boolean(m.value.execute_msg)),
-    mergeMap((m) =>
-      of(...transactionFilter).pipe(
-        filter((f) => f.contractToSpy === m.value.contract),
-        map((f) => ({
-          chosenCoins: f.chosenCoins,
-          conditions: f.conditions,
-          maxTokenPrice: f.maxTokenPrice,
-          contract: m.value.contract,
-          liquidity: parseLiquidityInfo(m),
-        })),
-        filter(({ liquidity }) => Boolean(liquidity)),
-        map(({ chosenCoins, conditions, maxTokenPrice, liquidity, contract }) => {
-          const currencyDenom = liquidity.currency.denom;
-          const currencyAmount = liquidity.currency.amount;
-          const tokenAmount = liquidity.token.amount;
+export const smartContractWorkflow =
+  (transactionFilters: TransactionFilter[]) => (transactions: TxInfo.Data[]) =>
+    of(...transactions).pipe(
+      mergeMap((t) => t.tx.value.msg),
+      filter(isValidSmartContract),
+      mergeMap(processMsgWithFilters(transactionFilters)),
+    );
 
-          const satisfiedCondition =
-            chosenCoins.includes(currencyDenom) &&
-            conditions[currencyDenom]?.find(
-              checkCondition(+tokenAmount, +currencyAmount, maxTokenPrice),
-            );
+const processMsgWithFilters =
+  (transactionFilter: TransactionFilter[]) => (message: MsgExecuteContract.Data) =>
+    of(...transactionFilter).pipe(
+      filter((f) => f.contractToSpy === message.value.contract),
+      map((f) => ({
+        chosenCoins: f.chosenCoins,
+        conditions: f.conditions,
+        maxTokenPrice: f.maxTokenPrice,
+        contract: message.value.contract,
+        liquidity: parseLiquidityInfo(message),
+      })),
+      filter(({ liquidity }) => Boolean(liquidity)),
+      filter(({ liquidity, chosenCoins }) => chosenCoins.includes(liquidity.currency.denom)),
+      map(({ conditions, maxTokenPrice, liquidity, contract }) => {
+        const currencyDenom = liquidity.currency.denom;
+        const currencyAmount = liquidity.currency.amount;
+        const tokenAmount = liquidity.token.amount;
 
-          return satisfiedCondition
-            ? {
-                contract,
-                denom: currencyDenom,
-                toBuy: satisfiedCondition.buy,
-                liquidity: { currency: currencyAmount, token: tokenAmount },
-              }
-            : null;
-        }),
-        filter(Boolean),
-        take(1),
-      ),
-    ),
-    toArray(),
-  );
+        const satisfiedCondition = conditions[currencyDenom]?.find(
+          checkCondition(+tokenAmount, +currencyAmount, maxTokenPrice),
+        );
 
-  return firstValueFrom(source);
+        return satisfiedCondition
+          ? {
+              contract,
+              denom: currencyDenom,
+              toBuy: satisfiedCondition.buy,
+              liquidity: { currency: currencyAmount, token: tokenAmount },
+            }
+          : null;
+      }),
+      filter(Boolean),
+      take(1),
+    );
+
+function isValidSmartContract(msg: Msg.Data): msg is MsgExecuteContract.Data {
+  return msg.type === 'wasm/MsgExecuteContract' && Boolean(msg.value.execute_msg);
 }
 
 function parseLiquidityInfo(txMsg: MsgExecuteContract.Data) {
