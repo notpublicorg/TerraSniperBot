@@ -1,51 +1,44 @@
-import { LCDClient, MsgExecuteContract } from '@terra-money/terra.js';
+import { LCDClient, WebSocketClient } from '@terra-money/terra.js';
 
-const data = {
-  infos: [],
-};
+// const ws = new WebSocket('ws://162.55.245.183:26657/websocket');
+// ws.onerror = (e) => {
+//   console.log(e);
+// };
 
-const intervalId = setInterval(async () => {
-  const terra = new LCDClient({
-    URL: 'https://lcd.terra.dev',
-    chainID: 'tequila-0004',
-  });
+// const terra = new LCDClient({
+//   URL: 'https://lcd.terra.dev',
+//   chainID: 'tequila-0004',
+// });
 
-  try {
-    const transactions = await terra.tx.txInfosByHeight(undefined);
-    const contractInfo = transactions
-      .filter((txInfo) =>
-        txInfo.tx.toData().value.msg.some((m) => {
-          if (m.type === 'wasm/MsgExecuteContract') {
-            const executeMsg = JSON.parse(
-              Buffer.from(m.value.execute_msg as unknown as string, 'base64').toString('utf8'),
-            );
-            return Object.keys(executeMsg).includes('provide_liquidity');
-          }
+// const transactions = await terra.tx.txInfosByHeight(undefined);
 
-          return false;
-        }),
-      )
-      .map((txInfo) =>
-        txInfo.tx.toData().value.msg.map((m: MsgExecuteContract.Data) => ({
-          ...m,
-          value: {
-            ...m.value,
-            execute_msg:
-              m.value.execute_msg &&
-              JSON.parse(
-                Buffer.from(m.value.execute_msg as unknown as string, 'base64').toString('utf8'),
-              ),
-          },
-        })),
-      );
+const terra = new LCDClient({
+  URL: 'https://162.55.245.183:26657',
+  chainID: 'tequila-0004',
+});
 
-    if (contractInfo.length) {
-      data.infos.push(contractInfo);
-    }
+terra.tendermint.blockInfo().then((r) => console.log(r));
 
-    if (data.infos.length > 5) {
-      clearInterval(intervalId);
-      console.log(JSON.stringify(data));
-    }
-  } catch (e) {}
-}, 5000);
+const wsclient = new WebSocketClient('ws://162.55.245.183:26657/websocket');
+wsclient.on('error', () => {
+  console.log('error');
+});
+
+console.log(wsclient.isConnected);
+
+wsclient.once('connection', () => console.log('ready to go'));
+
+wsclient.subscribeTx({}, (response) => {
+  console.log('---------------- <NEW RESPONSE> --------------');
+  console.log('--------------------------------------------');
+  console.log(JSON.stringify(response));
+  console.log('--------------------------------------------');
+  console.log('---------------- </NEW RESPONSE> --------------');
+});
+
+process.stdin.on('data', () => {
+  console.log(wsclient.isConnected);
+  console.log('shutting ws connection');
+  wsclient.destroy();
+  process.exit(0);
+});
