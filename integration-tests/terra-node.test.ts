@@ -1,5 +1,7 @@
 import { LCDClient, WebSocketClient } from '@terra-money/terra.js';
 
+jest.setTimeout(10000);
+
 type WebsocketTxResponse = {
   type: 'tendermint/event/Tx';
   value: {
@@ -35,7 +37,7 @@ function getTransaction(txHash: string) {
   return terra.tx.txInfo(txHash);
 }
 
-test.skip('ws contract', async () => {
+test('ws contract', async () => {
   const EXPECTED_TX_RESPONSE = {
     type: 'tendermint/event/Tx',
     value: {
