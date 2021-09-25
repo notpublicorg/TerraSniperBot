@@ -1,6 +1,6 @@
 import { Coins, Msg, MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
 
-import { ProvideLiquidityParam } from './smart-contract-workflow';
+import { ProvideLiquidityParam } from './types/liquidity';
 
 export const createWasmExecuteMsg = (data?: {
   contract?: string;

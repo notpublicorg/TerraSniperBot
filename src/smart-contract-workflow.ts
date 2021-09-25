@@ -1,36 +1,18 @@
 import { Msg, MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { filter, map, mergeMap, take } from 'rxjs/operators';
 
-type LiquidityCurrencyAmount = {
-  amount: string;
-  info: { native_token: { denom: string } };
-};
-type LiquidityTokenAmount = {
-  amount: string;
-  info: {
-    token: { contract_addr: string };
-  };
-};
-export type ProvideLiquidityParam = {
-  provide_liquidity: {
-    assets: Array<LiquidityCurrencyAmount | LiquidityTokenAmount>;
-    slippage_tolerance: string;
-  };
-};
-
-type BuyCondition = { greaterOrEqual: number; buy: number };
-export type BuyConditionsByDenom = Record<string, BuyCondition[]>;
-export type TransactionFilter = {
-  contractToSpy: string;
-  chosenCoins: string[];
-  conditions: BuyConditionsByDenom;
-  maxTokenPrice?: number;
-};
+import {
+  LiquidityCurrencyAmount,
+  LiquidityTokenAmount,
+  ParsedLiquidity,
+  ProvideLiquidityParam,
+} from './types/liquidity';
+import { BuyCondition, TransactionFilter } from './types/transaction-filter';
 
 export const smartContractWorkflow =
-  (transactionFilters: TransactionFilter[]) => (transactions: TxInfo.Data[]) =>
-    of(...transactions).pipe(
+  (transactionFilters: TransactionFilter[]) => (transactions: Observable<TxInfo.Data>) =>
+    transactions.pipe(
       mergeMap((t) => t.tx.value.msg),
       filter(isValidSmartContract),
       mergeMap(processMsgWithFilters(transactionFilters)),
@@ -40,32 +22,25 @@ const processMsgWithFilters =
   (transactionFilter: TransactionFilter[]) => (message: MsgExecuteContract.Data) =>
     of(...transactionFilter).pipe(
       filter((f) => f.contractToSpy === message.value.contract),
-      map((f) => ({
-        chosenCoins: f.chosenCoins,
-        conditions: f.conditions,
-        maxTokenPrice: f.maxTokenPrice,
-        contract: message.value.contract,
-        liquidity: parseLiquidityInfo(message),
-      })),
-      filter(({ liquidity }) => Boolean(liquidity)),
-      filter(({ liquidity, chosenCoins }) => chosenCoins.includes(liquidity.currency.denom)),
-      map(({ conditions, maxTokenPrice, liquidity, contract }) => {
-        const currencyDenom = liquidity.currency.denom;
-        const currencyAmount = liquidity.currency.amount;
-        const tokenAmount = liquidity.token.amount;
+      map((f) => {
+        const liquidity = parseLiquidityInfo(message);
 
-        const satisfiedCondition = conditions[currencyDenom]?.find(
-          checkCondition(+tokenAmount, +currencyAmount, maxTokenPrice),
+        if (!liquidity) return null;
+
+        return {
+          conditions: f.conditions,
+          maxTokenPrice: f.maxTokenPrice,
+          contract: message.value.contract,
+          liquidity,
+        };
+      }),
+      filter(Boolean),
+      map(({ conditions, maxTokenPrice, liquidity, contract }) => {
+        const satisfiedBuyCondition = conditions.find(
+          isLiquiditySatisfiesCondition(liquidity, maxTokenPrice),
         );
 
-        return satisfiedCondition
-          ? {
-              contract,
-              denom: currencyDenom,
-              toBuy: satisfiedCondition.buy,
-              liquidity: { currency: currencyAmount, token: tokenAmount },
-            }
-          : null;
+        return satisfiedBuyCondition ? { contract, satisfiedBuyCondition, liquidity } : null;
       }),
       filter(Boolean),
       take(1),
@@ -75,7 +50,7 @@ function isValidSmartContract(msg: Msg.Data): msg is MsgExecuteContract.Data {
   return msg.type === 'wasm/MsgExecuteContract' && Boolean(msg.value.execute_msg);
 }
 
-function parseLiquidityInfo(txMsg: MsgExecuteContract.Data) {
+function parseLiquidityInfo(txMsg: MsgExecuteContract.Data): ParsedLiquidity | null {
   const parsed: ProvideLiquidityParam = JSON.parse(
     Buffer.from(txMsg.value.execute_msg as unknown as string, 'base64').toString('utf8'),
   );
@@ -97,13 +72,19 @@ function parseLiquidityInfo(txMsg: MsgExecuteContract.Data) {
   };
 }
 
-const checkCondition =
-  (totalToken: number, totalCurrency: number, maxTokenPrice?: number) =>
+const isLiquiditySatisfiesCondition =
+  ({ currency, token }: ParsedLiquidity, maxTokenPrice?: number) =>
   (condition: BuyCondition) => {
-    if (totalCurrency >= condition.greaterOrEqual) {
-      if (!maxTokenPrice) return true;
-      return maxTokenPrice >= calculateAverageTokenPrice(totalToken, totalCurrency, condition.buy);
-    }
+    if (currency.denom !== condition.denom) return false;
+
+    const currencyAmount = +currency.amount;
+    const tokenAmount = +token.amount;
+
+    if (currencyAmount < condition.greaterOrEqual) return false;
+
+    if (!maxTokenPrice) return true;
+
+    return maxTokenPrice >= calculateAverageTokenPrice(tokenAmount, currencyAmount, condition.buy);
   };
 
 function calculateAverageTokenPrice(

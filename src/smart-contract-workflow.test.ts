@@ -1,28 +1,23 @@
 import { Denom, TxInfo } from '@terra-money/terra.js';
-import { firstValueFrom, toArray } from 'rxjs';
+import { firstValueFrom, of, toArray } from 'rxjs';
 
-import {
-  BuyConditionsByDenom,
-  smartContractWorkflow,
-  TransactionFilter,
-} from './smart-contract-workflow';
+import { smartContractWorkflow } from './smart-contract-workflow';
 import { aTransaction, createWasmExecuteMsg } from './transaction-builder';
+import { BuyCondition, TransactionFilter } from './types/transaction-filter';
 
 const DEFAULT_COIN_DENOM = Denom.LUNA;
-const DEFAULT_CONDITIONS: BuyConditionsByDenom = {
-  [DEFAULT_COIN_DENOM]: [{ greaterOrEqual: 100, buy: 10 }],
-};
-
+const DEFAULT_CONDITIONS: BuyCondition[] = [
+  { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 100, buy: 10 },
+];
 const DEFAULT_FILTER: TransactionFilter = {
   contractToSpy: 'knownSmartContractToken',
-  chosenCoins: [DEFAULT_COIN_DENOM],
   conditions: DEFAULT_CONDITIONS,
 };
 
 function checkTransaction(transactionFilter: TransactionFilter[], transactions: TxInfo.Data[]) {
-  const source = smartContractWorkflow(transactionFilter)(transactions).pipe(toArray());
-
-  return firstValueFrom(source);
+  return firstValueFrom(
+    smartContractWorkflow(transactionFilter)(of(...transactions)).pipe(toArray()),
+  );
 }
 
 it('should reject non-execute transaction', async () => {
@@ -71,7 +66,15 @@ it('should reject transaction without chosen coin', async () => {
     .build();
 
   await expect(
-    checkTransaction([{ ...DEFAULT_FILTER, chosenCoins: [Denom.LUNA] }], [TRANSACTION]),
+    checkTransaction(
+      [
+        {
+          ...DEFAULT_FILTER,
+          conditions: [{ denom: Denom.LUNA, greaterOrEqual: 100, buy: 10 }],
+        },
+      ],
+      [TRANSACTION],
+    ),
   ).resolves.toEqual([]);
 });
 
@@ -97,7 +100,7 @@ it('should reject if coin amount is less than amount given in condition', async 
       [
         {
           ...DEFAULT_FILTER,
-          conditions: { [DEFAULT_COIN_DENOM]: [{ greaterOrEqual: 10000, buy: 10 }] },
+          conditions: [{ denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10 }],
         },
       ],
       [TRANSACTION],
@@ -127,10 +130,7 @@ it("should reject if liquidity's average token price is bigger than given max to
       [
         {
           ...DEFAULT_FILTER,
-          chosenCoins: [DEFAULT_COIN_DENOM],
-          conditions: {
-            [DEFAULT_COIN_DENOM]: [{ greaterOrEqual: 10000, buy: 10000 }],
-          },
+          conditions: [{ denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 }],
           maxTokenPrice: 20,
         },
       ],
@@ -171,11 +171,10 @@ it('should accept valid transaction which satisfies conditions and max token pri
       [
         {
           ...DEFAULT_FILTER,
-          chosenCoins: [Denom.USD, DEFAULT_COIN_DENOM],
-          conditions: {
-            [Denom.USD]: [{ greaterOrEqual: 10, buy: 10 }],
-            [DEFAULT_COIN_DENOM]: [{ greaterOrEqual: 10000, buy: 10000 }],
-          },
+          conditions: [
+            { denom: Denom.USD, greaterOrEqual: 10, buy: 10 },
+            { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
+          ],
           maxTokenPrice: 23,
         },
       ],
@@ -184,9 +183,11 @@ it('should accept valid transaction which satisfies conditions and max token pri
   ).resolves.toEqual([
     {
       contract: DEFAULT_FILTER.contractToSpy,
-      denom: DEFAULT_COIN_DENOM,
-      toBuy: 10000,
-      liquidity: { currency: '100000', token: '5000' },
+      satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
+      liquidity: {
+        token: { amount: '5000' },
+        currency: { amount: '100000', denom: DEFAULT_COIN_DENOM },
+      },
     },
   ]);
 });
@@ -221,13 +222,10 @@ it('should accept the transaction with 2 acceptable messages', async () => {
       [
         {
           ...DEFAULT_FILTER,
-          chosenCoins: [DEFAULT_COIN_DENOM],
-          conditions: {
-            [DEFAULT_COIN_DENOM]: [
-              { greaterOrEqual: 10000, buy: 10000 },
-              { greaterOrEqual: 10, buy: 10 },
-            ],
-          },
+          conditions: [
+            { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
+            { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10, buy: 10 },
+          ],
         },
       ],
       [TRANSACTION],
@@ -235,15 +233,19 @@ it('should accept the transaction with 2 acceptable messages', async () => {
   ).resolves.toEqual([
     {
       contract: DEFAULT_FILTER.contractToSpy,
-      denom: DEFAULT_COIN_DENOM,
-      toBuy: 10,
-      liquidity: { currency: '1000', token: '5000' },
+      satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10, buy: 10 },
+      liquidity: {
+        token: { amount: '5000' },
+        currency: { amount: '1000', denom: DEFAULT_COIN_DENOM },
+      },
     },
     {
       contract: DEFAULT_FILTER.contractToSpy,
-      denom: DEFAULT_COIN_DENOM,
-      toBuy: 10000,
-      liquidity: { currency: '100000', token: '5000' },
+      satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
+      liquidity: {
+        token: { amount: '5000' },
+        currency: { amount: '100000', denom: DEFAULT_COIN_DENOM },
+      },
     },
   ]);
 });
@@ -282,10 +284,7 @@ it('should accept transaction which satisfies second filter', async () => {
         DEFAULT_FILTER,
         {
           contractToSpy: ALTERNATIVE_CONTRACT,
-          chosenCoins: [DEFAULT_COIN_DENOM],
-          conditions: {
-            [DEFAULT_COIN_DENOM]: [{ greaterOrEqual: 10000, buy: 10000 }],
-          },
+          conditions: [{ denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 }],
         },
       ],
       [TRANSACTION],
@@ -293,9 +292,11 @@ it('should accept transaction which satisfies second filter', async () => {
   ).resolves.toEqual([
     {
       contract: ALTERNATIVE_CONTRACT,
-      denom: DEFAULT_COIN_DENOM,
-      toBuy: 10000,
-      liquidity: { currency: '100000', token: '5000' },
+      satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
+      liquidity: {
+        token: { amount: '5000' },
+        currency: { amount: '100000', denom: DEFAULT_COIN_DENOM },
+      },
     },
   ]);
 });
