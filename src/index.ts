@@ -6,12 +6,17 @@ import { TransactionFilter } from './types/transaction-filter';
 
 const FILTERS_MOCK: TransactionFilter[] = [
   {
-    contractToSpy: '',
+    contractToSpy: 'terra17pewe6hl5ft8jgfuhrts9qlpyyq3sr4xw4tgw0',
     conditions: [
       {
         denom: Denom.USD,
-        greaterOrEqual: 10000,
-        buy: 10000,
+        greaterOrEqual: 10,
+        buy: 10,
+      },
+      {
+        denom: Denom.LUNA,
+        greaterOrEqual: 20,
+        buy: 10,
       },
     ],
   },
