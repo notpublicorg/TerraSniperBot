@@ -56,8 +56,16 @@ function parseLiquidityInfo({ value }: MsgExecuteContract.Data): ParsedLiquidity
   if (!currencyInfo || !tokenInfo) return null;
 
   return {
-    token: { amount: tokenInfo.amount, contract: tokenInfo.info.token.contract_addr },
-    currency: { amount: currencyInfo.amount, denom: currencyInfo.info.native_token.denom },
+    token: {
+      // TODO: утилсу для добавления и убирания 6 нулей
+      amount: (+tokenInfo.amount / 1000000).toString(),
+      contract: tokenInfo.info.token.contract_addr,
+    },
+    currency: {
+      // TODO: утилсу для добавления и убирания 6 нулей
+      amount: (+currencyInfo.amount / 1000000).toString(),
+      denom: currencyInfo.info.native_token.denom,
+    },
   };
 }
 

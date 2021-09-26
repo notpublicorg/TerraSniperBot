@@ -1,9 +1,9 @@
 import { taskCreatorFactory } from './create-task';
-import { SniperTask } from './sniper-task';
+import { SniperTaskNew } from './sniper-task';
 import { TasksGateway } from './tasks-gateway';
 
 it('should create task', async () => {
-  const TASK: SniperTask = {
+  const TASK: SniperTaskNew = {
     contract: 'token contract',
     conditions: [{ denom: 'uluna', greaterOrEqual: '100', buy: '10' }],
     maxTokenPrice: '25',

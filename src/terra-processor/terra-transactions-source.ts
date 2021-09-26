@@ -9,7 +9,7 @@ export function createTerraTransactionsSource(
     lcdUrl: string;
     lcdChainId: string;
   },
-  logger: { error: (error: Error) => void },
+  logger: { info: (data: unknown) => void; error: (error: Error) => void },
 ) {
   const wsclient = new WebSocketClient(config.websocketUrl);
 

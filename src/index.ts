@@ -6,8 +6,13 @@ import { TransactionFilter } from './terra-processor/types/transaction-filter';
 
 const FILTERS_MOCK: TransactionFilter[] = [
   {
-    contractToSpy: 'terra17pewe6hl5ft8jgfuhrts9qlpyyq3sr4xw4tgw0',
+    contractToSpy: 'terra1ruzfnlfcgzld2yfpnjgspmm3jaeq4xtjl0z490',
     conditions: [
+      {
+        denom: Denom.USD,
+        greaterOrEqual: 20,
+        buy: 20,
+      },
       {
         denom: Denom.USD,
         greaterOrEqual: 10,
@@ -16,9 +21,10 @@ const FILTERS_MOCK: TransactionFilter[] = [
       {
         denom: Denom.LUNA,
         greaterOrEqual: 20,
-        buy: 10,
+        buy: 20,
       },
     ],
+    maxTokenPrice: 100,
   },
 ];
 
@@ -28,7 +34,7 @@ const transactionsSource = createTerraTransactionsSource(
     lcdUrl: 'https://bombay-lcd.terra.dev',
     lcdChainId: 'bombay-11',
   },
-  { error: console.log },
+  { error: console.log, info: console.info },
 );
 
 const smartContractWorkflow = createSmartContractWorkflow(FILTERS_MOCK)(transactionsSource);
