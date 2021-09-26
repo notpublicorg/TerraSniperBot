@@ -1,0 +1,86 @@
+{
+  "gas_used": "186409",
+  "gas_wanted": "300000",
+  "height": "5980251",
+  "logs": [
+    {
+      "events": [
+        {
+          "attributes": [
+            { "key": "sender", "value": "terra1gq88kks6um33nkzt3fpftvyxf8u9s2peadn5m6" },
+            { "key": "contract_address", "value": "terra1hf0ekh78mhex2j0tdfjawpvg37s42fewpnp7ez" },
+            { "key": "sender", "value": "terra1hf0ekh78mhex2j0tdfjawpvg37s42fewpnp7ez" },
+            { "key": "contract_address", "value": "terra1ftn5x69rd35rtwsa94nrd26pgr5yldd30ly859" }
+          ],
+          "type": "execute_contract"
+        },
+        {
+          "attributes": [
+            { "key": "contract_address", "value": "terra1ftn5x69rd35rtwsa94nrd26pgr5yldd30ly859" },
+            { "key": "action", "value": "validate" },
+            { "key": "is_valid", "value": "true" }
+          ],
+          "type": "from_contract"
+        },
+        {
+          "attributes": [
+            { "key": "action", "value": "/terra.wasm.v1beta1.MsgExecuteContract" },
+            { "key": "module", "value": "wasm" },
+            { "key": "sender", "value": "terra1gq88kks6um33nkzt3fpftvyxf8u9s2peadn5m6" },
+            { "key": "module", "value": "wasm" },
+            { "key": "sender", "value": "terra1hf0ekh78mhex2j0tdfjawpvg37s42fewpnp7ez" }
+          ],
+          "type": "message"
+        },
+        {
+          "attributes": [
+            { "key": "contract_address", "value": "terra1ftn5x69rd35rtwsa94nrd26pgr5yldd30ly859" },
+            { "key": "action", "value": "validate" },
+            { "key": "is_valid", "value": "true" }
+          ],
+          "type": "wasm"
+        },
+        {
+          "attributes": [
+            { "key": "contract_address", "value": "terra1hf0ekh78mhex2j0tdfjawpvg37s42fewpnp7ez" },
+            { "key": "current", "value": "14697000000" },
+            { "key": "round_id", "value": "15342" }
+          ],
+          "type": "wasm-answer_updated"
+        },
+        {
+          "attributes": [
+            { "key": "contract_address", "value": "terra1hf0ekh78mhex2j0tdfjawpvg37s42fewpnp7ez" },
+            { "key": "submission", "value": "14697000000" },
+            { "key": "round_id", "value": "15342" },
+            { "key": "oracle", "value": "terra1gq88kks6um33nkzt3fpftvyxf8u9s2peadn5m6" }
+          ],
+          "type": "wasm-submission_received"
+        }
+      ]
+    }
+  ],
+  "raw_log": "[{\"events\":[{\"type\":\"execute_contract\",\"attributes\":[{\"key\":\"sender\",\"value\":\"terra1gq88kks6um33nkzt3fpftvyxf8u9s2peadn5m6\"},{\"key\":\"contract_address\",\"value\":\"terra1hf0ekh78mhex2j0tdfjawpvg37s42fewpnp7ez\"},{\"key\":\"sender\",\"value\":\"terra1hf0ekh78mhex2j0tdfjawpvg37s42fewpnp7ez\"},{\"key\":\"contract_address\",\"value\":\"terra1ftn5x69rd35rtwsa94nrd26pgr5yldd30ly859\"}]},{\"type\":\"from_contract\",\"attributes\":[{\"key\":\"contract_address\",\"value\":\"terra1ftn5x69rd35rtwsa94nrd26pgr5yldd30ly859\"},{\"key\":\"action\",\"value\":\"validate\"},{\"key\":\"is_valid\",\"value\":\"true\"}]},{\"type\":\"message\",\"attributes\":[{\"key\":\"action\",\"value\":\"/terra.wasm.v1beta1.MsgExecuteContract\"},{\"key\":\"module\",\"value\":\"wasm\"},{\"key\":\"sender\",\"value\":\"terra1gq88kks6um33nkzt3fpftvyxf8u9s2peadn5m6\"},{\"key\":\"module\",\"value\":\"wasm\"},{\"key\":\"sender\",\"value\":\"terra1hf0ekh78mhex2j0tdfjawpvg37s42fewpnp7ez\"}]},{\"type\":\"wasm\",\"attributes\":[{\"key\":\"contract_address\",\"value\":\"terra1ftn5x69rd35rtwsa94nrd26pgr5yldd30ly859\"},{\"key\":\"action\",\"value\":\"validate\"},{\"key\":\"is_valid\",\"value\":\"true\"}]},{\"type\":\"wasm-answer_updated\",\"attributes\":[{\"key\":\"contract_address\",\"value\":\"terra1hf0ekh78mhex2j0tdfjawpvg37s42fewpnp7ez\"},{\"key\":\"current\",\"value\":\"14697000000\"},{\"key\":\"round_id\",\"value\":\"15342\"}]},{\"type\":\"wasm-submission_received\",\"attributes\":[{\"key\":\"contract_address\",\"value\":\"terra1hf0ekh78mhex2j0tdfjawpvg37s42fewpnp7ez\"},{\"key\":\"submission\",\"value\":\"14697000000\"},{\"key\":\"round_id\",\"value\":\"15342\"},{\"key\":\"oracle\",\"value\":\"terra1gq88kks6um33nkzt3fpftvyxf8u9s2peadn5m6\"}]}]}]",
+  "timestamp": "2021-09-26T17:37:55Z",
+  "tx": {
+    "type": "core/StdTx",
+    "value": {
+      "fee": { "amount": [{ "amount": "45000", "denom": "uluna" }], "gas": "300000" },
+      "memo": "",
+      "msg": [
+        {
+          "type": "wasm/MsgExecuteContract",
+          "value": {
+            "coins": [],
+            "contract": "terra1hf0ekh78mhex2j0tdfjawpvg37s42fewpnp7ez",
+            "execute_msg": { "submit": { "round_id": 15342, "submission": "14697000000" } },
+            "sender": "terra1gq88kks6um33nkzt3fpftvyxf8u9s2peadn5m6"
+          }
+        }
+      ],
+      "signatures": [],
+      "timeout_height": "0"
+    }
+  },
+  "txhash": "1A0668B3B03743A830674AED552425C466B586477F9D3E39834603CA6061A8FC"
+}
