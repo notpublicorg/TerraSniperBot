@@ -1,8 +1,8 @@
 import { Denom } from '@terra-money/terra.js';
 
-import { createSmartContractWorkflow } from './smart-contract-workflow';
-import { createTerraTransactionsSource } from './terra-transactions-source';
-import { TransactionFilter } from './types/transaction-filter';
+import { createSmartContractWorkflow } from './/terra-processor/smart-contract-workflow';
+import { createTerraTransactionsSource } from './terra-processor/terra-transactions-source';
+import { TransactionFilter } from './terra-processor/types/transaction-filter';
 
 const FILTERS_MOCK: TransactionFilter[] = [
   {

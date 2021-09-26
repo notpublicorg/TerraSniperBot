@@ -1,6 +1,6 @@
 import { LCDClient, MsgExecuteContract, WebSocketClient } from '@terra-money/terra.js';
 
-import { TendermintTxResponse } from '../src/types/tendermint-response';
+import { TendermintTxResponse } from '../src/terra-processor/types/tendermint-response';
 
 jest.setTimeout(10000);
 
