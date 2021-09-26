@@ -1,5 +1,6 @@
-import { SniperTaskNew } from './sniper-task';
+import { SniperTask, SniperTaskNew } from './sniper-task';
 
 export type TasksGateway = {
-  createTask: (task: SniperTaskNew) => Promise<void>;
+  addTask: (task: SniperTaskNew) => Promise<void>;
+  getAll: () => Promise<SniperTask[]>;
 };

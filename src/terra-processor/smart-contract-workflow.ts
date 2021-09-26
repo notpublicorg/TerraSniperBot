@@ -58,12 +58,13 @@ function parseLiquidityInfo({ value }: MsgExecuteContract.Data): ParsedLiquidity
   return {
     token: {
       // TODO: утилсу для добавления и убирания 6 нулей
-      amount: (+tokenInfo.amount / 1000000).toString(),
+      amount: tokenInfo.amount,
       contract: tokenInfo.info.token.contract_addr,
     },
     currency: {
       // TODO: утилсу для добавления и убирания 6 нулей
-      amount: (+currencyInfo.amount / 1000000).toString(),
+      // amount: (+currencyInfo.amount / 1000000).toString(),
+      amount: currencyInfo.amount,
       denom: currencyInfo.info.native_token.denom,
     },
   };
