@@ -1,18 +1,8 @@
-import { LCDClient, WebSocketClient } from '@terra-money/terra.js';
+import { LCDClient, MsgExecuteContract, WebSocketClient } from '@terra-money/terra.js';
+
+import { TendermintTxResponse } from '../src/types/tendermint-response';
 
 jest.setTimeout(10000);
-
-type WebsocketTxResponse = {
-  type: 'tendermint/event/Tx';
-  value: {
-    TxResult: {
-      height: string;
-      result: Record<string, unknown>;
-      tx: string;
-      txhash: string;
-    };
-  };
-};
 
 const wsclient = new WebSocketClient('ws://162.55.245.183:26657/websocket');
 
@@ -22,11 +12,11 @@ const terra = new LCDClient({
 });
 
 function getWsResponse() {
-  return new Promise<WebsocketTxResponse>((resolve) => {
+  return new Promise<TendermintTxResponse>((resolve) => {
     wsclient.subscribeTx({}, (response) => {
       wsclient.destroy();
 
-      resolve(response as WebsocketTxResponse);
+      resolve(response as TendermintTxResponse);
     });
 
     wsclient['start']();
@@ -60,4 +50,16 @@ test('getting tx', async () => {
   const transaction = await getTransaction(response.value.TxResult.txhash);
 
   expect(transaction.txhash).toEqual(response.value.TxResult.txhash);
+});
+
+test('getting txs by heigth', async () => {
+  const transactions = await terra.tx.txInfosByHeight(undefined);
+
+  const filtered = transactions
+    .map((t) => t.tx.toData())
+    .flatMap((t) => t.value.msg)
+    .filter((m): m is MsgExecuteContract.Data => m.type === 'wasm/MsgExecuteContract')
+    .map((m) => m.value.execute_msg);
+
+  expect(filtered[0]).toBeInstanceOf(Object);
 });

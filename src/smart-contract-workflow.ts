@@ -1,5 +1,5 @@
 import { Msg, MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
-import { Observable, of } from 'rxjs';
+import { from, Observable } from 'rxjs';
 import { filter, map, mergeMap, take } from 'rxjs/operators';
 
 import {
@@ -10,17 +10,17 @@ import {
 } from './types/liquidity';
 import { BuyCondition, TransactionFilter } from './types/transaction-filter';
 
-export const smartContractWorkflow =
+export const createSmartContractWorkflow =
   (transactionFilters: TransactionFilter[]) => (transactions: Observable<TxInfo.Data>) =>
     transactions.pipe(
       mergeMap((t) => t.tx.value.msg),
       filter(isValidSmartContract),
-      mergeMap(processMsgWithFilters(transactionFilters)),
+      mergeMap(processMsgWithFilters(from(transactionFilters))),
     );
 
 const processMsgWithFilters =
-  (transactionFilter: TransactionFilter[]) => (message: MsgExecuteContract.Data) =>
-    of(...transactionFilter).pipe(
+  (transactionFilter: Observable<TransactionFilter>) => (message: MsgExecuteContract.Data) =>
+    transactionFilter.pipe(
       filter((f) => f.contractToSpy === message.value.contract),
       map((f) => {
         const liquidity = parseLiquidityInfo(message);
@@ -50,10 +50,11 @@ function isValidSmartContract(msg: Msg.Data): msg is MsgExecuteContract.Data {
   return msg.type === 'wasm/MsgExecuteContract' && Boolean(msg.value.execute_msg);
 }
 
-function parseLiquidityInfo(txMsg: MsgExecuteContract.Data): ParsedLiquidity | null {
-  const parsed: ProvideLiquidityParam = JSON.parse(
-    Buffer.from(txMsg.value.execute_msg as unknown as string, 'base64').toString('utf8'),
-  );
+function parseLiquidityInfo({ value }: MsgExecuteContract.Data): ParsedLiquidity | null {
+  const parsed: ProvideLiquidityParam =
+    typeof value.execute_msg === 'string'
+      ? JSON.parse(Buffer.from(value.execute_msg as unknown as string, 'base64').toString('utf8'))
+      : value.execute_msg;
 
   if (!parsed || !parsed.provide_liquidity) return null;
 

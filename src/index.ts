@@ -1,20 +1,37 @@
-import { WebSocketClient } from '@terra-money/terra.js';
+import { Denom } from '@terra-money/terra.js';
 
-const wsclient = new WebSocketClient('ws://162.55.245.183:26657/websocket');
+import { createSmartContractWorkflow } from './smart-contract-workflow';
+import { createTerraTransactionsSource } from './terra-transactions-source';
+import { TransactionFilter } from './types/transaction-filter';
 
-wsclient.subscribe('Tx', {}, (response) => {
-  console.log('---------------- <NEW RESPONSE> --------------');
-  console.log('--------------------------------------------');
-  console.log(JSON.stringify(response));
-  console.log('--------------------------------------------');
-  console.log('---------------- </NEW RESPONSE> --------------');
-});
+const FILTERS_MOCK: TransactionFilter[] = [
+  {
+    contractToSpy: '',
+    conditions: [
+      {
+        denom: Denom.USD,
+        greaterOrEqual: 10000,
+        buy: 10000,
+      },
+    ],
+  },
+];
 
-wsclient['start']();
+const transactionsSource = createTerraTransactionsSource(
+  {
+    websocketUrl: 'ws://162.55.245.183:26657/websocket',
+    lcdUrl: 'https://bombay-lcd.terra.dev',
+    lcdChainId: 'bombay-11',
+  },
+  { error: console.log },
+);
+
+const smartContractWorkflow = createSmartContractWorkflow(FILTERS_MOCK)(transactionsSource);
+
+const subscription = smartContractWorkflow.subscribe(console.log);
 
 process.stdin.on('data', () => {
-  console.log(wsclient.isConnected);
-  console.log('shutting ws connection');
-  wsclient.destroy();
+  console.log('shutting down connection');
+  subscription.unsubscribe();
   process.exit(0);
 });
