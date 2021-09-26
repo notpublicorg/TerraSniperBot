@@ -17,15 +17,19 @@ const transactionsSource = createTerraTransactionsSource(
 
 export class TerraTasksProcessor implements TasksProcessor {
   private tasks: SniperTask[] = [];
+  private smartContractWorkflow: ReturnType<typeof createSmartContractWorkflow>;
   private subscription: Subscription | null = null;
+
+  constructor() {
+    this.smartContractWorkflow = createSmartContractWorkflow(
+      this.getFilters.bind(this),
+      transactionsSource,
+    );
+  }
 
   init: TasksProcessor['init'] = (tasks) => {
     this.tasks = tasks;
-    const smartContractWorkflow = createSmartContractWorkflow(this.getFilters.bind(this))(
-      transactionsSource,
-    );
-
-    this.subscription = smartContractWorkflow.subscribe(console.log);
+    this.subscription = this.smartContractWorkflow.subscribe(console.log);
   };
 
   reinit: TasksProcessor['reinit'] = (tasks) => {

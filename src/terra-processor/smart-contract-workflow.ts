@@ -10,28 +10,30 @@ import {
 } from './types/liquidity';
 import { BuyCondition, ParsedLiquidity, TransactionFilter } from './types/transaction-filter';
 
-export const createSmartContractWorkflow =
-  (getTransactionFilters: () => TransactionFilter[]) => (transactions: Observable<TxInfo.Data>) =>
-    transactions.pipe(
-      mergeMap((t) => t.tx.value.msg),
-      filter(isValidSmartContract),
-      map(parseLiquidityInfo),
-      filter(Boolean),
-      mergeMap((liquidity) =>
-        from(getTransactionFilters()).pipe(
-          filter((f) => f.contractToSpy === liquidity.token.contract),
-          map(({ conditions, maxTokenPrice, taskId }) => {
-            const satisfiedBuyCondition = conditions.find(
-              isLiquiditySatisfiesCondition(liquidity, maxTokenPrice),
-            );
+export const createSmartContractWorkflow = (
+  getTransactionFilters: () => TransactionFilter[],
+  transactions: Observable<TxInfo.Data>,
+) =>
+  transactions.pipe(
+    mergeMap((t) => t.tx.value.msg),
+    filter(isValidSmartContract),
+    map(parseLiquidityInfo),
+    filter(Boolean),
+    mergeMap((liquidity) =>
+      from(getTransactionFilters()).pipe(
+        filter((f) => f.contractToSpy === liquidity.token.contract),
+        map(({ conditions, maxTokenPrice, taskId }) => {
+          const satisfiedBuyCondition = conditions.find(
+            isLiquiditySatisfiesCondition(liquidity, maxTokenPrice),
+          );
 
-            return satisfiedBuyCondition ? { taskId, satisfiedBuyCondition, liquidity } : null;
-          }),
-          filter(Boolean),
-          take(1),
-        ),
+          return satisfiedBuyCondition ? { taskId, satisfiedBuyCondition, liquidity } : null;
+        }),
+        filter(Boolean),
+        take(1),
       ),
-    );
+    ),
+  );
 
 function isValidSmartContract(msg: Msg.Data): msg is MsgExecuteContract.Data {
   return msg.type === 'wasm/MsgExecuteContract' && Boolean(msg.value.execute_msg);
