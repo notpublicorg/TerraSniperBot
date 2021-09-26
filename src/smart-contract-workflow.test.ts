@@ -26,24 +26,18 @@ it('should reject non-execute transaction', async () => {
   await expect(checkTransaction([DEFAULT_FILTER], [TRANSACTION])).resolves.toEqual([]);
 });
 
-it('should reject transaction with unknown contract', async () => {
-  const TRANSACTION = aTransaction()
-    .withMsgs([
-      createWasmExecuteMsg({
-        contract: 'unknown',
-      }),
-    ])
-    .build();
+it('should reject transaction without liquidity message', async () => {
+  const TRANSACTION = aTransaction().withMsgs([createWasmExecuteMsg()]).build();
 
   await expect(checkTransaction([DEFAULT_FILTER], [TRANSACTION])).resolves.toEqual([]);
 });
 
-it('should reject transaction without liquidity message', async () => {
+it('should reject transaction with unknown contract', async () => {
   const TRANSACTION = aTransaction()
     .withMsgs([
       createWasmExecuteMsg({
-        contract: DEFAULT_FILTER.contractToSpy,
-        execute_msg: {},
+        token: { contract: 'unknown', amount: '' },
+        currency: { denom: DEFAULT_COIN_DENOM, amount: '' },
       }),
     ])
     .build();
@@ -55,12 +49,8 @@ it('should reject transaction without chosen coin', async () => {
   const TRANSACTION = aTransaction()
     .withMsgs([
       createWasmExecuteMsg({
-        contract: DEFAULT_FILTER.contractToSpy,
-        execute_msg: {
-          provide_liquidity: {
-            assets: [{ amount: '1000', info: { native_token: { denom: Denom.USD } } }],
-          },
-        },
+        token: { contract: DEFAULT_FILTER.contractToSpy, amount: '' },
+        currency: { denom: Denom.USD, amount: '1000' },
       }),
     ])
     .build();
@@ -82,15 +72,8 @@ it('should reject if coin amount is less than amount given in condition', async 
   const TRANSACTION = aTransaction()
     .withMsgs([
       createWasmExecuteMsg({
-        contract: DEFAULT_FILTER.contractToSpy,
-        execute_msg: {
-          provide_liquidity: {
-            assets: [
-              { amount: '5000', info: { token: { contract_addr: '' } } },
-              { amount: '1000', info: { native_token: { denom: DEFAULT_COIN_DENOM } } },
-            ],
-          },
-        },
+        token: { contract: DEFAULT_FILTER.contractToSpy, amount: '5000' },
+        currency: { denom: DEFAULT_COIN_DENOM, amount: '1000' },
       }),
     ])
     .build();
@@ -112,15 +95,8 @@ it("should reject if liquidity's average token price is bigger than given max to
   const TRANSACTION = aTransaction()
     .withMsgs([
       createWasmExecuteMsg({
-        contract: DEFAULT_FILTER.contractToSpy,
-        execute_msg: {
-          provide_liquidity: {
-            assets: [
-              { amount: '100000', info: { native_token: { denom: DEFAULT_COIN_DENOM } } },
-              { amount: '5000', info: { token: { contract_addr: '' } } },
-            ],
-          },
-        },
+        token: { contract: DEFAULT_FILTER.contractToSpy, amount: '5000' },
+        currency: { denom: DEFAULT_COIN_DENOM, amount: '100000' },
       }),
     ])
     .build();
@@ -141,27 +117,8 @@ it("should reject if liquidity's average token price is bigger than given max to
 
 it('should accept valid transaction which satisfies conditions and max token price', async () => {
   const LIQUIDITY_MSG = createWasmExecuteMsg({
-    contract: DEFAULT_FILTER.contractToSpy,
-    execute_msg: {
-      provide_liquidity: {
-        assets: [
-          {
-            amount: '100000',
-            info: {
-              native_token: { denom: DEFAULT_COIN_DENOM },
-            },
-          },
-          {
-            amount: '5000',
-            info: {
-              token: {
-                contract_addr: '',
-              },
-            },
-          },
-        ],
-      },
-    },
+    token: { contract: DEFAULT_FILTER.contractToSpy, amount: '5000' },
+    currency: { denom: DEFAULT_COIN_DENOM, amount: '100000' },
   });
   const TRANSACTION = aTransaction().withMsgs([LIQUIDITY_MSG]).build();
   const NOT_APPLICABLE_TRANSACTION = aTransaction().build();
@@ -182,10 +139,9 @@ it('should accept valid transaction which satisfies conditions and max token pri
     ),
   ).resolves.toEqual([
     {
-      contract: DEFAULT_FILTER.contractToSpy,
       satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
       liquidity: {
-        token: { amount: '5000' },
+        token: { amount: '5000', contract: DEFAULT_FILTER.contractToSpy },
         currency: { amount: '100000', denom: DEFAULT_COIN_DENOM },
       },
     },
@@ -194,26 +150,12 @@ it('should accept valid transaction which satisfies conditions and max token pri
 
 it('should accept the transaction with 2 acceptable messages', async () => {
   const SMALL_LIQUIDITY = createWasmExecuteMsg({
-    contract: DEFAULT_FILTER.contractToSpy,
-    execute_msg: {
-      provide_liquidity: {
-        assets: [
-          { amount: '5000', info: { token: { contract_addr: '' } } },
-          { amount: '1000', info: { native_token: { denom: DEFAULT_COIN_DENOM } } },
-        ],
-      },
-    },
+    token: { contract: DEFAULT_FILTER.contractToSpy, amount: '5000' },
+    currency: { denom: DEFAULT_COIN_DENOM, amount: '1000' },
   });
   const BIG_LIQUIDITY = createWasmExecuteMsg({
-    contract: DEFAULT_FILTER.contractToSpy,
-    execute_msg: {
-      provide_liquidity: {
-        assets: [
-          { amount: '5000', info: { token: { contract_addr: '' } } },
-          { amount: '100000', info: { native_token: { denom: DEFAULT_COIN_DENOM } } },
-        ],
-      },
-    },
+    token: { contract: DEFAULT_FILTER.contractToSpy, amount: '5000' },
+    currency: { denom: DEFAULT_COIN_DENOM, amount: '100000' },
   });
   const TRANSACTION = aTransaction().withMsgs([SMALL_LIQUIDITY, BIG_LIQUIDITY]).build();
 
@@ -232,18 +174,16 @@ it('should accept the transaction with 2 acceptable messages', async () => {
     ),
   ).resolves.toEqual([
     {
-      contract: DEFAULT_FILTER.contractToSpy,
       satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10, buy: 10 },
       liquidity: {
-        token: { amount: '5000' },
+        token: { amount: '5000', contract: DEFAULT_FILTER.contractToSpy },
         currency: { amount: '1000', denom: DEFAULT_COIN_DENOM },
       },
     },
     {
-      contract: DEFAULT_FILTER.contractToSpy,
       satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
       liquidity: {
-        token: { amount: '5000' },
+        token: { amount: '5000', contract: DEFAULT_FILTER.contractToSpy },
         currency: { amount: '100000', denom: DEFAULT_COIN_DENOM },
       },
     },
@@ -254,27 +194,8 @@ it('should accept transaction which satisfies second filter', async () => {
   const ALTERNATIVE_CONTRACT = 'alternative';
 
   const LIQUIDITY_MSG = createWasmExecuteMsg({
-    contract: ALTERNATIVE_CONTRACT,
-    execute_msg: {
-      provide_liquidity: {
-        assets: [
-          {
-            amount: '100000',
-            info: {
-              native_token: { denom: DEFAULT_COIN_DENOM },
-            },
-          },
-          {
-            amount: '5000',
-            info: {
-              token: {
-                contract_addr: '',
-              },
-            },
-          },
-        ],
-      },
-    },
+    token: { contract: ALTERNATIVE_CONTRACT, amount: '5000' },
+    currency: { denom: DEFAULT_COIN_DENOM, amount: '100000' },
   });
   const TRANSACTION = aTransaction().withMsgs([LIQUIDITY_MSG]).build();
 
@@ -291,10 +212,9 @@ it('should accept transaction which satisfies second filter', async () => {
     ),
   ).resolves.toEqual([
     {
-      contract: ALTERNATIVE_CONTRACT,
       satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
       liquidity: {
-        token: { amount: '5000' },
+        token: { amount: '5000', contract: ALTERNATIVE_CONTRACT },
         currency: { amount: '100000', denom: DEFAULT_COIN_DENOM },
       },
     },

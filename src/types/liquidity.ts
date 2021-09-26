@@ -14,8 +14,3 @@ export type ProvideLiquidityParam = {
     slippage_tolerance: string;
   };
 };
-
-export type ParsedLiquidity = {
-  token: { amount: string };
-  currency: { amount: string; denom: string };
-};

@@ -5,42 +5,30 @@ import { filter, map, mergeMap, take } from 'rxjs/operators';
 import {
   LiquidityCurrencyAmount,
   LiquidityTokenAmount,
-  ParsedLiquidity,
   ProvideLiquidityParam,
 } from './types/liquidity';
-import { BuyCondition, TransactionFilter } from './types/transaction-filter';
+import { BuyCondition, ParsedLiquidity, TransactionFilter } from './types/transaction-filter';
 
 export const createSmartContractWorkflow =
   (transactionFilters: TransactionFilter[]) => (transactions: Observable<TxInfo.Data>) =>
     transactions.pipe(
       mergeMap((t) => t.tx.value.msg),
       filter(isValidSmartContract),
+      map(parseLiquidityInfo),
+      filter(Boolean),
       mergeMap(processMsgWithFilters(from(transactionFilters))),
     );
 
 const processMsgWithFilters =
-  (transactionFilter: Observable<TransactionFilter>) => (message: MsgExecuteContract.Data) =>
+  (transactionFilter: Observable<TransactionFilter>) => (liquidity: ParsedLiquidity) =>
     transactionFilter.pipe(
-      filter((f) => f.contractToSpy === message.value.contract),
-      map((f) => {
-        const liquidity = parseLiquidityInfo(message);
-
-        if (!liquidity) return null;
-
-        return {
-          conditions: f.conditions,
-          maxTokenPrice: f.maxTokenPrice,
-          contract: message.value.contract,
-          liquidity,
-        };
-      }),
-      filter(Boolean),
-      map(({ conditions, maxTokenPrice, liquidity, contract }) => {
+      filter((f) => f.contractToSpy === liquidity.token.contract),
+      map(({ conditions, maxTokenPrice }) => {
         const satisfiedBuyCondition = conditions.find(
           isLiquiditySatisfiesCondition(liquidity, maxTokenPrice),
         );
 
-        return satisfiedBuyCondition ? { contract, satisfiedBuyCondition, liquidity } : null;
+        return satisfiedBuyCondition ? { satisfiedBuyCondition, liquidity } : null;
       }),
       filter(Boolean),
       take(1),
@@ -68,7 +56,7 @@ function parseLiquidityInfo({ value }: MsgExecuteContract.Data): ParsedLiquidity
   if (!currencyInfo || !tokenInfo) return null;
 
   return {
-    token: { amount: tokenInfo.amount },
+    token: { amount: tokenInfo.amount, contract: tokenInfo.info.token.contract_addr },
     currency: { amount: currencyInfo.amount, denom: currencyInfo.info.native_token.denom },
   };
 }

@@ -1,23 +1,32 @@
-import { Coins, Msg, MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
+import { Msg, MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
 
 import { ProvideLiquidityParam } from './types/liquidity';
+import { ParsedLiquidity } from './types/transaction-filter';
 
-export const createWasmExecuteMsg = (data?: {
-  contract?: string;
-  coins?: Coins.Data;
-  execute_msg?: ProvideLiquidityParam | Record<string, unknown>;
-}): MsgExecuteContract.Data => {
-  const executeMsgInBase64 = data?.execute_msg
-    ? Buffer.from(JSON.stringify(data.execute_msg)).toString('base64')
-    : '';
+export const createWasmExecuteMsg = (liquidity?: ParsedLiquidity): MsgExecuteContract.Data => {
+  const execute_msg: ProvideLiquidityParam | undefined = liquidity && {
+    provide_liquidity: {
+      assets: [
+        {
+          amount: liquidity.token.amount,
+          info: { token: { contract_addr: liquidity.token.contract } },
+        },
+        {
+          amount: liquidity.currency.amount,
+          info: { native_token: { denom: liquidity.currency.denom } },
+        },
+      ],
+      slippage_tolerance: '0.01',
+    },
+  };
 
   return {
     type: 'wasm/MsgExecuteContract',
     value: {
-      coins: data?.coins || [],
-      contract: data?.contract || 'terra1en087uygr8f57vdczvkhy9465t9y6su4ztq4u3',
+      coins: [],
+      contract: 'terra1en087uygr8f57vdczvkhy9465t9y6su4ztq4u3',
       // eslint-disable-next-line @typescript-eslint/ban-types
-      execute_msg: executeMsgInBase64 as unknown as object,
+      execute_msg: execute_msg || {},
       sender: 'terra1nfzgmsvfucalgpwq5s4wcq6cey3rrzcalvcf26',
     },
   };
