@@ -1,18 +1,21 @@
 import { Msg, MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
 
+import { terraAmountConverter } from './terra-amount-converter';
 import { ProvideLiquidityParam } from './types/liquidity';
-import { ParsedLiquidity } from './types/transaction-filter';
 
-export const createWasmExecuteMsg = (liquidity?: ParsedLiquidity): MsgExecuteContract.Data => {
+export const createWasmExecuteMsg = (liquidity?: {
+  token: { amount: number; contract: string };
+  currency: { amount: number; denom: string };
+}): MsgExecuteContract.Data => {
   const execute_msg: ProvideLiquidityParam | undefined = liquidity && {
     provide_liquidity: {
       assets: [
         {
-          amount: liquidity.token.amount,
+          amount: terraAmountConverter.toTerraFormat(liquidity.token.amount),
           info: { token: { contract_addr: liquidity.token.contract } },
         },
         {
-          amount: liquidity.currency.amount,
+          amount: terraAmountConverter.toTerraFormat(liquidity.currency.amount),
           info: { native_token: { denom: liquidity.currency.denom } },
         },
       ],

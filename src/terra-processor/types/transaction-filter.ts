@@ -7,6 +7,6 @@ export type TransactionFilter = {
 };
 
 export type ParsedLiquidity = {
-  token: { amount: string; contract: string };
-  currency: { amount: string; denom: string };
+  token: { amount: number; contract: string };
+  currency: { amount: number; denom: string };
 };

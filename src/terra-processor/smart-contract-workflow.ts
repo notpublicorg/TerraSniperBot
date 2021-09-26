@@ -2,6 +2,7 @@ import { Msg, MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
 import { from, Observable } from 'rxjs';
 import { filter, map, mergeMap, take } from 'rxjs/operators';
 
+import { terraAmountConverter } from './terra-amount-converter';
 import {
   LiquidityCurrencyAmount,
   LiquidityTokenAmount,
@@ -57,14 +58,11 @@ function parseLiquidityInfo({ value }: MsgExecuteContract.Data): ParsedLiquidity
 
   return {
     token: {
-      // TODO: утилсу для добавления и убирания 6 нулей
-      amount: tokenInfo.amount,
+      amount: terraAmountConverter.toNumber(tokenInfo.amount),
       contract: tokenInfo.info.token.contract_addr,
     },
     currency: {
-      // TODO: утилсу для добавления и убирания 6 нулей
-      // amount: (+currencyInfo.amount / 1000000).toString(),
-      amount: currencyInfo.amount,
+      amount: terraAmountConverter.toNumber(currencyInfo.amount),
       denom: currencyInfo.info.native_token.denom,
     },
   };
@@ -75,14 +73,13 @@ const isLiquiditySatisfiesCondition =
   (condition: BuyCondition) => {
     if (currency.denom !== condition.denom) return false;
 
-    const currencyAmount = +currency.amount;
-    const tokenAmount = +token.amount;
-
-    if (currencyAmount < condition.greaterOrEqual) return false;
+    if (currency.amount < condition.greaterOrEqual) return false;
 
     if (!maxTokenPrice) return true;
 
-    return maxTokenPrice >= calculateAverageTokenPrice(tokenAmount, currencyAmount, condition.buy);
+    return (
+      maxTokenPrice >= calculateAverageTokenPrice(token.amount, currency.amount, condition.buy)
+    );
   };
 
 function calculateAverageTokenPrice(
