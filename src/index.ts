@@ -7,6 +7,7 @@ import { TransactionFilter } from './terra-processor/types/transaction-filter';
 class TransactionFiltersStorage {
   private FILTERS_MOCK: TransactionFilter[] = [
     {
+      taskId: 'taskId',
       contractToSpy: 'terra1ruzfnlfcgzld2yfpnjgspmm3jaeq4xtjl0z490',
       conditions: [
         {

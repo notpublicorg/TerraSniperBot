@@ -20,12 +20,12 @@ export const createSmartContractWorkflow =
       mergeMap((liquidity) =>
         from(getTransactionFilters()).pipe(
           filter((f) => f.contractToSpy === liquidity.token.contract),
-          map(({ conditions, maxTokenPrice }) => {
+          map(({ conditions, maxTokenPrice, taskId }) => {
             const satisfiedBuyCondition = conditions.find(
               isLiquiditySatisfiesCondition(liquidity, maxTokenPrice),
             );
 
-            return satisfiedBuyCondition ? { satisfiedBuyCondition, liquidity } : null;
+            return satisfiedBuyCondition ? { taskId, satisfiedBuyCondition, liquidity } : null;
           }),
           filter(Boolean),
           take(1),

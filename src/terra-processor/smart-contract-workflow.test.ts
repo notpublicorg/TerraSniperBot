@@ -11,6 +11,7 @@ const DEFAULT_CONDITIONS: BuyCondition[] = [
 ];
 const DEFAULT_FILTER: TransactionFilter = {
   contractToSpy: 'knownSmartContractToken',
+  taskId: 'defaultTaskId',
   conditions: DEFAULT_CONDITIONS,
 };
 
@@ -139,6 +140,7 @@ it('should accept valid transaction which satisfies conditions and max token pri
     ),
   ).resolves.toEqual([
     {
+      taskId: DEFAULT_FILTER.taskId,
       satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
       liquidity: {
         token: { amount: 5000, contract: DEFAULT_FILTER.contractToSpy },
@@ -174,6 +176,7 @@ it('should accept the transaction with 2 acceptable messages', async () => {
     ),
   ).resolves.toEqual([
     {
+      taskId: DEFAULT_FILTER.taskId,
       satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10, buy: 10 },
       liquidity: {
         token: { amount: 5000, contract: DEFAULT_FILTER.contractToSpy },
@@ -181,6 +184,7 @@ it('should accept the transaction with 2 acceptable messages', async () => {
       },
     },
     {
+      taskId: DEFAULT_FILTER.taskId,
       satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
       liquidity: {
         token: { amount: 5000, contract: DEFAULT_FILTER.contractToSpy },
@@ -204,6 +208,7 @@ it('should accept transaction which satisfies second filter', async () => {
       [
         DEFAULT_FILTER,
         {
+          taskId: 'alternativeTaskId',
           contractToSpy: ALTERNATIVE_CONTRACT,
           conditions: [{ denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 }],
         },
@@ -212,6 +217,7 @@ it('should accept transaction which satisfies second filter', async () => {
     ),
   ).resolves.toEqual([
     {
+      taskId: 'alternativeTaskId',
       satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
       liquidity: {
         token: { amount: 5000, contract: ALTERNATIVE_CONTRACT },
