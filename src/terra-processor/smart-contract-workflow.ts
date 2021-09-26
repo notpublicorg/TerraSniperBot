@@ -11,28 +11,26 @@ import {
 import { BuyCondition, ParsedLiquidity, TransactionFilter } from './types/transaction-filter';
 
 export const createSmartContractWorkflow =
-  (transactionFilters: TransactionFilter[]) => (transactions: Observable<TxInfo.Data>) =>
+  (getTransactionFilters: () => TransactionFilter[]) => (transactions: Observable<TxInfo.Data>) =>
     transactions.pipe(
       mergeMap((t) => t.tx.value.msg),
       filter(isValidSmartContract),
       map(parseLiquidityInfo),
       filter(Boolean),
-      mergeMap(processMsgWithFilters(from(transactionFilters))),
-    );
+      mergeMap((liquidity) =>
+        from(getTransactionFilters()).pipe(
+          filter((f) => f.contractToSpy === liquidity.token.contract),
+          map(({ conditions, maxTokenPrice }) => {
+            const satisfiedBuyCondition = conditions.find(
+              isLiquiditySatisfiesCondition(liquidity, maxTokenPrice),
+            );
 
-const processMsgWithFilters =
-  (transactionFilter: Observable<TransactionFilter>) => (liquidity: ParsedLiquidity) =>
-    transactionFilter.pipe(
-      filter((f) => f.contractToSpy === liquidity.token.contract),
-      map(({ conditions, maxTokenPrice }) => {
-        const satisfiedBuyCondition = conditions.find(
-          isLiquiditySatisfiesCondition(liquidity, maxTokenPrice),
-        );
-
-        return satisfiedBuyCondition ? { satisfiedBuyCondition, liquidity } : null;
-      }),
-      filter(Boolean),
-      take(1),
+            return satisfiedBuyCondition ? { satisfiedBuyCondition, liquidity } : null;
+          }),
+          filter(Boolean),
+          take(1),
+        ),
+      ),
     );
 
 function isValidSmartContract(msg: Msg.Data): msg is MsgExecuteContract.Data {

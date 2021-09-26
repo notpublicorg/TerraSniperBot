@@ -4,29 +4,34 @@ import { createSmartContractWorkflow } from './/terra-processor/smart-contract-w
 import { createTerraTransactionsSource } from './terra-processor/terra-transactions-source';
 import { TransactionFilter } from './terra-processor/types/transaction-filter';
 
-const FILTERS_MOCK: TransactionFilter[] = [
-  {
-    contractToSpy: 'terra1ruzfnlfcgzld2yfpnjgspmm3jaeq4xtjl0z490',
-    conditions: [
-      {
-        denom: Denom.USD,
-        greaterOrEqual: 20,
-        buy: 20,
-      },
-      {
-        denom: Denom.USD,
-        greaterOrEqual: 10,
-        buy: 10,
-      },
-      {
-        denom: Denom.LUNA,
-        greaterOrEqual: 20,
-        buy: 20,
-      },
-    ],
-    maxTokenPrice: 100,
-  },
-];
+class TransactionFiltersStorage {
+  private FILTERS_MOCK: TransactionFilter[] = [
+    {
+      contractToSpy: 'terra1ruzfnlfcgzld2yfpnjgspmm3jaeq4xtjl0z490',
+      conditions: [
+        {
+          denom: Denom.USD,
+          greaterOrEqual: 20,
+          buy: 20,
+        },
+        {
+          denom: Denom.USD,
+          greaterOrEqual: 10,
+          buy: 10,
+        },
+        {
+          denom: Denom.LUNA,
+          greaterOrEqual: 20,
+          buy: 20,
+        },
+      ],
+      maxTokenPrice: 100,
+    },
+  ];
+  getFilters() {
+    return this.FILTERS_MOCK;
+  }
+}
 
 const transactionsSource = createTerraTransactionsSource(
   {
@@ -37,7 +42,10 @@ const transactionsSource = createTerraTransactionsSource(
   { error: console.log, info: console.info },
 );
 
-const smartContractWorkflow = createSmartContractWorkflow(FILTERS_MOCK)(transactionsSource);
+const transactionFiltersStorage = new TransactionFiltersStorage();
+const smartContractWorkflow = createSmartContractWorkflow(
+  transactionFiltersStorage.getFilters.bind(this),
+)(transactionsSource);
 
 const subscription = smartContractWorkflow.subscribe(console.log);
 
