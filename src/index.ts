@@ -9,7 +9,7 @@ import { TerraTasksProcessor } from './terra-processor';
 const TASK_MOCK: SniperTask = {
   id: 'taskId',
   status: 'active',
-  contract: 'terra1ruzfnlfcgzld2yfpnjgspmm3jaeq4xtjl0z490',
+  contract: 'terra1m7v70xk2ljhmvqy0psp5p9w3f6uztj3mftncdz',
   conditions: [
     {
       denom: Denom.USD,
@@ -21,13 +21,8 @@ const TASK_MOCK: SniperTask = {
       greaterOrEqual: '10',
       buy: '10',
     },
-    {
-      denom: Denom.LUNA,
-      greaterOrEqual: '20',
-      buy: '20',
-    },
   ],
-  maxTokenPrice: '100',
+  maxTokenPrice: '1.5',
 };
 
 const gateway = new InMemoryTasksGateway(generateIdFromDate);

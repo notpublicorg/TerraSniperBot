@@ -13,7 +13,7 @@ const { terra, transactionsSource } = createTerraTransactionsSource(
     lcdUrl: 'https://bombay-lcd.terra.dev',
     lcdChainId: 'bombay-11',
   },
-  { error: (e) => console.log(e.stack), info: console.info },
+  { error: console.log, info: console.info },
 );
 
 export class TerraTasksProcessor implements TasksProcessor {
@@ -45,7 +45,7 @@ export class TerraTasksProcessor implements TasksProcessor {
     return this.tasks.map((t) => ({
       taskId: t.id,
       contractToSpy: t.contract,
-      maxTokenPrice: +t.maxTokenPrice,
+      maxTokenPrice: t.maxTokenPrice ? +t.maxTokenPrice : undefined,
       conditions: t.conditions.map((c) => ({
         denom: c.denom,
         greaterOrEqual: +c.greaterOrEqual,

@@ -47,7 +47,7 @@ function parseLiquidityInfo({ value }: MsgExecuteContract.Data): ParsedLiquidity
       ? JSON.parse(Buffer.from(value.execute_msg as unknown as string, 'base64').toString('utf8'))
       : value.execute_msg;
 
-  if (!parsed || !parsed.provide_liquidity) return null;
+  if (!parsed || !parsed.provide_liquidity || !parsed.provide_liquidity.assets) return null;
 
   const currencyInfo = parsed.provide_liquidity.assets.find(
     (a) => 'native_token' in a.info,
