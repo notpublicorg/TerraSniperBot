@@ -6,11 +6,12 @@
   "scripts": {
     "start:dev": "ts-node src/index.ts",
     "lint": "eslint \"src/**/*.ts\"",
-    "lint:fix": "npm run lint -- --fix",
-    "lint:strict": "npm run lint -- --max-warnings 0",
+    "lint:fix": "yarn lint --fix",
+    "lint:strict": "yarn lint --max-warnings 0",
     "test:unit": "jest src",
     "test:integration": "jest integration-tests",
-    "test": "yarn test:unit && yarn test:integration"
+    "test": "yarn test:unit && yarn test:integration",
+    "verify": "yarn lint:strict && yarn test:unit"
   },
   "devDependencies": {
     "@types/jest": "^27.0.2",
