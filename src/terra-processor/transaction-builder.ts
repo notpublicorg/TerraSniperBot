@@ -3,10 +3,13 @@ import { Msg, MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
 import { terraAmountConverter } from './terra-amount-converter';
 import { ProvideLiquidityParam } from './types/liquidity';
 
-export const createWasmExecuteMsg = (liquidity?: {
-  token: { amount: number; contract: string };
-  currency: { amount: number; denom: string };
-}): MsgExecuteContract.Data => {
+export const createWasmExecuteMsg = (
+  contract: string,
+  liquidity?: {
+    token: { amount: number; contract: string };
+    currency: { amount: number; denom: string };
+  },
+): MsgExecuteContract.Data => {
   const execute_msg: ProvideLiquidityParam | undefined = liquidity && {
     provide_liquidity: {
       assets: [
@@ -27,7 +30,7 @@ export const createWasmExecuteMsg = (liquidity?: {
     type: 'wasm/MsgExecuteContract',
     value: {
       coins: [],
-      contract: 'terra1en087uygr8f57vdczvkhy9465t9y6su4ztq4u3',
+      contract: contract || 'terra1en087uygr8f57vdczvkhy9465t9y6su4ztq4u3',
       // eslint-disable-next-line @typescript-eslint/ban-types
       execute_msg: execute_msg || {},
       sender: 'terra1nfzgmsvfucalgpwq5s4wcq6cey3rrzcalvcf26',

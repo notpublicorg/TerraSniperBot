@@ -39,5 +39,5 @@ export function createTerraTransactionsSource(
     map((txInfo) => txInfo.toData()),
   );
 
-  return transactionsSource;
+  return { terra, transactionsSource };
 }

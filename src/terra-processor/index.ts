@@ -1,29 +1,31 @@
-import { Subscription } from 'rxjs';
+import { mergeMap, Observable, Subscription, tap } from 'rxjs';
 
 import { SniperTask } from '../sniper-task';
 import { TasksProcessor } from '../tasks-processor';
+import { sendTransaction } from './new-transaction-workflow';
 import { createSmartContractWorkflow } from './smart-contract-workflow';
 import { createTerraTransactionsSource } from './terra-transactions-source';
-import { TransactionFilter } from './types/transaction-filter';
+import { NewTransactionResult, TransactionFilter } from './types/transaction-filter';
 
-const transactionsSource = createTerraTransactionsSource(
+const { terra, transactionsSource } = createTerraTransactionsSource(
   {
     websocketUrl: 'ws://162.55.245.183:26657/websocket',
     lcdUrl: 'https://bombay-lcd.terra.dev',
     lcdChainId: 'bombay-11',
   },
-  { error: console.log, info: console.info },
+  { error: (e) => console.log(e.stack), info: console.info },
 );
 
 export class TerraTasksProcessor implements TasksProcessor {
   private tasks: SniperTask[] = [];
-  private smartContractWorkflow: ReturnType<typeof createSmartContractWorkflow>;
+  private smartContractWorkflow: Observable<NewTransactionResult>;
   private subscription: Subscription | null = null;
 
   constructor() {
-    this.smartContractWorkflow = createSmartContractWorkflow(
-      this.getFilters.bind(this),
-      transactionsSource,
+    this.smartContractWorkflow = transactionsSource.pipe(
+      createSmartContractWorkflow(this.getFilters.bind(this)),
+      tap((f) => console.log(f)),
+      mergeMap(sendTransaction(terra)),
     );
   }
 

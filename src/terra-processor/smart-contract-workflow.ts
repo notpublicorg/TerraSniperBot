@@ -1,5 +1,5 @@
 import { Msg, MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
-import { from, Observable } from 'rxjs';
+import { from, pipe } from 'rxjs';
 import { filter, map, mergeMap, take } from 'rxjs/operators';
 
 import { terraAmountConverter } from './terra-amount-converter';
@@ -8,21 +8,23 @@ import {
   LiquidityTokenAmount,
   ProvideLiquidityParam,
 } from './types/liquidity';
-import { BuyCondition, ParsedLiquidity, TransactionFilter } from './types/transaction-filter';
+import {
+  BuyCondition,
+  FiltrationResult,
+  ParsedLiquidity,
+  TransactionFilter,
+} from './types/transaction-filter';
 
-export const createSmartContractWorkflow = (
-  getTransactionFilters: () => TransactionFilter[],
-  transactions: Observable<TxInfo.Data>,
-) =>
-  transactions.pipe(
-    mergeMap((t) => t.tx.value.msg),
+export const createSmartContractWorkflow = (getTransactionFilters: () => TransactionFilter[]) =>
+  pipe(
+    mergeMap((t: TxInfo.Data) => t.tx.value.msg),
     filter(isValidSmartContract),
     map(parseLiquidityInfo),
     filter(Boolean),
     mergeMap((liquidity) =>
       from(getTransactionFilters()).pipe(
         filter((f) => f.contractToSpy === liquidity.token.contract),
-        map(({ conditions, maxTokenPrice, taskId }) => {
+        map(({ conditions, maxTokenPrice, taskId }): FiltrationResult | null => {
           const satisfiedBuyCondition = conditions.find(
             isLiquiditySatisfiesCondition(liquidity, maxTokenPrice),
           );
@@ -57,6 +59,7 @@ function parseLiquidityInfo({ value }: MsgExecuteContract.Data): ParsedLiquidity
   if (!currencyInfo || !tokenInfo) return null;
 
   return {
+    pairContract: value.contract,
     token: {
       amount: terraAmountConverter.toNumber(tokenInfo.amount),
       contract: tokenInfo.info.token.contract_addr,

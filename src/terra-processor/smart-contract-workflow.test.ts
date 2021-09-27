@@ -5,6 +5,7 @@ import { createSmartContractWorkflow } from './smart-contract-workflow';
 import { aTransaction, createWasmExecuteMsg } from './transaction-builder';
 import { BuyCondition, TransactionFilter } from './types/transaction-filter';
 
+const PAIR_CONTRACT = 'pairContract';
 const DEFAULT_COIN_DENOM = Denom.LUNA;
 const DEFAULT_CONDITIONS: BuyCondition[] = [
   { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 100, buy: 10 },
@@ -17,7 +18,9 @@ const DEFAULT_FILTER: TransactionFilter = {
 
 function checkTransaction(transactionFilter: TransactionFilter[], transactions: TxInfo.Data[]) {
   return firstValueFrom(
-    createSmartContractWorkflow(() => transactionFilter, from(transactions)).pipe(toArray()),
+    from(transactions)
+      .pipe(createSmartContractWorkflow(() => transactionFilter))
+      .pipe(toArray()),
   );
 }
 
@@ -28,7 +31,9 @@ it('should reject non-execute transaction', async () => {
 });
 
 it('should reject transaction without liquidity message', async () => {
-  const TRANSACTION = aTransaction().withMsgs([createWasmExecuteMsg()]).build();
+  const TRANSACTION = aTransaction()
+    .withMsgs([createWasmExecuteMsg(PAIR_CONTRACT)])
+    .build();
 
   await expect(checkTransaction([DEFAULT_FILTER], [TRANSACTION])).resolves.toEqual([]);
 });
@@ -36,7 +41,7 @@ it('should reject transaction without liquidity message', async () => {
 it('should reject transaction with unknown contract', async () => {
   const TRANSACTION = aTransaction()
     .withMsgs([
-      createWasmExecuteMsg({
+      createWasmExecuteMsg(PAIR_CONTRACT, {
         token: { contract: 'unknown', amount: 0 },
         currency: { denom: DEFAULT_COIN_DENOM, amount: 0 },
       }),
@@ -49,7 +54,7 @@ it('should reject transaction with unknown contract', async () => {
 it('should reject transaction without chosen coin', async () => {
   const TRANSACTION = aTransaction()
     .withMsgs([
-      createWasmExecuteMsg({
+      createWasmExecuteMsg(PAIR_CONTRACT, {
         token: { contract: DEFAULT_FILTER.contractToSpy, amount: 0 },
         currency: { denom: Denom.USD, amount: 1000 },
       }),
@@ -72,7 +77,7 @@ it('should reject transaction without chosen coin', async () => {
 it('should reject if coin amount is less than amount given in condition', async () => {
   const TRANSACTION = aTransaction()
     .withMsgs([
-      createWasmExecuteMsg({
+      createWasmExecuteMsg(PAIR_CONTRACT, {
         token: { contract: DEFAULT_FILTER.contractToSpy, amount: 5000 },
         currency: { denom: DEFAULT_COIN_DENOM, amount: 1000 },
       }),
@@ -95,7 +100,7 @@ it('should reject if coin amount is less than amount given in condition', async 
 it("should reject if liquidity's average token price is bigger than given max token price", async () => {
   const TRANSACTION = aTransaction()
     .withMsgs([
-      createWasmExecuteMsg({
+      createWasmExecuteMsg(PAIR_CONTRACT, {
         token: { contract: DEFAULT_FILTER.contractToSpy, amount: 5000 },
         currency: { denom: DEFAULT_COIN_DENOM, amount: 100000 },
       }),
@@ -117,7 +122,7 @@ it("should reject if liquidity's average token price is bigger than given max to
 });
 
 it('should accept valid transaction which satisfies conditions and max token price', async () => {
-  const LIQUIDITY_MSG = createWasmExecuteMsg({
+  const LIQUIDITY_MSG = createWasmExecuteMsg(PAIR_CONTRACT, {
     token: { contract: DEFAULT_FILTER.contractToSpy, amount: 5000 },
     currency: { denom: DEFAULT_COIN_DENOM, amount: 100000 },
   });
@@ -143,6 +148,7 @@ it('should accept valid transaction which satisfies conditions and max token pri
       taskId: DEFAULT_FILTER.taskId,
       satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
       liquidity: {
+        pairContract: PAIR_CONTRACT,
         token: { amount: 5000, contract: DEFAULT_FILTER.contractToSpy },
         currency: { amount: 100000, denom: DEFAULT_COIN_DENOM },
       },
@@ -151,11 +157,11 @@ it('should accept valid transaction which satisfies conditions and max token pri
 });
 
 it('should accept the transaction with 2 acceptable messages', async () => {
-  const SMALL_LIQUIDITY = createWasmExecuteMsg({
+  const SMALL_LIQUIDITY = createWasmExecuteMsg(PAIR_CONTRACT, {
     token: { contract: DEFAULT_FILTER.contractToSpy, amount: 5000 },
     currency: { denom: DEFAULT_COIN_DENOM, amount: 1000 },
   });
-  const BIG_LIQUIDITY = createWasmExecuteMsg({
+  const BIG_LIQUIDITY = createWasmExecuteMsg(PAIR_CONTRACT, {
     token: { contract: DEFAULT_FILTER.contractToSpy, amount: 5000 },
     currency: { denom: DEFAULT_COIN_DENOM, amount: 100000 },
   });
@@ -179,6 +185,7 @@ it('should accept the transaction with 2 acceptable messages', async () => {
       taskId: DEFAULT_FILTER.taskId,
       satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10, buy: 10 },
       liquidity: {
+        pairContract: PAIR_CONTRACT,
         token: { amount: 5000, contract: DEFAULT_FILTER.contractToSpy },
         currency: { amount: 1000, denom: DEFAULT_COIN_DENOM },
       },
@@ -187,6 +194,7 @@ it('should accept the transaction with 2 acceptable messages', async () => {
       taskId: DEFAULT_FILTER.taskId,
       satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
       liquidity: {
+        pairContract: PAIR_CONTRACT,
         token: { amount: 5000, contract: DEFAULT_FILTER.contractToSpy },
         currency: { amount: 100000, denom: DEFAULT_COIN_DENOM },
       },
@@ -197,7 +205,7 @@ it('should accept the transaction with 2 acceptable messages', async () => {
 it('should accept transaction which satisfies second filter', async () => {
   const ALTERNATIVE_CONTRACT = 'alternative';
 
-  const LIQUIDITY_MSG = createWasmExecuteMsg({
+  const LIQUIDITY_MSG = createWasmExecuteMsg(PAIR_CONTRACT, {
     token: { contract: ALTERNATIVE_CONTRACT, amount: 5000 },
     currency: { denom: DEFAULT_COIN_DENOM, amount: 100000 },
   });
@@ -220,6 +228,7 @@ it('should accept transaction which satisfies second filter', async () => {
       taskId: 'alternativeTaskId',
       satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
       liquidity: {
+        pairContract: PAIR_CONTRACT,
         token: { amount: 5000, contract: ALTERNATIVE_CONTRACT },
         currency: { amount: 100000, denom: DEFAULT_COIN_DENOM },
       },
