@@ -9,7 +9,7 @@ import {
 } from '@terra-money/terra.js';
 
 import { terraAmountConverter } from './terra-amount-converter';
-import { FiltrationResult, NewTransactionResult } from './types/transaction-filter';
+import { NewTransactionInfo, NewTransactionResult } from './types/new-transaction-info';
 
 const WALLET_MNEMONIC = new MnemonicKey({
   mnemonic:
@@ -20,32 +20,28 @@ export const sendTransaction =
   (terra: LCDClient) =>
   async ({
     taskId,
-    satisfiedBuyCondition,
-    liquidity,
-  }: FiltrationResult): Promise<NewTransactionResult> => {
+    pairContract,
+    buyAmount,
+    buyDenom,
+  }: NewTransactionInfo): Promise<NewTransactionResult> => {
     const wallet = terra.wallet(WALLET_MNEMONIC);
 
     const execute = new MsgExecuteContract(
       wallet.key.accAddress,
-      liquidity.pairContract,
+      pairContract,
       {
         swap: {
           offer_asset: {
             info: {
               native_token: {
-                denom: satisfiedBuyCondition.denom,
+                denom: buyDenom,
               },
             },
-            amount: terraAmountConverter.toTerraFormat(satisfiedBuyCondition.buy),
+            amount: terraAmountConverter.toTerraFormat(buyAmount),
           },
         },
       },
-      [
-        new Coin(
-          satisfiedBuyCondition.denom,
-          terraAmountConverter.toTerraFormat(satisfiedBuyCondition.buy),
-        ),
-      ],
+      [new Coin(buyDenom, terraAmountConverter.toTerraFormat(buyAmount))],
     );
 
     const tx = await wallet.createAndSignTx({

@@ -14,7 +14,7 @@ const TASK: SniperTask = {
 it('should get tasks and initialize processor', async () => {
   const processor: TasksProcessor = {
     init: jest.fn(),
-    reinit: jest.fn(),
+    updateTasks: jest.fn(),
     stop: jest.fn(),
   };
 

@@ -19,7 +19,7 @@ const DEFAULT_FILTER: TransactionFilter = {
 function checkTransaction(transactionFilter: TransactionFilter[], transactions: TxInfo.Data[]) {
   return firstValueFrom(
     from(transactions)
-      .pipe(createLiquidityFilterWorkflow(() => transactionFilter))
+      .pipe(createLiquidityFilterWorkflow(() => from(transactionFilter)))
       .pipe(toArray()),
   );
 }

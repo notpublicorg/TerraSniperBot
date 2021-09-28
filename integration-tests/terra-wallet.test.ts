@@ -32,7 +32,7 @@ async function queryTokenBalance(account: string, tokenContract: string) {
 
 const terra = new LCDClient({
   URL: 'https://bombay-lcd.terra.dev',
-  chainID: 'bombay-11',
+  chainID: 'bombay-12',
 });
 
 const WALLET_MNEMONIC = new MnemonicKey({

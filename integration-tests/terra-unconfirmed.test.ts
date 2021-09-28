@@ -5,7 +5,7 @@ jest.setTimeout(10000);
 
 // const terra = new LCDClient({
 //   URL: 'https://bombay-lcd.terra.dev',
-//   chainID: 'bombay-11',
+//   chainID: 'bombay-12',
 // });
 
 export type UnconfirmedTxsResponse = {

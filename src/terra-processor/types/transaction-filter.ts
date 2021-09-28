@@ -1,5 +1,3 @@
-import { BlockTxBroadcastResult } from '@terra-money/terra.js';
-
 export type BuyCondition = { denom: string; greaterOrEqual: number; buy: number };
 
 export type TransactionFilter = {
@@ -19,10 +17,4 @@ export type FiltrationResult = {
   taskId: string;
   satisfiedBuyCondition: BuyCondition;
   liquidity: ParsedLiquidity;
-};
-
-export type NewTransactionResult = {
-  taskId: string;
-  success: boolean;
-  txResult: BlockTxBroadcastResult;
 };

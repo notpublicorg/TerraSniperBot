@@ -8,7 +8,7 @@ const wsclient = new WebSocketClient('ws://162.55.245.183:26657/websocket');
 
 const terra = new LCDClient({
   URL: 'https://bombay-lcd.terra.dev',
-  chainID: 'bombay-11',
+  chainID: 'bombay-12',
 });
 
 function getWsResponse() {

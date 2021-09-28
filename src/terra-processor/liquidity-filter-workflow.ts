@@ -1,5 +1,5 @@
 import { Msg, MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
-import { from, pipe } from 'rxjs';
+import { from, Observable, pipe } from 'rxjs';
 import { filter, map, mergeMap, take } from 'rxjs/operators';
 
 import { terraAmountConverter } from './terra-amount-converter';
@@ -15,14 +15,16 @@ import {
   TransactionFilter,
 } from './types/transaction-filter';
 
-export const createLiquidityFilterWorkflow = (getTransactionFilters: () => TransactionFilter[]) =>
+export const createLiquidityFilterWorkflow = (
+  getFiltersSource: () => Observable<TransactionFilter>,
+) =>
   pipe(
     mergeMap((t: TxInfo.Data) => t.tx.value.msg),
     filter(isValidSmartContract),
     map(parseLiquidityInfo),
     filter(Boolean),
     mergeMap((liquidity) =>
-      from(getTransactionFilters()).pipe(
+      getFiltersSource().pipe(
         filter((f) => f.contractToSpy === liquidity.token.contract),
         map(({ conditions, maxTokenPrice, taskId }): FiltrationResult | null => {
           const satisfiedBuyCondition = conditions.find(
