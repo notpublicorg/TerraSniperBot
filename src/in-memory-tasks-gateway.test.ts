@@ -14,11 +14,9 @@ const TASK: SniperTask = {
 
 it('should add task', async () => {
   const idGenerator = jest.fn(() => 'id');
-
   const gateway = new InMemoryTasksGateway(idGenerator);
 
   await gateway.addTask(NEW_TASK);
-
   const tasks = await gateway.getAll();
 
   expect(tasks).toEqual([TASK]);
