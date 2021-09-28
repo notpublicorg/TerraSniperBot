@@ -2,8 +2,8 @@ import { mergeMap, Observable, Subscription, tap } from 'rxjs';
 
 import { SniperTask } from '../sniper-task';
 import { TasksProcessor } from '../tasks-processor';
+import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
 import { sendTransaction } from './new-transaction-workflow';
-import { createSmartContractWorkflow } from './smart-contract-workflow';
 import { createTerraTransactionsSource } from './terra-transactions-source';
 import { NewTransactionResult, TransactionFilter } from './types/transaction-filter';
 
@@ -23,7 +23,7 @@ export class TerraTasksProcessor implements TasksProcessor {
 
   constructor() {
     this.smartContractWorkflow = transactionsSource.pipe(
-      createSmartContractWorkflow(this.getFilters.bind(this)),
+      createLiquidityFilterWorkflow(this.getFilters.bind(this)),
       tap((f) => console.log(f)),
       mergeMap(sendTransaction(terra)),
     );

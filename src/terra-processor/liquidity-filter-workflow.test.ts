@@ -1,7 +1,7 @@
 import { Denom, TxInfo } from '@terra-money/terra.js';
 import { firstValueFrom, from, toArray } from 'rxjs';
 
-import { createSmartContractWorkflow } from './smart-contract-workflow';
+import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
 import { aTransaction, createWasmExecuteMsg } from './transaction-builder';
 import { BuyCondition, TransactionFilter } from './types/transaction-filter';
 
@@ -19,7 +19,7 @@ const DEFAULT_FILTER: TransactionFilter = {
 function checkTransaction(transactionFilter: TransactionFilter[], transactions: TxInfo.Data[]) {
   return firstValueFrom(
     from(transactions)
-      .pipe(createSmartContractWorkflow(() => transactionFilter))
+      .pipe(createLiquidityFilterWorkflow(() => transactionFilter))
       .pipe(toArray()),
   );
 }

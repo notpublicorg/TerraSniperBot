@@ -15,7 +15,7 @@ import {
   TransactionFilter,
 } from './types/transaction-filter';
 
-export const createSmartContractWorkflow = (getTransactionFilters: () => TransactionFilter[]) =>
+export const createLiquidityFilterWorkflow = (getTransactionFilters: () => TransactionFilter[]) =>
   pipe(
     mergeMap((t: TxInfo.Data) => t.tx.value.msg),
     filter(isValidSmartContract),
