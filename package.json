@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start:dev": "ts-node src/index.ts",
+    "start:node": "ts-node",
+    "start:dev": "yarn start:node src/index.ts",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "yarn lint --fix",
     "lint:strict": "yarn lint --max-warnings 0",
