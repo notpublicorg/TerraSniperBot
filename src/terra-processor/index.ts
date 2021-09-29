@@ -1,4 +1,4 @@
-import { filter, from, map, mergeMap, mergeWith, Observable, Subscription, tap } from 'rxjs';
+import { filter, from, map, mergeMap, mergeWith, Observable, of, Subscription, tap } from 'rxjs';
 
 import { SniperTask } from '../sniper-task';
 import {
@@ -10,6 +10,7 @@ import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
 import { sendTransaction } from './new-transaction-workflow';
 import { createBlockSource } from './transactions-sources/block-source';
 import { createMempoolSource } from './transactions-sources/mempool-source';
+import { TransactionMetaInfo } from './types/meta';
 import { NewTransactionResult } from './types/new-transaction-info';
 import { TransactionFilter } from './types/transaction-filter';
 
@@ -30,27 +31,37 @@ export class TerraTasksProcessor implements TasksProcessor {
   private tasks: SniperTask[] = [];
   private processorUpdater: TasksProcessorUpdater | null = null;
 
-  private smartContractWorkflow: Observable<NewTransactionResult>;
+  private smartContractWorkflow: Observable<{
+    res: NewTransactionResult;
+    meta: TransactionMetaInfo;
+  }>;
   private subscription: Subscription | null = null;
 
   constructor() {
     this.smartContractWorkflow = transactionsBlockSource.pipe(
       mergeWith(transactionsMempoolSource),
-      createLiquidityFilterWorkflow(this.getFilters.bind(this)),
-      map(({ taskId, satisfiedBuyCondition, liquidity }) => ({
-        taskId,
-        isTaskActive: this.tasks.find((t) => t.id === taskId)?.status === 'active',
-        buyDenom: satisfiedBuyCondition.denom,
-        buyAmount: satisfiedBuyCondition.buy,
-        pairContract: liquidity.pairContract,
-      })),
-      tap((f) => console.log(f)),
-      filter(({ isTaskActive }) => isTaskActive),
-      tap(({ taskId }) => this.updateTask({ taskId, newStatus: 'blocked' })),
-      mergeMap(sendTransaction(terra)),
-      tap(({ taskId, success }) =>
-        this.updateTask({ taskId, newStatus: success ? 'closed' : 'active' }),
-      ),
+      mergeMap(({ tx, meta }) => {
+        const newMeta = meta;
+
+        return of(tx).pipe(
+          createLiquidityFilterWorkflow(this.getFilters.bind(this)),
+          map(({ taskId, satisfiedBuyCondition, liquidity }) => ({
+            taskId,
+            isTaskActive: this.tasks.find((t) => t.id === taskId)?.status === 'active',
+            buyDenom: satisfiedBuyCondition.denom,
+            buyAmount: satisfiedBuyCondition.buy,
+            pairContract: liquidity.pairContract,
+          })),
+          tap((f) => console.log(f)),
+          filter(({ isTaskActive }) => isTaskActive),
+          tap(({ taskId }) => this.updateTask({ taskId, newStatus: 'blocked' })),
+          mergeMap(sendTransaction(terra, newMeta)),
+          tap(({ taskId, success }) =>
+            this.updateTask({ taskId, newStatus: success ? 'closed' : 'active' }),
+          ),
+          map((res) => ({ res, meta: newMeta })),
+        );
+      }),
     );
   }
 
@@ -67,6 +78,7 @@ export class TerraTasksProcessor implements TasksProcessor {
   };
 
   updateTasks: TasksProcessor['updateTasks'] = (tasks) => {
+    console.log(tasks);
     this.tasks = tasks;
     if (this.tasks.length) {
       this.subscription = this.subscription || this.smartContractWorkflow.subscribe(console.log);

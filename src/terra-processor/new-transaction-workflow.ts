@@ -9,6 +9,7 @@ import {
 } from '@terra-money/terra.js';
 
 import { terraAmountConverter } from './terra-amount-converter';
+import { TransactionMetaInfo } from './types/meta';
 import { NewTransactionInfo, NewTransactionResult } from './types/new-transaction-info';
 
 const WALLET_MNEMONIC = new MnemonicKey({
@@ -17,13 +18,14 @@ const WALLET_MNEMONIC = new MnemonicKey({
 });
 
 export const sendTransaction =
-  (terra: LCDClient) =>
+  (terra: LCDClient, meta: TransactionMetaInfo) =>
   async ({
     taskId,
     pairContract,
     buyAmount,
     buyDenom,
   }: NewTransactionInfo): Promise<NewTransactionResult> => {
+    meta.newTransactionSendStartDateTime = new Date().toLocaleString();
     const wallet = terra.wallet(WALLET_MNEMONIC);
 
     const execute = new MsgExecuteContract(
@@ -50,6 +52,8 @@ export const sendTransaction =
     });
 
     const txResult = await terra.tx.broadcast(tx);
+
+    meta.newTransactionSendEndDateTime = new Date().toLocaleString();
 
     return { taskId, success: !isTxError(txResult), txResult };
   };

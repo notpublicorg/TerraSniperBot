@@ -1,6 +1,7 @@
 import { LCDClient, WebSocketClient } from '@terra-money/terra.js';
 import { catchError, map, mergeMap, Observable } from 'rxjs';
 
+import { TransactionMetaInfo } from '../types/meta';
 import { TendermintTxResponse } from '../types/tendermint-response';
 
 export function createBlockSource(
@@ -31,12 +32,19 @@ export function createBlockSource(
   });
 
   const transactionsBlockSource = source.pipe(
-    mergeMap((txhash) => terra.tx.txInfo(txhash)),
+    map((tx) => ({
+      tx,
+      meta: {
+        source: 'block',
+        receivedDateTime: new Date().toLocaleString(),
+      } as TransactionMetaInfo,
+    })),
+    mergeMap(({ tx, meta }) => terra.tx.txInfo(tx).then((response) => ({ response, meta }))),
     catchError((error, caught) => {
       logger.error(error);
       return caught;
     }),
-    map((txInfo) => txInfo.toData().tx.value),
+    map(({ response, meta }) => ({ tx: response.toData().tx.value, meta })),
   );
 
   return { terra, transactionsBlockSource };

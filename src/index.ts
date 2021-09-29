@@ -7,7 +7,7 @@ import { tasksWatcherFactory } from './tasks-watcher';
 import { TerraTasksProcessor } from './terra-processor';
 
 const TASK_MOCK: SniperTaskNew = {
-  contract: 'terra1m7v70xk2ljhmvqy0psp5p9w3f6uztj3mftncdz',
+  contract: 'terra1n4cy7vxwafjsr0553e0k0q7k92slztlurm08j4',
   conditions: [
     {
       denom: Denom.USD,
@@ -20,18 +20,39 @@ const TASK_MOCK: SniperTaskNew = {
       buy: '10',
     },
   ],
-  maxTokenPrice: '1.5',
+  maxTokenPrice: '100',
+};
+const TASK_MOCK_2: SniperTaskNew = {
+  contract: 'terra13y43fyl8t3sr24glvqn7ct0mu80rqcc6t2dla8',
+  conditions: [
+    {
+      denom: Denom.USD,
+      greaterOrEqual: '20',
+      buy: '20',
+    },
+    {
+      denom: Denom.USD,
+      greaterOrEqual: '10',
+      buy: '10',
+    },
+  ],
+  maxTokenPrice: '100',
 };
 
-const gateway = new InMemoryTasksGateway(generateIdFromDate);
-gateway.addTask(TASK_MOCK);
+async function start() {
+  const gateway = new InMemoryTasksGateway(generateIdFromDate);
+  await gateway.addTask(TASK_MOCK);
+  await gateway.addTask(TASK_MOCK_2);
 
-const tasksWatcher = tasksWatcherFactory(gateway, new TerraTasksProcessor());
+  const tasksWatcher = tasksWatcherFactory(gateway, new TerraTasksProcessor());
 
-tasksWatcher.start();
+  tasksWatcher.start();
 
-process.stdin.on('data', () => {
-  console.log('shutting down connection');
-  tasksWatcher.stop();
-  process.exit(0);
-});
+  process.stdin.on('data', () => {
+    console.log('shutting down connection');
+    tasksWatcher.stop();
+    process.exit(0);
+  });
+}
+
+start();

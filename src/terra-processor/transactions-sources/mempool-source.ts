@@ -1,8 +1,9 @@
 import { StdTx } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
-import { mergeMap, Observable, repeat } from 'rxjs';
+import { map, mergeMap, Observable, repeat } from 'rxjs';
 
 import { UnconfirmedTxsResponse } from '../types/mempool-response';
+import { TransactionMetaInfo } from '../types/meta';
 
 export function createMempoolSource(config: { tendermintApiUrl: string; lcdApiUrl: string }) {
   const tendermintApi = new APIRequester(config.tendermintApiUrl);
@@ -18,10 +19,17 @@ export function createMempoolSource(config: { tendermintApiUrl: string; lcdApiUr
 
   // TODO: handle decode error
   return source.pipe(
-    mergeMap((tx) =>
+    map((tx) => ({
+      tx,
+      meta: {
+        source: 'mempool',
+        receivedDateTime: new Date().toLocaleString(),
+      } as TransactionMetaInfo,
+    })),
+    mergeMap(({ tx, meta }) =>
       lcdApi
         .postRaw<{ result: StdTx.Data['value'] }>('/txs/decode', { tx })
-        .then((response) => response.result),
+        .then((response) => ({ tx: response.result, meta })),
     ),
     repeat(),
   );

@@ -1,3 +1,3 @@
 import { IdGenerator } from './id-generator';
 
-export const generateIdFromDate: IdGenerator = () => `${Date.now()}-id`;
+export const generateIdFromDate: IdGenerator = () => `${Date.now()}-id-${Math.random()}`;
