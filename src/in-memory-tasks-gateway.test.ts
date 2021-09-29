@@ -34,3 +34,12 @@ it('should update task status', async () => {
 
   expect(tasks).toEqual([{ ...TASK, status: 'closed' }]);
 });
+
+it('should notify subscribers when new task added', async () => {
+  const gatewayClientFn = jest.fn();
+
+  gateway.subscribeToUpdates(gatewayClientFn);
+  await gateway.addTask(NEW_TASK);
+
+  expect(gatewayClientFn).toHaveBeenCalledWith([TASK]);
+});
