@@ -1,9 +1,9 @@
 import { LCDClient, WebSocketClient } from '@terra-money/terra.js';
 import { catchError, map, mergeMap, Observable } from 'rxjs';
 
-import { TendermintTxResponse } from './types/tendermint-response';
+import { TendermintTxResponse } from '../types/tendermint-response';
 
-export function createTerraTransactionsSource(
+export function createBlockSource(
   config: {
     websocketUrl: string;
     lcdUrl: string;
@@ -30,14 +30,14 @@ export function createTerraTransactionsSource(
     chainID: config.lcdChainId,
   });
 
-  const transactionsSource = source.pipe(
+  const transactionsBlockSource = source.pipe(
     mergeMap((txhash) => terra.tx.txInfo(txhash)),
     catchError((error, caught) => {
       logger.error(error);
       return caught;
     }),
-    map((txInfo) => txInfo.toData()),
+    map((txInfo) => txInfo.toData().tx.value),
   );
 
-  return { terra, transactionsSource };
+  return { terra, transactionsBlockSource };
 }

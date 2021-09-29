@@ -1,4 +1,4 @@
-import { Msg, MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
+import { Msg, MsgExecuteContract, StdTx } from '@terra-money/terra.js';
 import { Observable, pipe } from 'rxjs';
 import { filter, map, mergeMap, take } from 'rxjs/operators';
 
@@ -19,7 +19,7 @@ export const createLiquidityFilterWorkflow = (
   getFiltersSource: () => Observable<TransactionFilter>,
 ) =>
   pipe(
-    mergeMap((t: TxInfo.Data) => t.tx.value.msg),
+    mergeMap((t: StdTx.Data['value']) => t.msg),
     filter(isValidSmartContract),
     map(parseLiquidityInfo),
     filter(Boolean),

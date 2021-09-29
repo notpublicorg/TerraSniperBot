@@ -1,23 +1,14 @@
 import { StdTx } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 
+import { UnconfirmedTxsResponse } from '../src/terra-processor/types/mempool-response';
+
 jest.setTimeout(10000);
 
 // const terra = new LCDClient({
 //   URL: 'https://bombay-lcd.terra.dev',
 //   chainID: 'bombay-12',
 // });
-
-export type UnconfirmedTxsResponse = {
-  id: number;
-  jsonrpc: string;
-  result: {
-    n_txs: string; // '31';
-    total: string; // '426';
-    total_bytes: string; // '627810';
-    txs: string[];
-  };
-};
 
 const tendermintApi = new APIRequester('http://162.55.245.183:26657');
 const lcdApi = new APIRequester('https://bombay-lcd.terra.dev');
@@ -35,7 +26,7 @@ test('unconfirmed_txs contract', async () => {
       n_txs: expect.any(String),
       total: expect.any(String),
       total_bytes: expect.any(String),
-      txs: expect.arrayContaining([expect.any(String)]),
+      txs: expect.any(Array),
     },
   });
 });

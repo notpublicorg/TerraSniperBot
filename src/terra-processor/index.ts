@@ -1,4 +1,4 @@
-import { filter, from, map, mergeMap, Observable, Subscription, tap } from 'rxjs';
+import { filter, from, map, mergeMap, mergeWith, Observable, Subscription, tap } from 'rxjs';
 
 import { SniperTask } from '../sniper-task';
 import {
@@ -8,11 +8,12 @@ import {
 } from '../tasks-processor';
 import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
 import { sendTransaction } from './new-transaction-workflow';
-import { createTerraTransactionsSource } from './terra-transactions-source';
+import { createBlockSource } from './transactions-sources/block-source';
+import { createMempoolSource } from './transactions-sources/mempool-source';
 import { NewTransactionResult } from './types/new-transaction-info';
 import { TransactionFilter } from './types/transaction-filter';
 
-const { terra, transactionsSource } = createTerraTransactionsSource(
+const { terra, transactionsBlockSource } = createBlockSource(
   {
     websocketUrl: 'ws://162.55.245.183:26657/websocket',
     lcdUrl: 'https://bombay-lcd.terra.dev',
@@ -20,6 +21,10 @@ const { terra, transactionsSource } = createTerraTransactionsSource(
   },
   { error: console.log, info: console.info },
 );
+const transactionsMempoolSource = createMempoolSource({
+  tendermintApiUrl: 'http://162.55.245.183:26657',
+  lcdApiUrl: 'https://bombay-lcd.terra.dev',
+});
 
 export class TerraTasksProcessor implements TasksProcessor {
   private tasks: SniperTask[] = [];
@@ -29,7 +34,8 @@ export class TerraTasksProcessor implements TasksProcessor {
   private subscription: Subscription | null = null;
 
   constructor() {
-    this.smartContractWorkflow = transactionsSource.pipe(
+    this.smartContractWorkflow = transactionsBlockSource.pipe(
+      mergeWith(transactionsMempoolSource),
       createLiquidityFilterWorkflow(this.getFilters.bind(this)),
       tap((f) => console.log(f)),
       map(({ taskId, satisfiedBuyCondition, liquidity }) => ({
