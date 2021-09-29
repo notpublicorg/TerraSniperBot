@@ -12,5 +12,5 @@ export type SniperTaskNew = {
 
 export type SniperTask = SniperTaskNew & {
   id: string;
-  status: 'active' | 'blocked';
+  status: 'active' | 'blocked' | 'closed';
 };

@@ -1,5 +1,5 @@
 import { Msg, MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
-import { from, Observable, pipe } from 'rxjs';
+import { Observable, pipe } from 'rxjs';
 import { filter, map, mergeMap, take } from 'rxjs/operators';
 
 import { terraAmountConverter } from './terra-amount-converter';

@@ -49,12 +49,12 @@ test('txs parsing', async () => {
 
   expect(result).toEqual<StdTx.Data['value']>({
     fee: {
-      amount: expect.arrayContaining([
+      amount: expect.any(Array) /* ([
         {
           amount: expect.any(String), //  "26583",
           denom: expect.any(String), // "uusd",
         },
-      ]),
+      ]), */,
       gas: expect.any(String), // "177215",
     },
     memo: expect.any(String), // '',

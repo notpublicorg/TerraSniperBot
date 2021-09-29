@@ -1,7 +1,11 @@
 import { filter, from, map, mergeMap, Observable, Subscription, tap } from 'rxjs';
 
 import { SniperTask } from '../sniper-task';
-import { TasksProcessor } from '../tasks-processor';
+import {
+  TasksProcessor,
+  TasksProcessorUpdateParams,
+  TasksProcessorUpdater,
+} from '../tasks-processor';
 import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
 import { sendTransaction } from './new-transaction-workflow';
 import { createTerraTransactionsSource } from './terra-transactions-source';
@@ -18,9 +22,9 @@ const { terra, transactionsSource } = createTerraTransactionsSource(
 );
 
 export class TerraTasksProcessor implements TasksProcessor {
-  // TODO: use Map for better props getting
-  // TODO: special type for processors { isBlocked, with nums and filtered by active&blocked }
   private tasks: SniperTask[] = [];
+  private processorUpdater: TasksProcessorUpdater | null = null;
+
   private smartContractWorkflow: Observable<NewTransactionResult>;
   private subscription: Subscription | null = null;
 
@@ -36,21 +40,31 @@ export class TerraTasksProcessor implements TasksProcessor {
         pairContract: liquidity.pairContract,
       })),
       filter(({ isTaskActive }) => isTaskActive),
-      tap(({ taskId }) => this.blockTask(taskId)),
+      tap(({ taskId }) => this.updateTask({ taskId, newStatus: 'blocked' })),
       mergeMap(sendTransaction(terra)),
+      tap(({ taskId, success }) =>
+        this.updateTask({ taskId, newStatus: success ? 'closed' : 'active' }),
+      ),
     );
   }
 
-  init: TasksProcessor['init'] = (tasks) => {
-    this.tasks = tasks;
+  start: TasksProcessor['start'] = (tasks, handler) => {
+    this.updateTasks(tasks);
+    this.processorUpdater = handler;
     this.subscription = this.smartContractWorkflow.subscribe(console.log);
+
+    return {
+      stop: () => {
+        this.updateTasks([]);
+        this.processorUpdater = null;
+        this.subscription?.unsubscribe();
+      },
+    };
   };
 
   updateTasks: TasksProcessor['updateTasks'] = (tasks) => {
     this.tasks = tasks;
   };
-
-  stop: TasksProcessor['stop'] = () => this.subscription?.unsubscribe();
 
   private getFilters() {
     return from(this.tasks).pipe(
@@ -70,9 +84,7 @@ export class TerraTasksProcessor implements TasksProcessor {
     );
   }
 
-  private blockTask(id: string) {
-    console.log(id);
-    // TODO: send update request to processor subscriber
-    // subscriber.next(action: { type: activate, block, close; taskId }
+  private updateTask(params: TasksProcessorUpdateParams) {
+    this.processorUpdater?.(params);
   }
 }

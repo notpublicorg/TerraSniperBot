@@ -1,13 +1,19 @@
 import { TasksGateway } from './tasks-gateway';
-import { TasksProcessor } from './tasks-processor';
+import { TasksProcessor, TasksProcessorSubscription } from './tasks-processor';
 
-export const tasksWatcherFactory = (gateway: TasksGateway, processor: TasksProcessor) => ({
-  async start() {
-    const tasks = await gateway.getAll();
+export const tasksWatcherFactory = (gateway: TasksGateway, processor: TasksProcessor) => {
+  let processorSubscription: TasksProcessorSubscription | null = null;
 
-    processor.init(tasks);
-  },
-  stop() {
-    processor.stop();
-  },
-});
+  return {
+    async start() {
+      const tasks = await gateway.getAll();
+
+      processorSubscription = processor.start(tasks, ({ taskId, newStatus }) => {
+        gateway.updateTaskStatus(taskId, newStatus);
+      });
+    },
+    stop() {
+      processorSubscription?.stop();
+    },
+  };
+};

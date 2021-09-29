@@ -12,12 +12,25 @@ const TASK: SniperTask = {
   status: 'active',
 };
 
-it('should add task', async () => {
-  const idGenerator = jest.fn(() => 'id');
-  const gateway = new InMemoryTasksGateway(idGenerator);
+let gateway: InMemoryTasksGateway;
 
+beforeEach(() => {
+  const idGenerator = jest.fn(() => 'id');
+  gateway = new InMemoryTasksGateway(idGenerator);
+});
+
+it('should add task', async () => {
   await gateway.addTask(NEW_TASK);
   const tasks = await gateway.getAll();
 
   expect(tasks).toEqual([TASK]);
+});
+
+it('should update task status', async () => {
+  await gateway.addTask(NEW_TASK);
+  await gateway.updateTaskStatus(TASK.id, 'closed');
+
+  const tasks = await gateway.getAll();
+
+  expect(tasks).toEqual([{ ...TASK, status: 'closed' }]);
 });

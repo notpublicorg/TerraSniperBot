@@ -2,13 +2,11 @@ import { Denom } from '@terra-money/terra.js';
 
 import { generateIdFromDate } from './id-generator-date';
 import { InMemoryTasksGateway } from './in-memory-tasks-gateway';
-import { SniperTask } from './sniper-task';
+import { SniperTaskNew } from './sniper-task';
 import { tasksWatcherFactory } from './tasks-watcher';
 import { TerraTasksProcessor } from './terra-processor';
 
-const TASK_MOCK: SniperTask = {
-  id: 'taskId',
-  status: 'active',
+const TASK_MOCK: SniperTaskNew = {
   contract: 'terra1m7v70xk2ljhmvqy0psp5p9w3f6uztj3mftncdz',
   conditions: [
     {
