@@ -48,13 +48,13 @@ export class TerraTasksProcessor implements TasksProcessor {
     );
   }
 
-  start: TasksProcessor['start'] = (tasks, handler) => {
+  subscribe: TasksProcessor['subscribe'] = (tasks, handler) => {
     this.updateTasks(tasks);
     this.processorUpdater = handler;
     this.subscription = this.smartContractWorkflow.subscribe(console.log);
 
     return {
-      stop: () => {
+      unsubscribe: () => {
         this.updateTasks([]);
         this.processorUpdater = null;
         this.subscription?.unsubscribe();

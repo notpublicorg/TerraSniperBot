@@ -58,7 +58,7 @@ test('txs parsing', async () => {
       gas: expect.any(String), // "177215",
     },
     memo: expect.any(String), // '',
-    msg: [
+    msg: expect.arrayContaining([
       {
         type: expect.any(String), // 'wasm/MsgExecuteContract',
         value: expect.any(Object) /* {
@@ -73,7 +73,7 @@ test('txs parsing', async () => {
           sender: 'terra1gq88kks6um33nkzt3fpftvyxf8u9s2peadn5m6',
         }, */,
       },
-    ],
+    ]),
     signatures: expect.any(Array), // [],
     timeout_height: expect.any(String), // '0',
   });

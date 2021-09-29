@@ -7,10 +7,13 @@ export type TasksProcessorUpdateParams = {
 export type TasksProcessorUpdater = (params: TasksProcessorUpdateParams) => void;
 
 export type TasksProcessorSubscription = {
-  stop: () => void;
+  unsubscribe: () => void;
 };
 
 export type TasksProcessor = {
-  start: (initialTasks: SniperTask[], updater: TasksProcessorUpdater) => TasksProcessorSubscription;
+  subscribe: (
+    initialTasks: SniperTask[],
+    updater: TasksProcessorUpdater,
+  ) => TasksProcessorSubscription;
   updateTasks: (tasks: SniperTask[]) => void;
 };

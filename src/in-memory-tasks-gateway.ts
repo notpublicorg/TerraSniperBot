@@ -28,4 +28,13 @@ export class InMemoryTasksGateway implements TasksGateway {
       status: newStatus,
     });
   };
+
+  subscribeToUpdates() {
+    // TODO:
+    return {
+      unsubscribe: () => {
+        console.log('ha');
+      },
+    };
+  }
 }
