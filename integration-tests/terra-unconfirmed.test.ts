@@ -1,5 +1,5 @@
+import { StdTx } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
-import { load } from 'protobufjs';
 
 jest.setTimeout(10000);
 
@@ -20,7 +20,7 @@ export type UnconfirmedTxsResponse = {
 };
 
 const tendermintApi = new APIRequester('http://162.55.245.183:26657');
-// const lcdApi = new APIRequester('https://bombay-lcd.terra.dev');
+const lcdApi = new APIRequester('https://bombay-lcd.terra.dev');
 
 const requestUnconfirmedTxs = () =>
   tendermintApi.getRaw<UnconfirmedTxsResponse>('/unconfirmed_txs');
@@ -41,21 +41,40 @@ test('unconfirmed_txs contract', async () => {
 });
 
 test('txs parsing', async () => {
-  const root = await load('tx.proto');
-  const msg = root.lookupType('transaction.MsgExecuteContract');
-  // const data = await requestUnconfirmedTxs();
+  const data = await requestUnconfirmedTxs();
 
-  // const tx = data.result.txs[0];
-  const tx =
-    'CsMBCsABCiYvdGVycmEud2FzbS52MWJldGExLk1zZ0V4ZWN1dGVDb250cmFjdBKVAQosdGVycmExZ3E4OGtrczZ1bTMzbmt6dDNmcGZ0dnl4Zjh1OXMycGVhZG41bTYSLHRlcnJhMWhmMGVraDc4bWhleDJqMHRkZmphd3B2ZzM3czQyZmV3cG5wN2V6Gjd7InN1Ym1pdCI6eyJyb3VuZF9pZCI6Nzk1NSwic3VibWlzc2lvbiI6IjE0Njk3MDAwMDAwIn19EmoKUgpGCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQOQPvigPFN5HtjUaFhTqk92PoZfdOyOalCWtEdfrno8URIECgIIARi40wESFAoOCgV1bHVuYRIFNDUwMDAQ4KcSGkDJqe/rNqRFM4ZfFnDYmO5cO08v0YbQMwaAjbQM0pn/FladpxZVRb3RRji5MxpSwEu1iJPSuHdBWz0NHg127oZE';
+  const tx = data.result.txs[0];
 
-  // const parsed = decodeTx(base64ToBytes(tx), false);
-  // const parsed = decodeEventDataTx(Buffer.from(tx), true);
-  // const parsed = decodeContent(Buffer.from(tx, 'base64'), true);
-  // const parsed = unmarshalTx(base64ToBytes(tx), true);
-  const parsed = msg.decode(Buffer.from(tx, 'base64'));
-  // const decoded = decodeString(Buffer.from(tx));
-  // const parsed = unmarshalTx(Buffer.from(decoded[0], 'base64'));
+  const { result } = await lcdApi.postRaw<{ result: StdTx.Data['value'] }>('/txs/decode', { tx });
 
-  expect(parsed).toEqual({});
+  expect(result).toEqual<StdTx.Data['value']>({
+    fee: {
+      amount: expect.arrayContaining([
+        {
+          amount: expect.any(String), //  "26583",
+          denom: expect.any(String), // "uusd",
+        },
+      ]),
+      gas: expect.any(String), // "177215",
+    },
+    memo: expect.any(String), // '',
+    msg: [
+      {
+        type: expect.any(String), // 'wasm/MsgExecuteContract',
+        value: expect.any(Object) /* {
+          coins: [],
+          contract: 'terra1hf0ekh78mhex2j0tdfjawpvg37s42fewpnp7ez',
+          execute_msg: {
+            submit: {
+              round_id: 7955,
+              submission: '14697000000',
+            },
+          },
+          sender: 'terra1gq88kks6um33nkzt3fpftvyxf8u9s2peadn5m6',
+        }, */,
+      },
+    ],
+    signatures: expect.any(Array), // [],
+    timeout_height: expect.any(String), // '0',
+  });
 });
