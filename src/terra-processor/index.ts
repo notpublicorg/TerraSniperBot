@@ -37,7 +37,6 @@ export class TerraTasksProcessor implements TasksProcessor {
     this.smartContractWorkflow = transactionsBlockSource.pipe(
       mergeWith(transactionsMempoolSource),
       createLiquidityFilterWorkflow(this.getFilters.bind(this)),
-      tap((f) => console.log(f)),
       map(({ taskId, satisfiedBuyCondition, liquidity }) => ({
         taskId,
         isTaskActive: this.tasks.find((t) => t.id === taskId)?.status === 'active',
@@ -45,6 +44,7 @@ export class TerraTasksProcessor implements TasksProcessor {
         buyAmount: satisfiedBuyCondition.buy,
         pairContract: liquidity.pairContract,
       })),
+      tap((f) => console.log(f)),
       filter(({ isTaskActive }) => isTaskActive),
       tap(({ taskId }) => this.updateTask({ taskId, newStatus: 'blocked' })),
       mergeMap(sendTransaction(terra)),
@@ -57,19 +57,23 @@ export class TerraTasksProcessor implements TasksProcessor {
   subscribe: TasksProcessor['subscribe'] = (tasks, handler) => {
     this.updateTasks(tasks);
     this.processorUpdater = handler;
-    this.subscription = this.smartContractWorkflow.subscribe(console.log);
 
     return {
       unsubscribe: () => {
         this.updateTasks([]);
         this.processorUpdater = null;
-        this.subscription?.unsubscribe();
       },
     };
   };
 
   updateTasks: TasksProcessor['updateTasks'] = (tasks) => {
     this.tasks = tasks;
+    if (this.tasks.length) {
+      this.subscription = this.subscription || this.smartContractWorkflow.subscribe(console.log);
+    } else {
+      this.subscription?.unsubscribe();
+      this.subscription = null;
+    }
   };
 
   private getFilters() {
