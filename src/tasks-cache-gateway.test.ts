@@ -1,4 +1,4 @@
-import { SniperTask, SniperTaskNew } from './sniper-task';
+import { SniperTaskNew } from './sniper-task';
 import { TasksCacheGateway } from './tasks-cache-gateway';
 
 const NEW_TASK: SniperTaskNew = {
@@ -6,40 +6,36 @@ const NEW_TASK: SniperTaskNew = {
   conditions: [{ denom: 'uluna', greaterOrEqual: '100', buy: '10' }],
   maxTokenPrice: '25',
 };
-const TASK: SniperTask = {
-  ...NEW_TASK,
-  id: 'id',
-  status: 'active',
-};
 
 let gateway: TasksCacheGateway;
 
 beforeEach(() => {
-  const idGenerator = jest.fn(() => 'id');
+  const idGenerator = jest.fn(() => Math.random().toString());
   gateway = new TasksCacheGateway(idGenerator);
 });
 
-it('should add task', () => {
-  gateway.addTask(NEW_TASK);
-  const tasks = gateway.getAll();
-
-  expect(tasks).toEqual([TASK]);
-});
-
 it('should update task status', () => {
-  gateway.addTask(NEW_TASK);
-  gateway.updateTaskStatus(TASK.id, 'closed');
+  gateway.addNewTasks([NEW_TASK]);
 
-  const tasks = gateway.getAll();
+  const existingTasks = gateway.getAll();
 
-  expect(tasks).toEqual([{ ...TASK, status: 'closed' }]);
+  gateway.updateTaskStatus(existingTasks[0].id, 'closed');
+
+  expect(gateway.getAll()).toEqual([expect.objectContaining({ ...NEW_TASK, status: 'closed' })]);
 });
 
-it('should notify subscribers when new task added', () => {
+it('should add multiple tasks and notify once', () => {
   const gatewayClientFn = jest.fn();
 
   gateway.subscribeToUpdates(gatewayClientFn);
-  gateway.addTask(NEW_TASK);
+  gateway.addNewTasks([
+    { ...NEW_TASK, contract: 'first' },
+    { ...NEW_TASK, contract: 'second' },
+  ]);
 
-  expect(gatewayClientFn).toHaveBeenCalledWith([TASK]);
+  expect(gatewayClientFn).toHaveBeenCalledWith([
+    expect.objectContaining({ ...NEW_TASK, contract: 'first', status: 'active' }),
+    expect.objectContaining({ ...NEW_TASK, contract: 'second', status: 'active' }),
+  ]);
+  expect(gatewayClientFn).toHaveBeenCalledTimes(1);
 });

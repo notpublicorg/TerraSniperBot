@@ -10,12 +10,14 @@ export class TasksCacheGateway implements TasksGateway {
 
   getAll: TasksGateway['getAll'] = () => Array.from(this.tasks.values());
 
-  addTask: TasksGateway['addTask'] = (task) => {
-    const newTaskId = this.idGenerator();
-    this.tasks.set(newTaskId, {
-      ...task,
-      id: this.idGenerator(),
-      status: 'active',
+  addNewTasks: TasksGateway['addNewTasks'] = (tasks) => {
+    tasks.forEach((task) => {
+      const newTaskId = this.idGenerator();
+      this.tasks.set(newTaskId, {
+        ...task,
+        id: newTaskId,
+        status: 'active',
+      });
     });
 
     this.notifySubscribers();

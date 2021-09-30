@@ -40,8 +40,7 @@ const TASK_MOCK_2: SniperTaskNew = {
 };
 
 const gateway = new TasksCacheGateway(generateIdFromDate);
-gateway.addTask(TASK_MOCK);
-gateway.addTask(TASK_MOCK_2);
+gateway.addNewTasks([TASK_MOCK, TASK_MOCK_2]);
 
 const terraProcessor = new TerraTasksProcessor({
   tendermintApiUrl: 'http://162.55.245.183:26657',

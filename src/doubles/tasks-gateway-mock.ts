@@ -4,7 +4,7 @@ type MockedTasksGateway = jest.Mocked<TasksGateway>;
 
 class TasksGatewayMockBuilder {
   private gateway: MockedTasksGateway = {
-    addTask: jest.fn(),
+    addNewTasks: jest.fn(),
     getAll: jest.fn(),
     updateTaskStatus: jest.fn(),
     subscribeToUpdates: jest.fn(),
