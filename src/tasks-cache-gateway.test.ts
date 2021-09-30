@@ -1,5 +1,5 @@
-import { InMemoryTasksGateway } from './in-memory-tasks-gateway';
 import { SniperTask, SniperTaskNew } from './sniper-task';
+import { TasksCacheGateway } from './tasks-cache-gateway';
 
 const NEW_TASK: SniperTaskNew = {
   contract: 'token contract',
@@ -12,34 +12,34 @@ const TASK: SniperTask = {
   status: 'active',
 };
 
-let gateway: InMemoryTasksGateway;
+let gateway: TasksCacheGateway;
 
 beforeEach(() => {
   const idGenerator = jest.fn(() => 'id');
-  gateway = new InMemoryTasksGateway(idGenerator);
+  gateway = new TasksCacheGateway(idGenerator);
 });
 
-it('should add task', async () => {
-  await gateway.addTask(NEW_TASK);
-  const tasks = await gateway.getAll();
+it('should add task', () => {
+  gateway.addTask(NEW_TASK);
+  const tasks = gateway.getAll();
 
   expect(tasks).toEqual([TASK]);
 });
 
-it('should update task status', async () => {
-  await gateway.addTask(NEW_TASK);
-  await gateway.updateTaskStatus(TASK.id, 'closed');
+it('should update task status', () => {
+  gateway.addTask(NEW_TASK);
+  gateway.updateTaskStatus(TASK.id, 'closed');
 
-  const tasks = await gateway.getAll();
+  const tasks = gateway.getAll();
 
   expect(tasks).toEqual([{ ...TASK, status: 'closed' }]);
 });
 
-it('should notify subscribers when new task added', async () => {
+it('should notify subscribers when new task added', () => {
   const gatewayClientFn = jest.fn();
 
   gateway.subscribeToUpdates(gatewayClientFn);
-  await gateway.addTask(NEW_TASK);
+  gateway.addTask(NEW_TASK);
 
   expect(gatewayClientFn).toHaveBeenCalledWith([TASK]);
 });

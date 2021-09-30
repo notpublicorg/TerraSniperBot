@@ -6,12 +6,12 @@ export const tasksWatcherFactory = (gateway: TasksGateway, processor: TasksProce
   let gatewaySubscription: TasksGatewaySubscription | null = null;
 
   return {
-    async start() {
+    start() {
       gatewaySubscription = gateway.subscribeToUpdates((tasks) => {
         processor.updateTasks(tasks);
       });
 
-      const tasks = await gateway.getAll();
+      const tasks = gateway.getAll();
 
       processorSubscription = processor.subscribe(
         tasks?.filter((t) => t.status === 'active' || t.status === 'blocked') || [],

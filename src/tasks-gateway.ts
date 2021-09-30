@@ -4,8 +4,8 @@ export type TasksGatewayUpdater = (tasks: SniperTask[]) => void;
 export type TasksGatewaySubscription = { unsubscribe: () => void };
 
 export type TasksGateway = {
-  addTask: (task: SniperTaskNew) => Promise<void>;
-  getAll: () => Promise<SniperTask[]>;
-  updateTaskStatus: (taskId: string, newStatus: SniperTask['status']) => Promise<void>;
+  addTask: (task: SniperTaskNew) => void;
+  getAll: () => SniperTask[];
+  updateTaskStatus: (taskId: string, newStatus: SniperTask['status']) => void;
   subscribeToUpdates: (updater: TasksGatewayUpdater) => TasksGatewaySubscription;
 };

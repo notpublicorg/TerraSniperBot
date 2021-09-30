@@ -15,13 +15,13 @@ it('should pass all active & blocked tasks to processor on start', async () => {
   const gateway = aTasksGatewayMock()
     .with(
       'getAll',
-      jest.fn(() => Promise.resolve([ACTIVE_TASK, CLOSED_TASK, BLOCKED_TASK])),
+      jest.fn(() => [ACTIVE_TASK, CLOSED_TASK, BLOCKED_TASK]),
     )
     .build();
 
   const taskWatcher = tasksWatcherFactory(gateway, processor);
 
-  await taskWatcher.start();
+  taskWatcher.start();
 
   expect(processor.subscribe.mock.calls[0][0]).toEqual([ACTIVE_TASK, BLOCKED_TASK]);
 });

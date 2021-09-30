@@ -2,15 +2,15 @@ import { IdGenerator } from './id-generator';
 import { SniperTask } from './sniper-task';
 import { TasksGateway, TasksGatewayUpdater } from './tasks-gateway';
 
-export class InMemoryTasksGateway implements TasksGateway {
+export class TasksCacheGateway implements TasksGateway {
   private tasks = new Map<string, SniperTask>();
   private updater: TasksGatewayUpdater | null = null;
 
   constructor(private idGenerator: IdGenerator) {}
 
-  getAll: TasksGateway['getAll'] = async () => Array.from(this.tasks.values());
+  getAll: TasksGateway['getAll'] = () => Array.from(this.tasks.values());
 
-  addTask: TasksGateway['addTask'] = async (task) => {
+  addTask: TasksGateway['addTask'] = (task) => {
     const newTaskId = this.idGenerator();
     this.tasks.set(newTaskId, {
       ...task,
@@ -21,7 +21,7 @@ export class InMemoryTasksGateway implements TasksGateway {
     this.notifySubscribers();
   };
 
-  updateTaskStatus: TasksGateway['updateTaskStatus'] = async (taskId, newStatus) => {
+  updateTaskStatus: TasksGateway['updateTaskStatus'] = (taskId, newStatus) => {
     const taskToUpdate = this.tasks.get(taskId);
 
     if (!taskToUpdate) return;
@@ -43,9 +43,9 @@ export class InMemoryTasksGateway implements TasksGateway {
     };
   };
 
-  private async notifySubscribers() {
+  private notifySubscribers() {
     if (this.updater) {
-      const tasks = await this.getAll();
+      const tasks = this.getAll();
       this.updater(tasks);
     }
   }
