@@ -32,7 +32,7 @@ export const createNewTransactionPreparationFlow = (
     tap(({ taskId }) => updateTask({ taskId, newStatus: 'blocked' })),
   );
 
-export const sendTransaction =
+export const createTransactionSender =
   (terra: LCDClient, walletMnemonic: MnemonicKey) =>
   async ({
     taskId,

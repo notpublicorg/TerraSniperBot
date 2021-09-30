@@ -1,6 +1,8 @@
 import { LCDClient, MnemonicKey } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import {
+  catchError,
+  EMPTY,
   filter,
   from,
   map,
@@ -10,6 +12,7 @@ import {
   of,
   pipe,
   repeat,
+  retry,
   Subscription,
   tap,
 } from 'rxjs';
@@ -21,7 +24,10 @@ import {
   TasksProcessorUpdater,
 } from '../tasks-processor';
 import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
-import { createNewTransactionPreparationFlow, sendTransaction } from './new-transaction-workflow';
+import {
+  createNewTransactionPreparationFlow,
+  createTransactionSender,
+} from './new-transaction-workflow';
 import { TransactionMetaJournal } from './transaction-meta-journal';
 import { createBlockSource, createTxFromHashFlow } from './transactions-sources/block-source';
 import { createMempoolSource, createTxFromEncoded } from './transactions-sources/mempool-source';
@@ -40,7 +46,16 @@ const coreSmartContractWorkflow = (
     tap(metaJournal.onFiltrationDone),
     createNewTransactionPreparationFlow(getTasks, updateTask),
     tap(metaJournal.onStartTransactionSending),
-    mergeMap(sendTransaction),
+    mergeMap((transactionInfo) =>
+      of(transactionInfo).pipe(
+        mergeMap(sendTransaction),
+        retry(2),
+        catchError(() => {
+          updateTask({ taskId: transactionInfo.taskId, newStatus: 'active' });
+          return EMPTY;
+        }),
+      ),
+    ),
     tap(({ taskId, success }) => updateTask({ taskId, newStatus: success ? 'closed' : 'active' })),
     map((result) => ({ result, metaJournal })),
   );
@@ -85,7 +100,7 @@ export class TerraTasksProcessor implements TasksProcessor {
             () => this.getFilters(),
             () => this.tasks,
             (params) => this.updateTask(params),
-            sendTransaction(terra, walletMnemonicKey),
+            createTransactionSender(terra, walletMnemonicKey),
           ),
         );
       }),
@@ -104,7 +119,7 @@ export class TerraTasksProcessor implements TasksProcessor {
             () => this.getFilters(),
             () => this.tasks,
             (params) => this.updateTask(params),
-            sendTransaction(terra, walletMnemonicKey),
+            createTransactionSender(terra, walletMnemonicKey),
           ),
         );
       }),

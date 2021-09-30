@@ -1,6 +1,6 @@
 import { delay, firstValueFrom, Observable, repeat, tap, toArray } from 'rxjs';
 
-test('repeat', async () => {
+test('repeat - recursive call', async () => {
   let count = 0;
 
   const source = new Observable((subscriber) => {
