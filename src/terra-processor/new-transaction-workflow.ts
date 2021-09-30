@@ -7,26 +7,40 @@ import {
   MsgExecuteContract,
   StdFee,
 } from '@terra-money/terra.js';
+import { filter, map, pipe, tap } from 'rxjs';
 
+import { SniperTask } from '../sniper-task';
+import { TasksProcessorUpdateParams } from '../tasks-processor';
 import { terraAmountConverter } from './terra-amount-converter';
-import { TransactionMetaInfo } from './types/meta';
 import { NewTransactionInfo, NewTransactionResult } from './types/new-transaction-info';
 
-const WALLET_MNEMONIC = new MnemonicKey({
-  mnemonic:
-    'clown lawsuit shoe hurt feed daring ugly already smile art reveal rail impact alter home fresh gadget prevent code guitar unusual tape dizzy this',
-});
+export const createNewTransactionPreparationFlow = (
+  getTasks: () => SniperTask[],
+  updateTask: (params: TasksProcessorUpdateParams) => void,
+) =>
+  pipe(
+    map(
+      ({ taskId, satisfiedBuyCondition, liquidity }): NewTransactionInfo => ({
+        taskId,
+        isTaskActive: getTasks().find((t) => t.id === taskId)?.status === 'active',
+        buyDenom: satisfiedBuyCondition.denom,
+        buyAmount: satisfiedBuyCondition.buy,
+        pairContract: liquidity.pairContract,
+      }),
+    ),
+    filter(({ isTaskActive }) => isTaskActive),
+    tap(({ taskId }) => updateTask({ taskId, newStatus: 'blocked' })),
+  );
 
 export const sendTransaction =
-  (terra: LCDClient, meta: TransactionMetaInfo) =>
+  (terra: LCDClient, walletMnemonic: MnemonicKey) =>
   async ({
     taskId,
     pairContract,
     buyAmount,
     buyDenom,
   }: NewTransactionInfo): Promise<NewTransactionResult> => {
-    meta.newTransactionSendStartDateTime = new Date().toLocaleString();
-    const wallet = terra.wallet(WALLET_MNEMONIC);
+    const wallet = terra.wallet(walletMnemonic);
 
     const execute = new MsgExecuteContract(
       wallet.key.accAddress,
@@ -52,8 +66,6 @@ export const sendTransaction =
     });
 
     const txResult = await terra.tx.broadcast(tx);
-
-    meta.newTransactionSendEndDateTime = new Date().toLocaleString();
 
     return { taskId, success: !isTxError(txResult), txResult };
   };

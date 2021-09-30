@@ -43,7 +43,16 @@ const gateway = new TasksCacheGateway(generateIdFromDate);
 gateway.addTask(TASK_MOCK);
 gateway.addTask(TASK_MOCK_2);
 
-const tasksWatcher = tasksWatcherFactory(gateway, new TerraTasksProcessor());
+const terraProcessor = new TerraTasksProcessor({
+  tendermintApiUrl: 'http://162.55.245.183:26657',
+  tendermintWebsocketUrl: 'ws://162.55.245.183:26657/websocket',
+  lcdUrl: 'https://bombay-lcd.terra.dev',
+  lcdChainId: 'bombay-12',
+  walletMnemonic:
+    'clown lawsuit shoe hurt feed daring ugly already smile art reveal rail impact alter home fresh gadget prevent code guitar unusual tape dizzy this',
+});
+
+const tasksWatcher = tasksWatcherFactory(gateway, terraProcessor);
 
 tasksWatcher.start();
 
