@@ -90,8 +90,6 @@ test.skip("swap tokens to dollars/luna (depends on what's in pair)", async () =>
 
   const txResult = await terra.tx.broadcast(tx);
 
-  console.log(JSON.stringify(txResult));
-
   expect(isTxError(txResult)).toBeFalsy();
 });
 
@@ -122,8 +120,6 @@ test.skip("swap dollars/luna (depends on what's in pair) to tokens", async () =>
   });
 
   const txResult = await terra.tx.broadcast(tx);
-
-  console.log(JSON.stringify(txResult));
 
   expect(isTxError(txResult)).toBeFalsy();
 });

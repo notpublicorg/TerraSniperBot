@@ -4,8 +4,10 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start:node": "ts-node",
-    "start:dev": "yarn start:node src/index.ts",
+    "babel": "babel-node --extensions \".ts,.tsx\"",
+    "start:dev": "nodemon --exec yarn babel src/index.ts",
+    "build": "babel --extensions \".ts,.tsx\" src -d dist",
+    "start:prod": "node dist/index.js",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "yarn lint --fix",
     "lint:strict": "yarn lint --max-warnings 0",
@@ -14,7 +16,15 @@
     "test:unit": "jest src",
     "verify": "yarn lint:strict && yarn tsc-check && yarn test"
   },
+  "engines": {
+    "node": ">=14.15.0"
+  },
   "devDependencies": {
+    "@babel/cli": "^7.14.8",
+    "@babel/core": "^7.14.8",
+    "@babel/node": "^7.14.7",
+    "@babel/preset-env": "^7.14.8",
+    "@babel/preset-typescript": "^7.14.5",
     "@types/jest": "^27.0.2",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.28.2",
@@ -23,6 +33,7 @@
     "eslint-plugin-prettier": "^3.4.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "jest": "^27.2.1",
+    "nodemon": "^2.0.9",
     "prettier": "^2.3.2",
     "ts-jest": "^27.0.5",
     "ts-node": "^10.2.1",

@@ -66,9 +66,6 @@ const tasksWatcher = tasksWatcherFactory(gateway, terraProcessor);
 
 tasksWatcher.start();
 
-// TODO: catch all errors and SIGTERM signals for graceful stop
-process.stdin.on('data', () => {
-  console.log('shutting down connection');
-  tasksWatcher.stop();
-  process.exit(0);
-});
+// Enable graceful stop
+process.once('SIGINT', () => tasksWatcher.stop());
+process.once('SIGTERM', () => tasksWatcher.stop());

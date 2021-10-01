@@ -33,7 +33,7 @@ export function createBlockSource(terra: LCDClient, config: { websocketUrl: stri
           metaJournal,
         }))
         .catch((e) => {
-          console.log(e);
+          console.log(e?.stack);
           return null;
         }),
     ),

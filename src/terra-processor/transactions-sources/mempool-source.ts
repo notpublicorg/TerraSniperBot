@@ -29,7 +29,7 @@ export function createMempoolSource(deps: { tendermintApi: APIRequester; lcdApi:
           metaJournal,
         }))
         .catch((e) => {
-          console.log(e);
+          console.log(e?.stack);
           return null;
         }),
     ),
