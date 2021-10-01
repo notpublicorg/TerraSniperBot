@@ -33,7 +33,7 @@ export function createBlockSource(terra: LCDClient, config: { websocketUrl: stri
           metaJournal,
         }))
         .catch((e) => {
-          console.log(e?.stack);
+          console.log('ERROR on getting txInfo: ', e.response?.data || e.message);
           return null;
         }),
     ),

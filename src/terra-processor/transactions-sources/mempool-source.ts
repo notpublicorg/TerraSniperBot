@@ -29,7 +29,7 @@ export function createMempoolSource(deps: { tendermintApi: APIRequester; lcdApi:
           metaJournal,
         }))
         .catch((e) => {
-          console.log(e?.stack);
+          console.log('ERROR on encoding tx: ', e.response?.data || e.message);
           return null;
         }),
     ),
