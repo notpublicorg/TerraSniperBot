@@ -1,8 +1,8 @@
 const MILLION = 1000000;
 
 export const terraAmountConverter = {
-  toTerraFormat(amount: number) {
-    return (amount * MILLION).toString();
+  toTerraFormat(amount: number | string) {
+    return (+amount * MILLION).toString();
   },
 
   toNumber(terraAmount: string) {

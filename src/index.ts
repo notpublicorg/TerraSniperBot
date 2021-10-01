@@ -49,6 +49,8 @@ const terraProcessor = new TerraTasksProcessor({
   lcdChainId: 'bombay-12',
   walletMnemonic:
     'clown lawsuit shoe hurt feed daring ugly already smile art reveal rail impact alter home fresh gadget prevent code guitar unusual tape dizzy this',
+  gasAdjustment: '1.5',
+  defaultGasPrice: { denom: 'uusd', amount: '100' },
 });
 
 const tasksWatcher = tasksWatcherFactory(gateway, terraProcessor);

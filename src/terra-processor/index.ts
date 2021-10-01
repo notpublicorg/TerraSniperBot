@@ -1,4 +1,4 @@
-import { LCDClient, MnemonicKey, TxInfo } from '@terra-money/terra.js';
+import { Coin, LCDClient, MnemonicKey, TxInfo } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import {
   filter,
@@ -26,9 +26,11 @@ import {
   createNewTransactionPreparationFlow,
   createTransactionSender,
 } from './new-transaction-workflow';
+import { terraAmountConverter } from './terra-amount-converter';
 import { TransactionMetaJournal } from './transaction-meta-journal';
 import { createBlockSource, createTxFromHashFlow } from './transactions-sources/block-source';
 import { createMempoolSource, createTxFromEncoded } from './transactions-sources/mempool-source';
+import { TerraProcessorCoin } from './types/coin';
 import {
   NewTransactionCreationInfo,
   NewTransactionInfo,
@@ -96,6 +98,8 @@ export class TerraTasksProcessor implements TasksProcessor {
     lcdUrl: string;
     lcdChainId: string;
     walletMnemonic: string;
+    gasAdjustment: string;
+    defaultGasPrice: TerraProcessorCoin;
   }) {
     const terra = new LCDClient({
       URL: config.lcdUrl,
@@ -104,6 +108,10 @@ export class TerraTasksProcessor implements TasksProcessor {
     const walletMnemonicKey = new MnemonicKey({
       mnemonic: config.walletMnemonic,
     });
+    const defaultTerraCoin: Coin.Data = {
+      denom: config.defaultGasPrice.denom,
+      amount: terraAmountConverter.toTerraFormat(config.defaultGasPrice.amount),
+    };
     const lcdApi = new APIRequester(config.lcdUrl);
     const tendermintApi = new APIRequester(config.tendermintApiUrl);
 
@@ -120,7 +128,11 @@ export class TerraTasksProcessor implements TasksProcessor {
             () => this.getFilters(),
             () => this.tasks,
             (params) => this.updateTask(params),
-            createTransactionSender(terra, walletMnemonicKey),
+            createTransactionSender(terra, {
+              walletMnemonic: walletMnemonicKey,
+              gasAdjustment: config.gasAdjustment,
+              gasPrices: [defaultTerraCoin],
+            }),
             (txHash) => terra.tx.txInfo(txHash),
           ),
         );
@@ -140,7 +152,11 @@ export class TerraTasksProcessor implements TasksProcessor {
             () => this.getFilters(),
             () => this.tasks,
             (params) => this.updateTask(params),
-            createTransactionSender(terra, walletMnemonicKey),
+            createTransactionSender(terra, {
+              walletMnemonic: walletMnemonicKey,
+              gasAdjustment: config.gasAdjustment,
+              gasPrices: [defaultTerraCoin],
+            }),
             (txHash) => terra.tx.txInfo(txHash),
           ),
         );

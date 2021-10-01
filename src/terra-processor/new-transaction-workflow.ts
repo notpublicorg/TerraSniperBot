@@ -1,11 +1,4 @@
-import {
-  Coin,
-  Denom,
-  LCDClient,
-  MnemonicKey,
-  MsgExecuteContract,
-  StdFee,
-} from '@terra-money/terra.js';
+import { Coin, Coins, LCDClient, MnemonicKey, MsgExecuteContract } from '@terra-money/terra.js';
 import { filter, map, pipe, tap } from 'rxjs';
 
 import { SniperTask } from '../sniper-task';
@@ -32,14 +25,17 @@ export const createNewTransactionPreparationFlow = (
   );
 
 export const createTransactionSender =
-  (terra: LCDClient, walletMnemonic: MnemonicKey) =>
+  (
+    terra: LCDClient,
+    config: { walletMnemonic: MnemonicKey; gasAdjustment: string; gasPrices: Coin.Data[] },
+  ) =>
   async ({
     taskId,
     pairContract,
     buyAmount,
     buyDenom,
   }: NewTransactionInfo): Promise<NewTransactionCreationInfo> => {
-    const wallet = terra.wallet(walletMnemonic);
+    const wallet = terra.wallet(config.walletMnemonic);
 
     const execute = new MsgExecuteContract(
       wallet.key.accAddress,
@@ -61,7 +57,8 @@ export const createTransactionSender =
 
     const tx = await wallet.createAndSignTx({
       msgs: [execute],
-      fee: new StdFee(1000000, [new Coin(Denom.USD, terraAmountConverter.toTerraFormat(5))]),
+      gasAdjustment: config.gasAdjustment,
+      gasPrices: Coins.fromData(config.gasPrices),
     });
 
     const txBroadcastingInfo = await terra.tx.broadcastAsync(tx);
