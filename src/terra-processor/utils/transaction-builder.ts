@@ -1,7 +1,7 @@
 import { Msg, MsgExecuteContract, TxInfo } from '@terra-money/terra.js';
 
 import { ProvideLiquidityParam } from '../types/liquidity';
-import { terraAmountConverter } from './terra-amount-converter';
+import { terraAmountConverter } from './terra-types-converter';
 
 export const createWasmExecuteMsg = (
   contract: string,

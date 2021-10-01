@@ -13,7 +13,7 @@ import {
   ParsedLiquidity,
   TransactionFilter,
 } from './types/transaction-filter';
-import { terraAmountConverter } from './utils/terra-amount-converter';
+import { terraAmountConverter } from './utils/terra-types-converter';
 
 export const createLiquidityFilterWorkflow = (
   getFiltersSource: () => Observable<TransactionFilter>,

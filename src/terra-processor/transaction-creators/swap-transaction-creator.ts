@@ -1,13 +1,14 @@
 import { Coin, Coins, LCDClient, MnemonicKey, MsgExecuteContract } from '@terra-money/terra.js';
 
 import { TransactionSender } from '../new-transaction-workflow';
+import { TerraProcessorCoin } from '../types/coin';
 import { NewTransactionCreationInfo, NewTransactionInfo } from '../types/new-transaction-info';
-import { terraAmountConverter } from '../utils/terra-amount-converter';
+import { terraAmountConverter, terraCoinConverter } from '../utils/terra-types-converter';
 
 export const swapTransactionCreator =
   (
     terra: LCDClient,
-    config: { walletMnemonic: MnemonicKey; gasAdjustment: string; gasPrices: Coin.Data[] },
+    config: { walletMnemonic: MnemonicKey; gasAdjustment: string; gasPrices: TerraProcessorCoin[] },
   ): TransactionSender =>
   async ({
     taskId,
@@ -38,7 +39,7 @@ export const swapTransactionCreator =
     const tx = await wallet.createAndSignTx({
       msgs: [execute],
       gasAdjustment: config.gasAdjustment,
-      gasPrices: Coins.fromData(config.gasPrices),
+      gasPrices: Coins.fromData(terraCoinConverter.toTerraFormat(config.gasPrices)),
     });
 
     const txBroadcastingInfo = await terra.tx.broadcastAsync(tx);

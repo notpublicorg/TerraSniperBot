@@ -1,4 +1,4 @@
-import { Coin, LCDClient, MnemonicKey } from '@terra-money/terra.js';
+import { Denom, LCDClient, MnemonicKey } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import {
   filter,
@@ -32,7 +32,7 @@ import { createMempoolSource } from './transactions-sources/mempool-source';
 import { TerraProcessorCoin } from './types/coin';
 import { NewTransactionResult } from './types/new-transaction-info';
 import { TransactionFilter } from './types/transaction-filter';
-import { terraAmountConverter } from './utils/terra-amount-converter';
+import { terraCoinConverter } from './utils/terra-types-converter';
 import { TransactionMetaJournal } from './utils/transaction-meta-journal';
 
 const coreSmartContractWorkflow = (
@@ -78,10 +78,6 @@ export class TerraTasksProcessor implements TasksProcessor {
     const walletMnemonicKey = new MnemonicKey({
       mnemonic: config.walletMnemonic,
     });
-    const defaultTerraCoin: Coin.Data = {
-      denom: config.defaultGasPrice.denom,
-      amount: terraAmountConverter.toTerraFormat(config.defaultGasPrice.amount),
-    };
     const lcdApi = new APIRequester(config.lcdUrl);
     const tendermintApi = new APIRequester(config.tendermintApiUrl);
 
@@ -89,8 +85,17 @@ export class TerraTasksProcessor implements TasksProcessor {
       tendermintApi,
       lcdApi,
     }).pipe(
-      mergeMap(({ txValue, metaJournal }) =>
-        of(txValue).pipe(
+      mergeMap(({ txValue, metaJournal }) => {
+        const feeInfo = {
+          maxGas: txValue.fee.gas,
+          fee: terraCoinConverter.toAppFormat(
+            txValue.fee.amount.filter((c) =>
+              Boolean(c && [Denom.USD, Denom.LUNA].includes(c.denom)),
+            ),
+          ),
+        };
+        console.log(feeInfo);
+        return of(txValue).pipe(
           coreSmartContractWorkflow(
             metaJournal,
             () => this.getFilters(),
@@ -99,12 +104,12 @@ export class TerraTasksProcessor implements TasksProcessor {
             swapTransactionCreator(terra, {
               walletMnemonic: walletMnemonicKey,
               gasAdjustment: config.gasAdjustment,
-              gasPrices: [defaultTerraCoin],
+              gasPrices: [config.defaultGasPrice],
             }),
             (txHash) => terra.tx.txInfo(txHash),
           ),
-        ),
-      ),
+        );
+      }),
     );
 
     const $blockSource = createBlockSource(terra, {
@@ -120,7 +125,7 @@ export class TerraTasksProcessor implements TasksProcessor {
             swapTransactionCreator(terra, {
               walletMnemonic: walletMnemonicKey,
               gasAdjustment: config.gasAdjustment,
-              gasPrices: [defaultTerraCoin],
+              gasPrices: [config.defaultGasPrice],
             }),
             (txHash) => terra.tx.txInfo(txHash),
           ),
