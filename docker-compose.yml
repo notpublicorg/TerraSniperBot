@@ -1,0 +1,6 @@
+services:
+  terrabot:
+    build: .
+    volumes:
+      - ./config:/app/config
+      - ./tasks.json:/app/tasks.json
