@@ -1,8 +1,9 @@
-import { Denom, TxInfo } from '@terra-money/terra.js';
+import { TxInfo } from '@terra-money/terra.js';
 import { firstValueFrom, from, map, toArray } from 'rxjs';
 
 import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
 import { BuyCondition, TransactionFilter } from './types/transaction-filter';
+import { Denom } from './utils/denom';
 import { aTransaction, createWasmExecuteMsg } from './utils/transaction-builder';
 
 const PAIR_CONTRACT = 'pairContract';

@@ -1,6 +1,7 @@
-import { Denom, StdFee } from '@terra-money/terra.js';
+import { StdFee } from '@terra-money/terra.js';
 
 import { TerraProcessorCoin } from '../types/coin';
+import { Denom } from '../utils/denom';
 import { terraCoinConverter } from './terra-types-converter';
 
 export function createGasPriceCalculator(options: {

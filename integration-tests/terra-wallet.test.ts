@@ -1,12 +1,13 @@
 import {
   Coin,
-  Denom,
   isTxError,
   LCDClient,
   MnemonicKey,
   MsgExecuteContract,
   StdFee,
 } from '@terra-money/terra.js';
+
+import { Denom } from '../src/terra-processor/utils/denom';
 
 jest.setTimeout(20000);
 

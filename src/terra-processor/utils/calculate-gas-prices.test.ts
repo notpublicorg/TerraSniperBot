@@ -1,7 +1,8 @@
-import { Denom, StdFee } from '@terra-money/terra.js';
+import { StdFee } from '@terra-money/terra.js';
 
 import { TerraProcessorCoin } from '../types/coin';
 import { createGasPriceCalculator } from './calculate-gas-prices';
+import { Denom } from './denom';
 
 const OPTIONS = {
   defaultDenom: Denom.USD,

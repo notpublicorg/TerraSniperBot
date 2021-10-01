@@ -42,7 +42,10 @@ export const newTransactionWorkflow = (
         mergeMap(transactionSender),
         retryAndContinue({
           retryCount: 2,
-          onError: () => taskUpdater({ taskId: transactionInfo.taskId, newStatus: 'active' }),
+          onError: (err) => {
+            console.log(err);
+            taskUpdater({ taskId: transactionInfo.taskId, newStatus: 'active' });
+          },
         }),
       ),
     ),
@@ -52,7 +55,10 @@ export const newTransactionWorkflow = (
         retryAndContinue({
           retryCount: 7,
           delay: 1000,
-          onError: () => taskUpdater({ taskId, newStatus: 'active' }),
+          onError: (err) => {
+            console.log(err);
+            taskUpdater({ taskId, newStatus: 'active' });
+          },
         }),
         map(
           (txInfo): NewTransactionResult => ({

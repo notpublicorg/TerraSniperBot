@@ -45,9 +45,9 @@ const coreSmartContractWorkflow = (
 ) =>
   pipe(
     createLiquidityFilterWorkflow(getFilters),
-    tap(metaJournal.onFiltrationDone),
+    tap(metaJournal.onFiltrationDone.bind(metaJournal)),
     createNewTransactionPreparationFlow(getTasks, updateTask),
-    tap(metaJournal.onStartTransactionSending),
+    tap(metaJournal.onStartTransactionSending.bind(metaJournal)),
     newTransactionWorkflow(sendTransaction, getTx, updateTask),
     map((result) => ({ result, metaJournal })),
   );

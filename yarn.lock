@@ -1236,10 +1236,10 @@
   dependencies:
     defer-to-connect "^1.0.1"
 
-"@terra-money/terra.js@^2.0.8":
-  version "2.0.8"
-  resolved "https://registry.yarnpkg.com/@terra-money/terra.js/-/terra.js-2.0.8.tgz#865bebc2566569ae241bc5d97fa2f22334845af4"
-  integrity sha512-4lHt6v8Tt7mDBBTSi6J6GgzD9ccBqfFfAKgvSo05DSHTq5Hanckvy08ylBOWPITIVjKa4CaoJmEDxumGCnfC7w==
+"@terra-money/terra.js@^2.0.14":
+  version "2.0.14"
+  resolved "https://registry.yarnpkg.com/@terra-money/terra.js/-/terra.js-2.0.14.tgz#3195ed184524f926196b0b0ef15ae177ece148d1"
+  integrity sha512-GeMadRIPaOedODa5a0pJ2+76l7MeFSIfSJZ2vvWPRco6MRIQLw/k0cZpPKMLm2Zo54li/oY1mrR+r3uxLM7q3Q==
   dependencies:
     axios "^0.21.1"
     bech32 "^2.0.0"
