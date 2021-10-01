@@ -1,6 +1,19 @@
-import { catchError, EMPTY, firstValueFrom, map, mergeMap, of, retry, toArray } from 'rxjs';
+import {
+  catchError,
+  concatWith,
+  delay,
+  EMPTY,
+  firstValueFrom,
+  map,
+  mergeMap,
+  of,
+  retryWhen,
+  take,
+  throwError,
+  toArray,
+} from 'rxjs';
 
-test('retry only inner observable', async () => {
+test('retry only inner observable / with delay', async () => {
   const notifyAboutError = jest.fn();
 
   await expect(
@@ -18,7 +31,10 @@ test('retry only inner observable', async () => {
 
               return `${timesToThrowError}-${count}`;
             }),
-            retry(2),
+            // retry(2),
+            retryWhen((errors) =>
+              errors.pipe(delay(1000), take(2), concatWith(throwError(() => new Error('ha')))),
+            ),
             catchError(() => {
               notifyAboutError();
               return EMPTY;

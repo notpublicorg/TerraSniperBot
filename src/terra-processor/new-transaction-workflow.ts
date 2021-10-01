@@ -1,7 +1,6 @@
 import {
   Coin,
   Denom,
-  isTxError,
   LCDClient,
   MnemonicKey,
   MsgExecuteContract,
@@ -12,7 +11,7 @@ import { filter, map, pipe, tap } from 'rxjs';
 import { SniperTask } from '../sniper-task';
 import { TasksProcessorUpdateParams } from '../tasks-processor';
 import { terraAmountConverter } from './terra-amount-converter';
-import { NewTransactionInfo, NewTransactionResult } from './types/new-transaction-info';
+import { NewTransactionCreationInfo, NewTransactionInfo } from './types/new-transaction-info';
 
 export const createNewTransactionPreparationFlow = (
   getTasks: () => SniperTask[],
@@ -39,7 +38,7 @@ export const createTransactionSender =
     pairContract,
     buyAmount,
     buyDenom,
-  }: NewTransactionInfo): Promise<NewTransactionResult> => {
+  }: NewTransactionInfo): Promise<NewTransactionCreationInfo> => {
     const wallet = terra.wallet(walletMnemonic);
 
     const execute = new MsgExecuteContract(
@@ -65,7 +64,7 @@ export const createTransactionSender =
       fee: new StdFee(1000000, [new Coin(Denom.USD, terraAmountConverter.toTerraFormat(5))]),
     });
 
-    const txResult = await terra.tx.broadcast(tx);
+    const txBroadcastingInfo = await terra.tx.broadcastAsync(tx);
 
-    return { taskId, success: !isTxError(txResult), txResult };
+    return { taskId, info: txBroadcastingInfo };
   };

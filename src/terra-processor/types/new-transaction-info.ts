@@ -1,4 +1,4 @@
-import { BlockTxBroadcastResult } from '@terra-money/terra.js';
+import { AsyncTxBroadcastResult } from '@terra-money/terra.js';
 
 export type NewTransactionInfo = {
   taskId: string;
@@ -8,8 +8,14 @@ export type NewTransactionInfo = {
   buyDenom: string;
 };
 
+export type NewTransactionCreationInfo = {
+  taskId: string;
+  info: AsyncTxBroadcastResult;
+};
+
 export type NewTransactionResult = {
   taskId: string;
   success: boolean;
-  txResult: BlockTxBroadcastResult;
+  txhash: string;
+  height: number;
 };

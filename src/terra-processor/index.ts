@@ -1,7 +1,9 @@
-import { LCDClient, MnemonicKey } from '@terra-money/terra.js';
+import { LCDClient, MnemonicKey, TxInfo } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import {
   catchError,
+  concatWith,
+  delay,
   EMPTY,
   filter,
   from,
@@ -13,8 +15,11 @@ import {
   pipe,
   repeat,
   retry,
+  retryWhen,
   Subscription,
+  take,
   tap,
+  throwError,
 } from 'rxjs';
 
 import { SniperTask } from '../sniper-task';
@@ -31,7 +36,11 @@ import {
 import { TransactionMetaJournal } from './transaction-meta-journal';
 import { createBlockSource, createTxFromHashFlow } from './transactions-sources/block-source';
 import { createMempoolSource, createTxFromEncoded } from './transactions-sources/mempool-source';
-import { NewTransactionInfo, NewTransactionResult } from './types/new-transaction-info';
+import {
+  NewTransactionCreationInfo,
+  NewTransactionInfo,
+  NewTransactionResult,
+} from './types/new-transaction-info';
 import { TransactionFilter } from './types/transaction-filter';
 
 const coreSmartContractWorkflow = (
@@ -39,7 +48,8 @@ const coreSmartContractWorkflow = (
   getFilters: () => Observable<TransactionFilter>,
   getTasks: () => SniperTask[],
   updateTask: (params: TasksProcessorUpdateParams) => void,
-  sendTransaction: (info: NewTransactionInfo) => Promise<NewTransactionResult>,
+  sendTransaction: (info: NewTransactionInfo) => Promise<NewTransactionCreationInfo>,
+  getTx: (hash: string) => Promise<TxInfo>,
 ) =>
   pipe(
     createLiquidityFilterWorkflow(getFilters),
@@ -54,6 +64,34 @@ const coreSmartContractWorkflow = (
           updateTask({ taskId: transactionInfo.taskId, newStatus: 'active' });
           return EMPTY;
         }),
+      ),
+    ),
+    mergeMap(({ taskId, info }) =>
+      of(info.txhash).pipe(
+        mergeMap((txhash) => getTx(txhash)),
+        retryWhen((errors) =>
+          errors.pipe(
+            delay(1000),
+            take(6),
+            concatWith(
+              throwError(
+                () => new Error(`Retry attempts exceeded for tx=${info.txhash} and task=${taskId}`),
+              ),
+            ),
+          ),
+        ),
+        catchError(() => {
+          updateTask({ taskId, newStatus: 'active' });
+          return EMPTY;
+        }),
+        map(
+          (txInfo): NewTransactionResult => ({
+            taskId,
+            success: txInfo.code !== undefined,
+            txhash: txInfo.txhash,
+            height: txInfo.height,
+          }),
+        ),
       ),
     ),
     tap(({ taskId, success }) => updateTask({ taskId, newStatus: success ? 'closed' : 'active' })),
