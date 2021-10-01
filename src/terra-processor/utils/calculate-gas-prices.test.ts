@@ -18,7 +18,7 @@ it('should return default gas price if there is fee', () => {
     amount: [],
   });
 
-  expect(gasPrices).toEqual([{ denom: Denom.USD, amount: 2.9 }]);
+  expect(gasPrices).toEqual([{ denom: OPTIONS.defaultDenom, amount: OPTIONS.defaultPrice }]);
 });
 
 it('should calculate gas price for LUNA and USD', () => {

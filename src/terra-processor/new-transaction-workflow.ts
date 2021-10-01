@@ -50,7 +50,7 @@ export const newTransactionWorkflow = (
       of(info.txhash).pipe(
         mergeMap((txhash) => txInfoGetter(txhash)),
         retryAndContinue({
-          retryCount: 6,
+          retryCount: 7,
           delay: 1000,
           onError: () => taskUpdater({ taskId, newStatus: 'active' }),
         }),
