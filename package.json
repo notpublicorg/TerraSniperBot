@@ -9,9 +9,10 @@
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "yarn lint --fix",
     "lint:strict": "yarn lint --max-warnings 0",
+    "tsc-check": "tsc --noEmit",
     "test": "jest",
     "test:unit": "jest src",
-    "verify": "yarn lint:strict && yarn test"
+    "verify": "yarn lint:strict && yarn tsc-check && yarn test"
   },
   "devDependencies": {
     "@types/jest": "^27.0.2",

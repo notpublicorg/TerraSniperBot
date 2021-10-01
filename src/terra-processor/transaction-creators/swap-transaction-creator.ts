@@ -8,7 +8,8 @@ import { terraAmountConverter, terraCoinConverter } from '../utils/terra-types-c
 export const swapTransactionCreator =
   (
     terra: LCDClient,
-    config: { walletMnemonic: MnemonicKey; gasAdjustment: string; gasPrices: TerraProcessorCoin[] },
+    config: { walletMnemonic: MnemonicKey; gasAdjustment: string },
+    gasPricesGetter: () => TerraProcessorCoin[],
   ): TransactionSender =>
   async ({
     taskId,
@@ -39,7 +40,7 @@ export const swapTransactionCreator =
     const tx = await wallet.createAndSignTx({
       msgs: [execute],
       gasAdjustment: config.gasAdjustment,
-      gasPrices: Coins.fromData(terraCoinConverter.toTerraFormat(config.gasPrices)),
+      gasPrices: Coins.fromData(terraCoinConverter.toTerraFormat(gasPricesGetter())),
     });
 
     const txBroadcastingInfo = await terra.tx.broadcastAsync(tx);

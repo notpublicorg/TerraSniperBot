@@ -1,4 +1,4 @@
-import { Denom, LCDClient, MnemonicKey } from '@terra-money/terra.js';
+import { LCDClient, MnemonicKey } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import {
   filter,
@@ -29,10 +29,9 @@ import {
 import { swapTransactionCreator } from './transaction-creators/swap-transaction-creator';
 import { createBlockSource } from './transactions-sources/block-source';
 import { createMempoolSource } from './transactions-sources/mempool-source';
-import { TerraProcessorCoin } from './types/coin';
 import { NewTransactionResult } from './types/new-transaction-info';
 import { TransactionFilter } from './types/transaction-filter';
-import { terraCoinConverter } from './utils/terra-types-converter';
+import { createGasPriceCalculator } from './utils/calculate-gas-prices';
 import { TransactionMetaJournal } from './utils/transaction-meta-journal';
 
 const coreSmartContractWorkflow = (
@@ -69,7 +68,16 @@ export class TerraTasksProcessor implements TasksProcessor {
     lcdChainId: string;
     walletMnemonic: string;
     gasAdjustment: string;
-    defaultGasPrice: TerraProcessorCoin;
+    block: {
+      defaultGasPriceDenom: string;
+      defaultGasPrice: number;
+    };
+    mempool: {
+      defaultGasPriceDenom: string;
+      defaultGasPrice: number;
+      minUusdPrice: number;
+      minLunaPrice: number;
+    };
   }) {
     const terra = new LCDClient({
       URL: config.lcdUrl,
@@ -80,36 +88,36 @@ export class TerraTasksProcessor implements TasksProcessor {
     });
     const lcdApi = new APIRequester(config.lcdUrl);
     const tendermintApi = new APIRequester(config.tendermintApiUrl);
+    const calculateGasPrices = createGasPriceCalculator({
+      defaultDenom: config.mempool.defaultGasPriceDenom,
+      defaultPrice: config.mempool.defaultGasPrice,
+      minUusdPrice: config.mempool.minUusdPrice,
+      minLunaPrice: config.mempool.minLunaPrice,
+    });
 
     const $mempoolSource = createMempoolSource({
       tendermintApi,
       lcdApi,
     }).pipe(
-      mergeMap(({ txValue, metaJournal }) => {
-        const feeInfo = {
-          maxGas: txValue.fee.gas,
-          fee: terraCoinConverter.toAppFormat(
-            txValue.fee.amount.filter((c) =>
-              Boolean(c && [Denom.USD, Denom.LUNA].includes(c.denom)),
-            ),
-          ),
-        };
-        console.log(feeInfo);
-        return of(txValue).pipe(
+      mergeMap(({ txValue, metaJournal }) =>
+        of(txValue).pipe(
           coreSmartContractWorkflow(
             metaJournal,
             () => this.getFilters(),
             () => this.tasks,
             (params) => this.updateTask(params),
-            swapTransactionCreator(terra, {
-              walletMnemonic: walletMnemonicKey,
-              gasAdjustment: config.gasAdjustment,
-              gasPrices: [config.defaultGasPrice],
-            }),
+            swapTransactionCreator(
+              terra,
+              {
+                walletMnemonic: walletMnemonicKey,
+                gasAdjustment: config.gasAdjustment,
+              },
+              () => calculateGasPrices(txValue.fee),
+            ),
             (txHash) => terra.tx.txInfo(txHash),
           ),
-        );
-      }),
+        ),
+      ),
     );
 
     const $blockSource = createBlockSource(terra, {
@@ -122,11 +130,19 @@ export class TerraTasksProcessor implements TasksProcessor {
             () => this.getFilters(),
             () => this.tasks,
             (params) => this.updateTask(params),
-            swapTransactionCreator(terra, {
-              walletMnemonic: walletMnemonicKey,
-              gasAdjustment: config.gasAdjustment,
-              gasPrices: [config.defaultGasPrice],
-            }),
+            swapTransactionCreator(
+              terra,
+              {
+                walletMnemonic: walletMnemonicKey,
+                gasAdjustment: config.gasAdjustment,
+              },
+              () => [
+                {
+                  denom: config.block.defaultGasPriceDenom,
+                  amount: config.block.defaultGasPrice,
+                },
+              ],
+            ),
             (txHash) => terra.tx.txInfo(txHash),
           ),
         ),
