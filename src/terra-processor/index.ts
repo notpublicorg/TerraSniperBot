@@ -26,6 +26,7 @@ import {
   TransactionSender,
   TxInfoGetter,
 } from './new-transaction-workflow';
+import { TerraTasksProcessorConfig } from './processor-config';
 import { swapTransactionCreator } from './transaction-creators/swap-transaction-creator';
 import { createBlockSource } from './transactions-sources/block-source';
 import { createMempoolSource } from './transactions-sources/mempool-source';
@@ -61,24 +62,7 @@ export class TerraTasksProcessor implements TasksProcessor {
   }>;
   private subscription: Subscription | null = null;
 
-  constructor(config: {
-    tendermintWebsocketUrl: string;
-    tendermintApiUrl: string;
-    lcdUrl: string;
-    lcdChainId: string;
-    walletMnemonic: string;
-    gasAdjustment: string;
-    block: {
-      defaultGasPriceDenom: string;
-      defaultGasPrice: number;
-    };
-    mempool: {
-      defaultGasPriceDenom: string;
-      defaultGasPrice: number;
-      minUusdPrice: number;
-      minLunaPrice: number;
-    };
-  }) {
+  constructor(config: TerraTasksProcessorConfig) {
     const terra = new LCDClient({
       URL: config.lcdUrl,
       chainID: config.lcdChainId,
