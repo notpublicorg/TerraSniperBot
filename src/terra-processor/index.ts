@@ -1,10 +1,6 @@
 import { LCDClient, MnemonicKey, TxInfo } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import {
-  catchError,
-  concatWith,
-  delay,
-  EMPTY,
   filter,
   from,
   map,
@@ -14,12 +10,8 @@ import {
   of,
   pipe,
   repeat,
-  retry,
-  retryWhen,
   Subscription,
-  take,
   tap,
-  throwError,
 } from 'rxjs';
 
 import { SniperTask } from '../sniper-task';
@@ -28,6 +20,7 @@ import {
   TasksProcessorUpdateParams,
   TasksProcessorUpdater,
 } from '../tasks-processor';
+import { retryAndContinue } from '../utils/retry-and-continue';
 import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
 import {
   createNewTransactionPreparationFlow,
@@ -59,30 +52,19 @@ const coreSmartContractWorkflow = (
     mergeMap((transactionInfo) =>
       of(transactionInfo).pipe(
         mergeMap(sendTransaction),
-        retry(2),
-        catchError(() => {
-          updateTask({ taskId: transactionInfo.taskId, newStatus: 'active' });
-          return EMPTY;
+        retryAndContinue({
+          retryCount: 2,
+          onError: () => updateTask({ taskId: transactionInfo.taskId, newStatus: 'active' }),
         }),
       ),
     ),
     mergeMap(({ taskId, info }) =>
       of(info.txhash).pipe(
         mergeMap((txhash) => getTx(txhash)),
-        retryWhen((errors) =>
-          errors.pipe(
-            delay(1000),
-            take(6),
-            concatWith(
-              throwError(
-                () => new Error(`Retry attempts exceeded for tx=${info.txhash} and task=${taskId}`),
-              ),
-            ),
-          ),
-        ),
-        catchError(() => {
-          updateTask({ taskId, newStatus: 'active' });
-          return EMPTY;
+        retryAndContinue({
+          retryCount: 6,
+          delay: 1000,
+          onError: () => updateTask({ taskId, newStatus: 'active' }),
         }),
         map(
           (txInfo): NewTransactionResult => ({
@@ -139,6 +121,7 @@ export class TerraTasksProcessor implements TasksProcessor {
             () => this.tasks,
             (params) => this.updateTask(params),
             createTransactionSender(terra, walletMnemonicKey),
+            (txHash) => terra.tx.txInfo(txHash),
           ),
         );
       }),
@@ -158,6 +141,7 @@ export class TerraTasksProcessor implements TasksProcessor {
             () => this.tasks,
             (params) => this.updateTask(params),
             createTransactionSender(terra, walletMnemonicKey),
+            (txHash) => terra.tx.txInfo(txHash),
           ),
         );
       }),
