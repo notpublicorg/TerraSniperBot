@@ -5,6 +5,8 @@
     "target": "es2019",
     "declaration": true,
     "removeComments": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,

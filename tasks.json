@@ -1,0 +1,36 @@
+{
+  "tasks": [
+    {
+      "contract": "terra1n4cy7vxwafjsr0553e0k0q7k92slztlurm08j4",
+      "conditions": [
+        {
+          "denom": "uusd",
+          "greaterOrEqual": "20",
+          "buy": "20"
+        },
+        {
+          "denom": "uusd",
+          "greaterOrEqual": "10",
+          "buy": "10"
+        }
+      ],
+      "maxTokenPrice": "100"
+    },
+    {
+      "contract": "terra13y43fyl8t3sr24glvqn7ct0mu80rqcc6t2dla8",
+      "conditions": [
+        {
+          "denom": "uusd",
+          "greaterOrEqual": "20",
+          "buy": "20"
+        },
+        {
+          "denom": "uusd",
+          "greaterOrEqual": "10",
+          "buy": "10"
+        }
+      ],
+      "maxTokenPrice": "100"
+    }
+  ]
+}
