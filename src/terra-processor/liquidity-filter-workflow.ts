@@ -2,7 +2,6 @@ import { Msg, MsgExecuteContract, StdTx } from '@terra-money/terra.js';
 import { Observable, pipe } from 'rxjs';
 import { filter, map, mergeMap, take } from 'rxjs/operators';
 
-import { terraAmountConverter } from './terra-amount-converter';
 import {
   LiquidityCurrencyAmount,
   LiquidityTokenAmount,
@@ -14,6 +13,7 @@ import {
   ParsedLiquidity,
   TransactionFilter,
 } from './types/transaction-filter';
+import { terraAmountConverter } from './utils/terra-amount-converter';
 
 export const createLiquidityFilterWorkflow = (
   getFiltersSource: () => Observable<TransactionFilter>,

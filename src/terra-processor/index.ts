@@ -1,4 +1,4 @@
-import { Coin, LCDClient, MnemonicKey, TxInfo } from '@terra-money/terra.js';
+import { Coin, LCDClient, MnemonicKey } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import {
   filter,
@@ -9,7 +9,6 @@ import {
   Observable,
   of,
   pipe,
-  repeat,
   Subscription,
   tap,
 } from 'rxjs';
@@ -20,65 +19,36 @@ import {
   TasksProcessorUpdateParams,
   TasksProcessorUpdater,
 } from '../tasks-processor';
-import { retryAndContinue } from '../utils/retry-and-continue';
 import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
 import {
   createNewTransactionPreparationFlow,
-  createTransactionSender,
+  newTransactionWorkflow,
+  TransactionSender,
+  TxInfoGetter,
 } from './new-transaction-workflow';
-import { terraAmountConverter } from './terra-amount-converter';
-import { TransactionMetaJournal } from './transaction-meta-journal';
-import { createBlockSource, createTxFromHashFlow } from './transactions-sources/block-source';
-import { createMempoolSource, createTxFromEncoded } from './transactions-sources/mempool-source';
+import { swapTransactionCreator } from './transaction-creators/swap-transaction-creator';
+import { createBlockSource } from './transactions-sources/block-source';
+import { createMempoolSource } from './transactions-sources/mempool-source';
 import { TerraProcessorCoin } from './types/coin';
-import {
-  NewTransactionCreationInfo,
-  NewTransactionInfo,
-  NewTransactionResult,
-} from './types/new-transaction-info';
+import { NewTransactionResult } from './types/new-transaction-info';
 import { TransactionFilter } from './types/transaction-filter';
+import { terraAmountConverter } from './utils/terra-amount-converter';
+import { TransactionMetaJournal } from './utils/transaction-meta-journal';
 
 const coreSmartContractWorkflow = (
   metaJournal: TransactionMetaJournal,
   getFilters: () => Observable<TransactionFilter>,
   getTasks: () => SniperTask[],
-  updateTask: (params: TasksProcessorUpdateParams) => void,
-  sendTransaction: (info: NewTransactionInfo) => Promise<NewTransactionCreationInfo>,
-  getTx: (hash: string) => Promise<TxInfo>,
+  updateTask: TasksProcessorUpdater,
+  sendTransaction: TransactionSender,
+  getTx: TxInfoGetter,
 ) =>
   pipe(
     createLiquidityFilterWorkflow(getFilters),
     tap(metaJournal.onFiltrationDone),
     createNewTransactionPreparationFlow(getTasks, updateTask),
     tap(metaJournal.onStartTransactionSending),
-    mergeMap((transactionInfo) =>
-      of(transactionInfo).pipe(
-        mergeMap(sendTransaction),
-        retryAndContinue({
-          retryCount: 2,
-          onError: () => updateTask({ taskId: transactionInfo.taskId, newStatus: 'active' }),
-        }),
-      ),
-    ),
-    mergeMap(({ taskId, info }) =>
-      of(info.txhash).pipe(
-        mergeMap((txhash) => getTx(txhash)),
-        retryAndContinue({
-          retryCount: 6,
-          delay: 1000,
-          onError: () => updateTask({ taskId, newStatus: 'active' }),
-        }),
-        map(
-          (txInfo): NewTransactionResult => ({
-            taskId,
-            success: txInfo.code !== undefined,
-            txhash: txInfo.txhash,
-            height: txInfo.height,
-          }),
-        ),
-      ),
-    ),
-    tap(({ taskId, success }) => updateTask({ taskId, newStatus: success ? 'closed' : 'active' })),
+    newTransactionWorkflow(sendTransaction, getTx, updateTask),
     map((result) => ({ result, metaJournal })),
   );
 
@@ -115,52 +85,47 @@ export class TerraTasksProcessor implements TasksProcessor {
     const lcdApi = new APIRequester(config.lcdUrl);
     const tendermintApi = new APIRequester(config.tendermintApiUrl);
 
-    const $mempoolSource = createMempoolSource(tendermintApi).pipe(
-      mergeMap((encodedTx) => {
-        const metaJournal = new TransactionMetaJournal('mempool');
-
-        return of(encodedTx).pipe(
-          createTxFromEncoded(lcdApi),
-          repeat(),
-          map((txDecodeResponse) => txDecodeResponse.result),
+    const $mempoolSource = createMempoolSource({
+      tendermintApi,
+      lcdApi,
+    }).pipe(
+      mergeMap(({ txValue, metaJournal }) =>
+        of(txValue).pipe(
           coreSmartContractWorkflow(
             metaJournal,
             () => this.getFilters(),
             () => this.tasks,
             (params) => this.updateTask(params),
-            createTransactionSender(terra, {
+            swapTransactionCreator(terra, {
               walletMnemonic: walletMnemonicKey,
               gasAdjustment: config.gasAdjustment,
               gasPrices: [defaultTerraCoin],
             }),
             (txHash) => terra.tx.txInfo(txHash),
           ),
-        );
-      }),
+        ),
+      ),
     );
 
-    const $blockSource = createBlockSource({
+    const $blockSource = createBlockSource(terra, {
       websocketUrl: config.tendermintWebsocketUrl,
     }).pipe(
-      mergeMap((txHash) => {
-        const metaJournal = new TransactionMetaJournal('block');
-
-        return of(txHash).pipe(
-          createTxFromHashFlow(terra),
+      mergeMap(({ txValue, metaJournal }) =>
+        of(txValue).pipe(
           coreSmartContractWorkflow(
             metaJournal,
             () => this.getFilters(),
             () => this.tasks,
             (params) => this.updateTask(params),
-            createTransactionSender(terra, {
+            swapTransactionCreator(terra, {
               walletMnemonic: walletMnemonicKey,
               gasAdjustment: config.gasAdjustment,
               gasPrices: [defaultTerraCoin],
             }),
             (txHash) => terra.tx.txInfo(txHash),
           ),
-        );
-      }),
+        ),
+      ),
     );
 
     this.smartContractWorkflow = $blockSource.pipe(mergeWith($mempoolSource));

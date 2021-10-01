@@ -1,67 +1,68 @@
-import { Coin, Coins, LCDClient, MnemonicKey, MsgExecuteContract } from '@terra-money/terra.js';
-import { filter, map, pipe, tap } from 'rxjs';
+import { TxInfo } from '@terra-money/terra.js';
+import { filter, map, mergeMap, of, pipe, tap } from 'rxjs';
 
 import { SniperTask } from '../sniper-task';
-import { TasksProcessorUpdateParams } from '../tasks-processor';
-import { terraAmountConverter } from './terra-amount-converter';
-import { NewTransactionCreationInfo, NewTransactionInfo } from './types/new-transaction-info';
+import { TasksProcessorUpdateParams, TasksProcessorUpdater } from '../tasks-processor';
+import {
+  NewTransactionCreationInfo,
+  NewTransactionInfo,
+  NewTransactionResult,
+} from './types/new-transaction-info';
+import { retryAndContinue } from './utils/retry-and-continue';
+
+export type TransactionSender = (info: NewTransactionInfo) => Promise<NewTransactionCreationInfo>;
+export type TxInfoGetter = (hash: string) => Promise<TxInfo>;
 
 export const createNewTransactionPreparationFlow = (
-  getTasks: () => SniperTask[],
-  updateTask: (params: TasksProcessorUpdateParams) => void,
+  tasksGetter: () => SniperTask[],
+  taskUpdater: (params: TasksProcessorUpdateParams) => void,
 ) =>
   pipe(
     map(
       ({ taskId, satisfiedBuyCondition, liquidity }): NewTransactionInfo => ({
         taskId,
-        isTaskActive: getTasks().find((t) => t.id === taskId)?.status === 'active',
+        isTaskActive: tasksGetter().find((t) => t.id === taskId)?.status === 'active',
         buyDenom: satisfiedBuyCondition.denom,
         buyAmount: satisfiedBuyCondition.buy,
         pairContract: liquidity.pairContract,
       }),
     ),
     filter(({ isTaskActive }) => isTaskActive),
-    tap(({ taskId }) => updateTask({ taskId, newStatus: 'blocked' })),
+    tap(({ taskId }) => taskUpdater({ taskId, newStatus: 'blocked' })),
   );
 
-export const createTransactionSender =
-  (
-    terra: LCDClient,
-    config: { walletMnemonic: MnemonicKey; gasAdjustment: string; gasPrices: Coin.Data[] },
-  ) =>
-  async ({
-    taskId,
-    pairContract,
-    buyAmount,
-    buyDenom,
-  }: NewTransactionInfo): Promise<NewTransactionCreationInfo> => {
-    const wallet = terra.wallet(config.walletMnemonic);
-
-    const execute = new MsgExecuteContract(
-      wallet.key.accAddress,
-      pairContract,
-      {
-        swap: {
-          offer_asset: {
-            info: {
-              native_token: {
-                denom: buyDenom,
-              },
-            },
-            amount: terraAmountConverter.toTerraFormat(buyAmount),
-          },
-        },
-      },
-      [new Coin(buyDenom, terraAmountConverter.toTerraFormat(buyAmount))],
-    );
-
-    const tx = await wallet.createAndSignTx({
-      msgs: [execute],
-      gasAdjustment: config.gasAdjustment,
-      gasPrices: Coins.fromData(config.gasPrices),
-    });
-
-    const txBroadcastingInfo = await terra.tx.broadcastAsync(tx);
-
-    return { taskId, info: txBroadcastingInfo };
-  };
+export const newTransactionWorkflow = (
+  transactionSender: TransactionSender,
+  txInfoGetter: TxInfoGetter,
+  taskUpdater: TasksProcessorUpdater,
+) =>
+  pipe(
+    mergeMap((transactionInfo: NewTransactionInfo) =>
+      of(transactionInfo).pipe(
+        mergeMap(transactionSender),
+        retryAndContinue({
+          retryCount: 2,
+          onError: () => taskUpdater({ taskId: transactionInfo.taskId, newStatus: 'active' }),
+        }),
+      ),
+    ),
+    mergeMap(({ taskId, info }) =>
+      of(info.txhash).pipe(
+        mergeMap((txhash) => txInfoGetter(txhash)),
+        retryAndContinue({
+          retryCount: 6,
+          delay: 1000,
+          onError: () => taskUpdater({ taskId, newStatus: 'active' }),
+        }),
+        map(
+          (txInfo): NewTransactionResult => ({
+            taskId,
+            success: txInfo.code !== undefined,
+            txhash: txInfo.txhash,
+            height: txInfo.height,
+          }),
+        ),
+      ),
+    ),
+    tap(({ taskId, success }) => taskUpdater({ taskId, newStatus: success ? 'closed' : 'active' })),
+  );

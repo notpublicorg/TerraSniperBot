@@ -2,8 +2,8 @@ import { Denom, TxInfo } from '@terra-money/terra.js';
 import { firstValueFrom, from, map, toArray } from 'rxjs';
 
 import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
-import { aTransaction, createWasmExecuteMsg } from './transaction-builder';
 import { BuyCondition, TransactionFilter } from './types/transaction-filter';
+import { aTransaction, createWasmExecuteMsg } from './utils/transaction-builder';
 
 const PAIR_CONTRACT = 'pairContract';
 const DEFAULT_COIN_DENOM = Denom.LUNA;

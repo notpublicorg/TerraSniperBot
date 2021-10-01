@@ -1,4 +1,4 @@
-import { FiltrationResult } from './types/transaction-filter';
+import { FiltrationResult } from '../types/transaction-filter';
 
 export class TransactionMetaJournal {
   public taskId = '';

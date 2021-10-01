@@ -1,28 +1,39 @@
 import { StdTx } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
-import { filter, mergeMap, Observable, pipe } from 'rxjs';
+import { filter, mergeMap, Observable, repeat } from 'rxjs';
 
 import { UnconfirmedTxsResponse } from '../types/mempool-response';
+import { TransactionMetaJournal } from '../utils/transaction-meta-journal';
 
-export function createMempoolSource(tendermintApi: APIRequester) {
-  const $source = new Observable<string>((subscriber) => {
-    // TODO: handle request errors
-    tendermintApi.getRaw<UnconfirmedTxsResponse>('/unconfirmed_txs').then((mempoolResponse) => {
-      mempoolResponse.result.txs.forEach((tx) => subscriber.next(tx));
-      subscriber.complete();
-    });
-  });
+export function createMempoolSource(deps: { tendermintApi: APIRequester; lcdApi: APIRequester }) {
+  const $source = new Observable<{ tx: string; metaJournal: TransactionMetaJournal }>(
+    (subscriber) => {
+      // TODO: handle request errors
+      deps.tendermintApi
+        .getRaw<UnconfirmedTxsResponse>('/unconfirmed_txs')
+        .then((mempoolResponse) => {
+          mempoolResponse.result.txs.forEach((tx) =>
+            subscriber.next({ tx, metaJournal: new TransactionMetaJournal('mempool') }),
+          );
+          subscriber.complete();
+        });
+    },
+  );
 
-  return $source;
-}
-
-export const createTxFromEncoded = (lcdApi: APIRequester) =>
-  pipe(
-    mergeMap((tx) =>
-      lcdApi.postRaw<{ result: StdTx.Data['value'] }>('/txs/decode', { tx }).catch((e) => {
-        console.log(e);
-        return null;
-      }),
+  return $source.pipe(
+    mergeMap(({ tx, metaJournal }) =>
+      deps.lcdApi
+        .postRaw<{ result: StdTx.Data['value'] }>('/txs/decode', { tx })
+        .then(({ result }) => ({
+          txValue: result,
+          metaJournal,
+        }))
+        .catch((e) => {
+          console.log(e);
+          return null;
+        }),
     ),
     filter(Boolean),
+    repeat(),
   );
+}
