@@ -6,6 +6,7 @@
   "scripts": {
     "babel": "babel-node --extensions \".ts,.tsx\"",
     "start:dev": "nodemon --exec yarn babel src/index.ts",
+    "start:play": "yarn babel src/terra-processor/playground.ts",
     "build": "babel --extensions \".ts,.tsx\" src -d dist",
     "start:prod": "node dist/index.js",
     "lint": "eslint \"src/**/*.ts\"",
