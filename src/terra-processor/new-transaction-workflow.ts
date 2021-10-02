@@ -43,8 +43,12 @@ export const newTransactionWorkflow = (
         mergeMap(transactionSender),
         retryAndContinue({
           retryCount: 2,
-          onError: (err) => {
-            console.log(err);
+          onError: (e) => {
+            console.log(
+              'ERROR on sending transaction: ',
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (e as unknown as { response: { data: any } }).response?.data || e.message,
+            );
             taskUpdater({ taskId: transactionInfo.taskId, newStatus: 'active' });
           },
         }),
@@ -56,8 +60,12 @@ export const newTransactionWorkflow = (
         retryAndContinue({
           retryCount: 7,
           delay: 1000,
-          onError: (err) => {
-            console.log(err);
+          onError: (e) => {
+            console.log(
+              'ERROR on checking is transaction in block: ',
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (e as unknown as { response: { data: any } }).response?.data || e.message,
+            );
             taskUpdater({ taskId, newStatus: 'active' });
           },
         }),

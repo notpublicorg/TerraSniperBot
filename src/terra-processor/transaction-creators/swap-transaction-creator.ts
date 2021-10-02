@@ -1,4 +1,4 @@
-import { Coin, isTxError, LCDClient, MnemonicKey, MsgExecuteContract } from '@terra-money/terra.js';
+import { Coin, LCDClient, MnemonicKey, MsgExecuteContract } from '@terra-money/terra.js';
 
 import { TransactionSender } from '../new-transaction-workflow';
 import { NewTransactionCreationInfo, NewTransactionInfo } from '../types/new-transaction-info';
@@ -43,8 +43,11 @@ export const swapTransactionCreator =
 
     const txBroadcastingInfo = await terra.tx.broadcastSync(tx);
 
-    if (isTxError(txBroadcastingInfo))
-      throw new Error(`${txBroadcastingInfo.txhash} - ${txBroadcastingInfo.raw_log}`);
+    console.log(txBroadcastingInfo);
+    // TODO: что-то он неправильно вычисляет походу
+
+    // if (isTxError(txBroadcastingInfo))
+    //   throw new Error(`${txBroadcastingInfo.txhash} - ${txBroadcastingInfo.raw_log}`);
 
     return { taskId, info: txBroadcastingInfo };
   };
