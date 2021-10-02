@@ -69,6 +69,7 @@ export const newTransactionWorkflow = (
             taskUpdater({ taskId, newStatus: 'active' });
           },
         }),
+        tap((v) => console.log('INFO from checking is transaction in block: ', v)),
         map(
           (txInfo): NewTransactionResult => ({
             taskId,

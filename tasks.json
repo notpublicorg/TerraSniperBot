@@ -15,22 +15,6 @@
         }
       ],
       "maxTokenPrice": "100"
-    },
-    {
-      "contract": "terra18pypgh5yht33dhd0yhevjj8yj6edkraqjgegls",
-      "conditions": [
-        {
-          "currency": "ust",
-          "greaterOrEqual": "20",
-          "buy": "20"
-        },
-        {
-          "currency": "ust",
-          "greaterOrEqual": "10",
-          "buy": "10"
-        }
-      ],
-      "maxTokenPrice": "100"
     }
   ]
 }

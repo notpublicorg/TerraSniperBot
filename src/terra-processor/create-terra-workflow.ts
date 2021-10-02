@@ -1,6 +1,6 @@
-import { Coin, LCDClient, MnemonicKey } from '@terra-money/terra.js';
+import { LCDClient, MnemonicKey } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
-import { map, mergeMap, mergeWith, Observable, of, tap } from 'rxjs';
+import { map, mergeMap, Observable, of, tap } from 'rxjs';
 
 import { SniperTask } from '../sniper-task';
 import { TasksProcessorUpdater } from '../tasks-processor';
@@ -12,7 +12,6 @@ import {
 } from './new-transaction-workflow';
 import { TerraTasksProcessorConfig } from './processor-config';
 import { swapTransactionCreator } from './transaction-creators/swap-transaction-creator';
-import { createBlockSource } from './transactions-sources/block-source';
 import { createMempoolSource } from './transactions-sources/mempool-source';
 import { TransactionFilter } from './types/transaction-filter';
 import { createGasPriceCalculator } from './utils/calculate-gas-prices';
@@ -72,31 +71,33 @@ export function createTerraWorkflow(
     ),
   );
 
-  const $blockSource = createBlockSource(terra, {
-    websocketUrl: config.tendermintWebsocketUrl,
-  }).pipe(
-    mergeMap(({ txValue, metaJournal }) =>
-      of(txValue).pipe(
-        createLiquidityFilterWorkflow(deps.getFiltersSource),
-        tap(metaJournal.onFiltrationDone.bind(metaJournal)),
-        createNewTransactionPreparationFlow(deps.getTasks, deps.updateTask),
-        tap(metaJournal.onStartTransactionSending.bind(metaJournal)),
-        newTransactionWorkflow(
-          swapTransactionCreator(
-            terra,
-            {
-              walletMnemonic: walletMnemonicKey,
-              gasAdjustment: config.gasAdjustment,
-            },
-            () => [new Coin(config.block.defaultGasPriceDenom, config.block.defaultGasPrice)],
-          ),
-          getTx,
-          deps.updateTask,
-        ),
-        map((result) => ({ result, metaJournal })),
-      ),
-    ),
-  );
+  // const $blockSource = createBlockSource(terra, {
+  //   websocketUrl: config.tendermintWebsocketUrl,
+  // }).pipe(
+  //   mergeMap(({ txValue, metaJournal }) =>
+  //     of(txValue).pipe(
+  //       createLiquidityFilterWorkflow(deps.getFiltersSource),
+  //       tap(metaJournal.onFiltrationDone.bind(metaJournal)),
+  //       createNewTransactionPreparationFlow(deps.getTasks, deps.updateTask),
+  //       tap(metaJournal.onStartTransactionSending.bind(metaJournal)),
+  //       newTransactionWorkflow(
+  //         swapTransactionCreator(
+  //           terra,
+  //           {
+  //             walletMnemonic: walletMnemonicKey,
+  //             gasAdjustment: config.gasAdjustment,
+  //           },
+  //           () => [new Coin(config.block.defaultGasPriceDenom, config.block.defaultGasPrice)],
+  //         ),
+  //         getTx,
+  //         deps.updateTask,
+  //       ),
+  //       map((result) => ({ result, metaJournal })),
+  //     ),
+  //   ),
+  // );
 
-  return $blockSource.pipe(mergeWith($mempoolSource));
+  return $mempoolSource;
+
+  // return $blockSource.pipe(mergeWith($mempoolSource));
 }
