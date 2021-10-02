@@ -18,7 +18,7 @@ const configuration = {
 const transactionInfo: NewTransactionInfo = {
   taskId: 'taskId',
   isTaskActive: true,
-  pairContract: '',
+  pairContract: 'terra13cnle7tv57pqpfzq2zr5kwp3dxmquyq7sxyssf',
   buyAmount: 1 * MILLION,
   buyDenom: Denom.USD,
 };

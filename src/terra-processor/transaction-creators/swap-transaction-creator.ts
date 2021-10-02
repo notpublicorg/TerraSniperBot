@@ -1,4 +1,4 @@
-import { Coin, LCDClient, MnemonicKey, MsgExecuteContract, StdFee } from '@terra-money/terra.js';
+import { Coin, isTxError, LCDClient, MnemonicKey, MsgExecuteContract } from '@terra-money/terra.js';
 
 import { TransactionSender } from '../new-transaction-workflow';
 import { NewTransactionCreationInfo, NewTransactionInfo } from '../types/new-transaction-info';
@@ -28,24 +28,23 @@ export const swapTransactionCreator =
                 denom: buyDenom,
               },
             },
-            amount: buyAmount,
+            amount: buyAmount.toString(),
           },
         },
       },
       [new Coin(buyDenom, buyAmount)],
     );
 
-    console.log(gasPricesGetter());
     const tx = await wallet.createAndSignTx({
       msgs: [execute],
       gasAdjustment: config.gasAdjustment,
-      fee: new StdFee(20000, [new Coin('uusd', 1000000)]),
+      gasPrices: gasPricesGetter(),
     });
 
     const txBroadcastingInfo = await terra.tx.broadcastSync(tx);
 
-    // TODO: ориентироваться на code если он success то тогда искать
-    console.log(txBroadcastingInfo);
+    if (isTxError(txBroadcastingInfo))
+      throw new Error(`${txBroadcastingInfo.txhash} - ${txBroadcastingInfo.raw_log}`);
 
     return { taskId, info: txBroadcastingInfo };
   };
