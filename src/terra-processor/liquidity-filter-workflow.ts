@@ -14,14 +14,18 @@ import {
   TransactionFilter,
 } from './types/transaction-filter';
 
+export const tryGetLiquidityMsgs = pipe(
+  mergeMap((t: StdTx.Data['value']) => t.msg),
+  filter(isValidSmartContract),
+  map(parseLiquidityInfo),
+  filter(Boolean),
+);
+
 export const createLiquidityFilterWorkflow = (
   getFiltersSource: () => Observable<TransactionFilter>,
 ) =>
   pipe(
-    mergeMap((t: StdTx.Data['value']) => t.msg),
-    filter(isValidSmartContract),
-    map(parseLiquidityInfo),
-    filter(Boolean),
+    tryGetLiquidityMsgs,
     mergeMap((liquidity) =>
       getFiltersSource().pipe(
         filter((f) => f.contractToSpy === liquidity.token.contract),
