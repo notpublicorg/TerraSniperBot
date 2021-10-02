@@ -1,6 +1,5 @@
-import { StdFee } from '@terra-money/terra.js';
+import { Coin, StdFee } from '@terra-money/terra.js';
 
-import { TerraProcessorCoin } from '../types/coin';
 import { createGasPriceCalculator } from './calculate-gas-prices';
 import { Denom } from './denom';
 
@@ -19,7 +18,7 @@ it('should return default gas price if there is fee', () => {
     amount: [],
   });
 
-  expect(gasPrices).toEqual([{ denom: OPTIONS.defaultDenom, amount: OPTIONS.defaultPrice }]);
+  expect(gasPrices).toEqual([new Coin(OPTIONS.defaultDenom, OPTIONS.defaultPrice)]);
 });
 
 it('should calculate gas price for LUNA and USD', () => {
@@ -32,18 +31,18 @@ it('should calculate gas price for LUNA and USD', () => {
     amount: [
       {
         denom: Denom.USD,
-        amount: (USD_FEE_AMOUNT * 1000000).toString(),
+        amount: USD_FEE_AMOUNT.toString(),
       },
-      { denom: Denom.LUNA, amount: (LUNA_FEE_AMOUNT * 1000000).toString() },
+      { denom: Denom.LUNA, amount: LUNA_FEE_AMOUNT.toString() },
       { denom: Denom.EUR, amount: '10000000' },
     ],
   };
 
   const gasPrices = calculateGasPrices(LIQUIDITY_FEE);
 
-  expect(gasPrices).toEqual<TerraProcessorCoin[]>([
-    { denom: Denom.USD, amount: (USD_FEE_AMOUNT / MAX_GAS) * 0.94 },
-    { denom: Denom.LUNA, amount: (LUNA_FEE_AMOUNT / MAX_GAS) * 0.94 },
+  expect(gasPrices).toEqual([
+    new Coin(Denom.USD, (USD_FEE_AMOUNT / MAX_GAS) * 0.94),
+    new Coin(Denom.LUNA, (LUNA_FEE_AMOUNT / MAX_GAS) * 0.94),
   ]);
 });
 
@@ -57,17 +56,17 @@ it('should set minimal values if result of calculation is lower', () => {
     amount: [
       {
         denom: Denom.USD,
-        amount: (USD_FEE_AMOUNT * 1000000).toString(),
+        amount: USD_FEE_AMOUNT.toString(),
       },
-      { denom: Denom.LUNA, amount: (LUNA_FEE_AMOUNT * 1000000).toString() },
+      { denom: Denom.LUNA, amount: LUNA_FEE_AMOUNT.toString() },
       { denom: Denom.EUR, amount: '10000000' },
     ],
   };
 
   const gasPrices = calculateGasPrices(LIQUIDITY_FEE);
 
-  expect(gasPrices).toEqual<TerraProcessorCoin[]>([
-    { denom: Denom.USD, amount: OPTIONS.minUusdPrice },
-    { denom: Denom.LUNA, amount: OPTIONS.minLunaPrice },
+  expect(gasPrices).toEqual([
+    new Coin(Denom.USD, OPTIONS.minUusdPrice),
+    new Coin(Denom.LUNA, OPTIONS.minLunaPrice),
   ]);
 });

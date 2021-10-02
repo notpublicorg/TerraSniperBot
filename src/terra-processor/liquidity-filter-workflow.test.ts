@@ -4,6 +4,7 @@ import { firstValueFrom, from, map, toArray } from 'rxjs';
 import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
 import { BuyCondition, TransactionFilter } from './types/transaction-filter';
 import { Denom } from './utils/denom';
+import { terraAmountConverter } from './utils/terra-types-converter';
 import { aTransaction, createWasmExecuteMsg } from './utils/transaction-builder';
 
 const PAIR_CONTRACT = 'pairContract';
@@ -92,7 +93,13 @@ it('should reject if coin amount is less than amount given in condition', async 
       [
         {
           ...DEFAULT_FILTER,
-          conditions: [{ denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10 }],
+          conditions: [
+            {
+              denom: DEFAULT_COIN_DENOM,
+              greaterOrEqual: terraAmountConverter.toTerraFormat(10000),
+              buy: terraAmountConverter.toTerraFormat(10),
+            },
+          ],
         },
       ],
       [TRANSACTION],
@@ -100,7 +107,7 @@ it('should reject if coin amount is less than amount given in condition', async 
   ).resolves.toEqual([]);
 });
 
-it("should reject if liquidity's average token price is bigger than given max token price", async () => {
+it.only("should reject if liquidity's average token price is bigger than given max token price", async () => {
   const TRANSACTION = aTransaction()
     .withMsgs([
       createWasmExecuteMsg(PAIR_CONTRACT, {
@@ -115,7 +122,13 @@ it("should reject if liquidity's average token price is bigger than given max to
       [
         {
           ...DEFAULT_FILTER,
-          conditions: [{ denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 }],
+          conditions: [
+            {
+              denom: DEFAULT_COIN_DENOM,
+              greaterOrEqual: terraAmountConverter.toTerraFormat(10000),
+              buy: terraAmountConverter.toTerraFormat(10000),
+            },
+          ],
           maxTokenPrice: 20,
         },
       ],
@@ -138,8 +151,16 @@ it('should accept valid transaction which satisfies conditions and max token pri
         {
           ...DEFAULT_FILTER,
           conditions: [
-            { denom: Denom.USD, greaterOrEqual: 10, buy: 10 },
-            { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
+            {
+              denom: Denom.USD,
+              greaterOrEqual: terraAmountConverter.toTerraFormat(10),
+              buy: terraAmountConverter.toTerraFormat(10),
+            },
+            {
+              denom: DEFAULT_COIN_DENOM,
+              greaterOrEqual: terraAmountConverter.toTerraFormat(10000),
+              buy: terraAmountConverter.toTerraFormat(10000),
+            },
           ],
           maxTokenPrice: 23,
         },
@@ -149,11 +170,18 @@ it('should accept valid transaction which satisfies conditions and max token pri
   ).resolves.toEqual([
     {
       taskId: DEFAULT_FILTER.taskId,
-      satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
+      satisfiedBuyCondition: {
+        denom: DEFAULT_COIN_DENOM,
+        greaterOrEqual: terraAmountConverter.toTerraFormat(10000),
+        buy: terraAmountConverter.toTerraFormat(10000),
+      },
       liquidity: {
         pairContract: PAIR_CONTRACT,
-        token: { amount: 5000, contract: DEFAULT_FILTER.contractToSpy },
-        currency: { amount: 100000, denom: DEFAULT_COIN_DENOM },
+        token: {
+          amount: terraAmountConverter.toTerraFormat(5000),
+          contract: DEFAULT_FILTER.contractToSpy,
+        },
+        currency: { amount: terraAmountConverter.toTerraFormat(100000), denom: DEFAULT_COIN_DENOM },
       },
     },
   ]);
@@ -176,8 +204,16 @@ it('should accept the transaction with 2 acceptable messages', async () => {
         {
           ...DEFAULT_FILTER,
           conditions: [
-            { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
-            { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10, buy: 10 },
+            {
+              denom: DEFAULT_COIN_DENOM,
+              greaterOrEqual: terraAmountConverter.toTerraFormat(10000),
+              buy: terraAmountConverter.toTerraFormat(10000),
+            },
+            {
+              denom: DEFAULT_COIN_DENOM,
+              greaterOrEqual: terraAmountConverter.toTerraFormat(10),
+              buy: terraAmountConverter.toTerraFormat(10),
+            },
           ],
         },
       ],
@@ -186,20 +222,34 @@ it('should accept the transaction with 2 acceptable messages', async () => {
   ).resolves.toEqual([
     {
       taskId: DEFAULT_FILTER.taskId,
-      satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10, buy: 10 },
+      satisfiedBuyCondition: {
+        denom: DEFAULT_COIN_DENOM,
+        greaterOrEqual: terraAmountConverter.toTerraFormat(10),
+        buy: terraAmountConverter.toTerraFormat(10),
+      },
       liquidity: {
         pairContract: PAIR_CONTRACT,
-        token: { amount: 5000, contract: DEFAULT_FILTER.contractToSpy },
-        currency: { amount: 1000, denom: DEFAULT_COIN_DENOM },
+        token: {
+          amount: terraAmountConverter.toTerraFormat(5000),
+          contract: DEFAULT_FILTER.contractToSpy,
+        },
+        currency: { amount: terraAmountConverter.toTerraFormat(1000), denom: DEFAULT_COIN_DENOM },
       },
     },
     {
       taskId: DEFAULT_FILTER.taskId,
-      satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
+      satisfiedBuyCondition: {
+        denom: DEFAULT_COIN_DENOM,
+        greaterOrEqual: terraAmountConverter.toTerraFormat(10000),
+        buy: terraAmountConverter.toTerraFormat(10000),
+      },
       liquidity: {
         pairContract: PAIR_CONTRACT,
-        token: { amount: 5000, contract: DEFAULT_FILTER.contractToSpy },
-        currency: { amount: 100000, denom: DEFAULT_COIN_DENOM },
+        token: {
+          amount: terraAmountConverter.toTerraFormat(5000),
+          contract: DEFAULT_FILTER.contractToSpy,
+        },
+        currency: { amount: terraAmountConverter.toTerraFormat(100000), denom: DEFAULT_COIN_DENOM },
       },
     },
   ]);
@@ -221,7 +271,13 @@ it('should accept transaction which satisfies second filter', async () => {
         {
           taskId: 'alternativeTaskId',
           contractToSpy: ALTERNATIVE_CONTRACT,
-          conditions: [{ denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 }],
+          conditions: [
+            {
+              denom: DEFAULT_COIN_DENOM,
+              greaterOrEqual: terraAmountConverter.toTerraFormat(100000),
+              buy: terraAmountConverter.toTerraFormat(100000),
+            },
+          ],
         },
       ],
       [TRANSACTION],
@@ -229,11 +285,15 @@ it('should accept transaction which satisfies second filter', async () => {
   ).resolves.toEqual([
     {
       taskId: 'alternativeTaskId',
-      satisfiedBuyCondition: { denom: DEFAULT_COIN_DENOM, greaterOrEqual: 10000, buy: 10000 },
+      satisfiedBuyCondition: {
+        denom: DEFAULT_COIN_DENOM,
+        greaterOrEqual: terraAmountConverter.toTerraFormat(100000),
+        buy: terraAmountConverter.toTerraFormat(100000),
+      },
       liquidity: {
         pairContract: PAIR_CONTRACT,
-        token: { amount: 5000, contract: ALTERNATIVE_CONTRACT },
-        currency: { amount: 100000, denom: DEFAULT_COIN_DENOM },
+        token: { amount: terraAmountConverter.toTerraFormat(5000), contract: ALTERNATIVE_CONTRACT },
+        currency: { amount: terraAmountConverter.toTerraFormat(100000), denom: DEFAULT_COIN_DENOM },
       },
     },
   ]);
