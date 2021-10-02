@@ -1,15 +1,13 @@
-import { Coin, Coins, LCDClient, MnemonicKey, MsgExecuteContract } from '@terra-money/terra.js';
+import { Coin, LCDClient, MnemonicKey, MsgExecuteContract, StdFee } from '@terra-money/terra.js';
 
 import { TransactionSender } from '../new-transaction-workflow';
-import { TerraProcessorCoin } from '../types/coin';
 import { NewTransactionCreationInfo, NewTransactionInfo } from '../types/new-transaction-info';
-import { terraAmountConverter, terraCoinConverter } from '../utils/terra-types-converter';
 
 export const swapTransactionCreator =
   (
     terra: LCDClient,
     config: { walletMnemonic: MnemonicKey; gasAdjustment: string },
-    gasPricesGetter: () => TerraProcessorCoin[],
+    gasPricesGetter: () => Coin[],
   ): TransactionSender =>
   async ({
     taskId,
@@ -30,20 +28,24 @@ export const swapTransactionCreator =
                 denom: buyDenom,
               },
             },
-            amount: terraAmountConverter.toTerraFormat(buyAmount),
+            amount: buyAmount,
           },
         },
       },
-      [new Coin(buyDenom, terraAmountConverter.toTerraFormat(buyAmount))],
+      [new Coin(buyDenom, buyAmount)],
     );
 
+    console.log(gasPricesGetter());
     const tx = await wallet.createAndSignTx({
       msgs: [execute],
       gasAdjustment: config.gasAdjustment,
-      gasPrices: Coins.fromData(terraCoinConverter.toTerraFormat(gasPricesGetter())),
+      fee: new StdFee(20000, [new Coin('uusd', 1000000)]),
     });
 
-    const txBroadcastingInfo = await terra.tx.broadcastAsync(tx);
+    const txBroadcastingInfo = await terra.tx.broadcastSync(tx);
+
+    // TODO: ориентироваться на code если он success то тогда искать
+    console.log(txBroadcastingInfo);
 
     return { taskId, info: txBroadcastingInfo };
   };

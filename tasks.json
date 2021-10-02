@@ -1,15 +1,15 @@
 {
   "tasks": [
     {
-      "contract": "terra1l7n7qe50z6pxa9l6suakmu53ayqupj72zeh6xe",
+      "contract": "terra1e8u08z7kksgxftryfafn7lz42jp45srpza2yu0",
       "conditions": [
         {
-          "denom": "uusd",
+          "currency": "ust",
           "greaterOrEqual": "20",
           "buy": "20"
         },
         {
-          "denom": "uusd",
+          "currency": "ust",
           "greaterOrEqual": "10",
           "buy": "10"
         }
@@ -20,12 +20,12 @@
       "contract": "terra18pypgh5yht33dhd0yhevjj8yj6edkraqjgegls",
       "conditions": [
         {
-          "denom": "uusd",
+          "currency": "ust",
           "greaterOrEqual": "20",
           "buy": "20"
         },
         {
-          "denom": "uusd",
+          "currency": "ust",
           "greaterOrEqual": "10",
           "buy": "10"
         }

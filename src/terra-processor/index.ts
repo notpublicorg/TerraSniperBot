@@ -1,4 +1,4 @@
-import { LCDClient, MnemonicKey } from '@terra-money/terra.js';
+import { Coin, LCDClient, MnemonicKey } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import {
   filter,
@@ -33,6 +33,8 @@ import { createMempoolSource } from './transactions-sources/mempool-source';
 import { NewTransactionResult } from './types/new-transaction-info';
 import { TransactionFilter } from './types/transaction-filter';
 import { createGasPriceCalculator } from './utils/calculate-gas-prices';
+import { CurrencyDenomMap } from './utils/denom';
+import { terraAmountConverter } from './utils/terra-types-converter';
 import { TransactionMetaJournal } from './utils/transaction-meta-journal';
 
 const coreSmartContractWorkflow = (
@@ -120,12 +122,7 @@ export class TerraTasksProcessor implements TasksProcessor {
                 walletMnemonic: walletMnemonicKey,
                 gasAdjustment: config.gasAdjustment,
               },
-              () => [
-                {
-                  denom: config.block.defaultGasPriceDenom,
-                  amount: config.block.defaultGasPrice,
-                },
-              ],
+              () => [new Coin(config.block.defaultGasPriceDenom, config.block.defaultGasPrice)],
             ),
             (txHash) => terra.tx.txInfo(txHash),
           ),
@@ -149,7 +146,6 @@ export class TerraTasksProcessor implements TasksProcessor {
   };
 
   updateTasks: TasksProcessor['updateTasks'] = (tasks) => {
-    console.log(tasks);
     this.tasks = tasks;
     if (this.tasks.length) {
       this.subscription = this.subscription || this.smartContractWorkflow.subscribe(console.log);
@@ -166,11 +162,13 @@ export class TerraTasksProcessor implements TasksProcessor {
         (t): TransactionFilter => ({
           taskId: t.id,
           contractToSpy: t.contract,
-          maxTokenPrice: t.maxTokenPrice ? +t.maxTokenPrice : undefined,
+          maxTokenPrice: t.maxTokenPrice
+            ? terraAmountConverter.toTerraFormat(+t.maxTokenPrice)
+            : undefined,
           conditions: t.conditions.map((c) => ({
-            denom: c.denom,
-            greaterOrEqual: +c.greaterOrEqual,
-            buy: +c.buy,
+            denom: CurrencyDenomMap[c.currency],
+            greaterOrEqual: terraAmountConverter.toTerraFormat(+c.greaterOrEqual),
+            buy: terraAmountConverter.toTerraFormat(+c.buy),
           })),
         }),
       ),

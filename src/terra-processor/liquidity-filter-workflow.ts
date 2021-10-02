@@ -13,7 +13,6 @@ import {
   ParsedLiquidity,
   TransactionFilter,
 } from './types/transaction-filter';
-import { terraAmountConverter } from './utils/terra-types-converter';
 
 export const createLiquidityFilterWorkflow = (
   getFiltersSource: () => Observable<TransactionFilter>,
@@ -63,11 +62,11 @@ function parseLiquidityInfo({ value }: MsgExecuteContract.Data): ParsedLiquidity
   return {
     pairContract: value.contract,
     token: {
-      amount: terraAmountConverter.toNumber(tokenInfo.amount),
+      amount: +tokenInfo.amount,
       contract: tokenInfo.info.token.contract_addr,
     },
     currency: {
-      amount: terraAmountConverter.toNumber(currencyInfo.amount),
+      amount: +currencyInfo.amount,
       denom: currencyInfo.info.native_token.denom,
     },
   };
@@ -92,6 +91,7 @@ function calculateAverageTokenPrice(
   totalCurrency: number,
   currencyToBuy: number,
 ) {
+  // TODO: выровнять количество нулей у token и currency
   const bougthTokenAmount = (totalToken * currencyToBuy) / (totalCurrency + currencyToBuy);
   const bougthTokenAmountWithCommission = bougthTokenAmount * 0.997;
   const averageTokenPrice = currencyToBuy / bougthTokenAmountWithCommission;

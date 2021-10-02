@@ -33,6 +33,8 @@ export class TasksCacheGateway implements TasksGateway {
       status: newStatus,
     });
 
+    console.log({ ...taskToUpdate, status: newStatus });
+
     this.notifySubscribers();
   };
 

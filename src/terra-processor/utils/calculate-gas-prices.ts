@@ -1,8 +1,6 @@
-import { StdFee } from '@terra-money/terra.js';
+import { Coin, StdFee } from '@terra-money/terra.js';
 
-import { TerraProcessorCoin } from '../types/coin';
 import { Denom } from '../utils/denom';
-import { terraCoinConverter } from './terra-types-converter';
 
 export function createGasPriceCalculator(options: {
   defaultDenom: string;
@@ -15,34 +13,25 @@ export function createGasPriceCalculator(options: {
     [Denom.LUNA]: options.minLunaPrice,
   };
 
-  return (liquidityFee: StdFee.Data): TerraProcessorCoin[] => {
+  return (liquidityFee: StdFee.Data): Coin[] => {
     const feeCoins = liquidityFee?.amount
-      ? terraCoinConverter.toAppFormat(
-          liquidityFee.amount.filter((c) => [Denom.USD, Denom.LUNA].includes(c.denom)),
-        )
+      ? liquidityFee.amount.filter((c) => [Denom.USD, Denom.LUNA].includes(c.denom))
       : [];
 
-    if (!feeCoins.length)
-      return [
-        {
-          denom: options.defaultDenom,
-          amount: options.defaultPrice,
-        },
-      ];
+    if (!feeCoins.length) return [new Coin(options.defaultDenom, options.defaultPrice)];
 
     const maxGas = +liquidityFee.gas;
 
     const gasPrices = feeCoins.map((c) => {
-      const calculatedPrice = (c.amount / maxGas) * 0.94;
+      const calculatedPrice = (+c.amount / maxGas) * 0.94;
       const minimalPrice = minimalPricesMap[c.denom];
 
-      return {
-        denom: c.denom,
-        amount:
-          minimalPrice === undefined || minimalPrice < calculatedPrice
-            ? calculatedPrice
-            : minimalPrice,
-      };
+      return new Coin(
+        c.denom,
+        minimalPrice === undefined || minimalPrice < calculatedPrice
+          ? calculatedPrice
+          : minimalPrice,
+      );
     });
 
     return gasPrices;

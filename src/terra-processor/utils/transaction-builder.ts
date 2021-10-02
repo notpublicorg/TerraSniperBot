@@ -14,11 +14,11 @@ export const createWasmExecuteMsg = (
     provide_liquidity: {
       assets: [
         {
-          amount: terraAmountConverter.toTerraFormat(liquidity.token.amount),
+          amount: terraAmountConverter.toTerraFormat(liquidity.token.amount).toString(),
           info: { token: { contract_addr: liquidity.token.contract } },
         },
         {
-          amount: terraAmountConverter.toTerraFormat(liquidity.currency.amount),
+          amount: terraAmountConverter.toTerraFormat(liquidity.currency.amount).toString(),
           info: { native_token: { denom: liquidity.currency.denom } },
         },
       ],

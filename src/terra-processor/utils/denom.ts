@@ -3,3 +3,8 @@ export const Denom = {
   USD: 'uusd',
   EUR: 'eur',
 };
+
+export const CurrencyDenomMap: Record<string, string> = {
+  ust: Denom.USD,
+  luna: Denom.LUNA,
+};

@@ -39,6 +39,7 @@ export const newTransactionWorkflow = (
   pipe(
     mergeMap((transactionInfo: NewTransactionInfo) =>
       of(transactionInfo).pipe(
+        tap((params) => console.log(params)),
         mergeMap(transactionSender),
         retryAndContinue({
           retryCount: 2,

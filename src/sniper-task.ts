@@ -1,5 +1,5 @@
 export type SniperBuyCondition = {
-  denom: string;
+  currency: string;
   greaterOrEqual: string;
   buy: string;
 };

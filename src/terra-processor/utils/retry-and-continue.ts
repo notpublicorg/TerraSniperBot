@@ -8,6 +8,7 @@ import {
   retry,
   retryWhen,
   take,
+  tap,
   throwError,
 } from 'rxjs';
 
@@ -21,6 +22,7 @@ export const retryAndContinue = <T>(options: {
       ? retryWhen((errors) =>
           errors.pipe(
             delay(options.delay || 0),
+            tap((error) => console.log(error)),
             take(options.retryCount),
             concatWith(throwError(() => new Error('Retry attempts exceeded!'))),
           ),
