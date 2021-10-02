@@ -73,7 +73,7 @@ export const newTransactionWorkflow = (
         map(
           (txInfo): NewTransactionResult => ({
             taskId,
-            success: txInfo.code !== undefined,
+            success: txInfo.code === undefined,
             txhash: txInfo.txhash,
             height: txInfo.height,
           }),
