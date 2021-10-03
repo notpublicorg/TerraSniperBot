@@ -1,11 +1,10 @@
-import { TasksProcessor } from '../tasks-processor';
+import { TasksProcessor } from '../core/tasks-processor';
 
 type MockedTasksProcessor = jest.Mocked<TasksProcessor>;
 
 class TasksProcessorMockBuilder {
   private gateway: MockedTasksProcessor = {
     subscribe: jest.fn(),
-    updateTasks: jest.fn(),
   };
 
   with<Prop extends keyof MockedTasksProcessor>(prop: Prop, value: MockedTasksProcessor[Prop]) {

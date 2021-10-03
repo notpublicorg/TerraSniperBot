@@ -1,4 +1,4 @@
-import { TasksGateway } from '../tasks-gateway';
+import { TasksGateway } from '../core/tasks-gateway';
 
 type MockedTasksGateway = jest.Mocked<TasksGateway>;
 
@@ -7,7 +7,6 @@ class TasksGatewayMockBuilder {
     addNewTasks: jest.fn(),
     getAll: jest.fn(),
     updateTaskStatus: jest.fn(),
-    subscribeToUpdates: jest.fn(),
   };
 
   with<Prop extends keyof MockedTasksGateway>(prop: Prop, value: MockedTasksGateway[Prop]) {

@@ -1,9 +1,9 @@
 import config from 'config';
 
 import tasks from '../tasks.json';
+import { TasksCacheGateway } from './cache/tasks-cache-gateway';
+import { tasksWatcherFactory } from './core/tasks-watcher';
 import { generateIdFromDate } from './id-generator-date';
-import { TasksCacheGateway } from './tasks-cache-gateway';
-import { tasksWatcherFactory } from './tasks-watcher';
 import { TerraTasksProcessor } from './terra-processor';
 
 const gateway = new TasksCacheGateway(generateIdFromDate);
@@ -25,7 +25,7 @@ const tasksWatcher = tasksWatcherFactory(gateway, terraProcessor);
 tasksWatcher.start();
 
 function stop() {
-  tasksWatcher.start();
+  tasksWatcher.stop();
   process.exit(0);
 }
 

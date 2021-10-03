@@ -1,8 +1,8 @@
 import { TxInfo } from '@terra-money/terra.js';
 import { filter, map, mergeMap, of, pipe, tap } from 'rxjs';
 
-import { SniperTask } from '../sniper-task';
-import { TasksProcessorUpdateParams, TasksProcessorUpdater } from '../tasks-processor';
+import { SniperTask } from '../core/sniper-task';
+import { TasksProcessorUpdateParams, TasksProcessorUpdater } from '../core/tasks-processor';
 import {
   NewTransactionCreationInfo,
   NewTransactionInfo,

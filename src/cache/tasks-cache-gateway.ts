@@ -1,10 +1,9 @@
+import { SniperTask } from '../core/sniper-task';
+import { TasksGateway } from '../core/tasks-gateway';
 import { IdGenerator } from './id-generator';
-import { SniperTask } from './sniper-task';
-import { TasksGateway, TasksGatewayUpdater } from './tasks-gateway';
 
 export class TasksCacheGateway implements TasksGateway {
   private tasks = new Map<string, SniperTask>();
-  private updater: TasksGatewayUpdater | null = null;
 
   constructor(private idGenerator: IdGenerator) {}
 
@@ -19,8 +18,6 @@ export class TasksCacheGateway implements TasksGateway {
         status: 'active',
       });
     });
-
-    this.notifySubscribers();
   };
 
   updateTaskStatus: TasksGateway['updateTaskStatus'] = (taskId, newStatus) => {
@@ -34,23 +31,5 @@ export class TasksCacheGateway implements TasksGateway {
     });
 
     console.log({ ...taskToUpdate, status: newStatus });
-
-    this.notifySubscribers();
   };
-
-  subscribeToUpdates: TasksGateway['subscribeToUpdates'] = (updater) => {
-    this.updater = updater;
-    return {
-      unsubscribe: () => {
-        this.updater = null;
-      },
-    };
-  };
-
-  private notifySubscribers() {
-    if (this.updater) {
-      const tasks = this.getAll();
-      this.updater(tasks);
-    }
-  }
 }

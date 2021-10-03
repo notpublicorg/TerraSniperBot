@@ -1,11 +1,11 @@
 import { filter, from, map, Observable, Subscription } from 'rxjs';
 
-import { SniperTask } from '../sniper-task';
+import { SniperTask } from '../core/sniper-task';
 import {
   TasksProcessor,
   TasksProcessorUpdateParams,
   TasksProcessorUpdater,
-} from '../tasks-processor';
+} from '../core/tasks-processor';
 import { createTerraWorkflow } from './create-terra-workflow';
 import { TerraTasksProcessorConfig } from './processor-config';
 import { NewTransactionResult } from './types/new-transaction-info';
@@ -15,8 +15,8 @@ import { terraAmountConverter } from './utils/terra-types-converter';
 import { TransactionMetaJournal } from './utils/transaction-meta-journal';
 
 export class TerraTasksProcessor implements TasksProcessor {
-  private tasks: SniperTask[] = [];
   private processorUpdater: TasksProcessorUpdater | null = null;
+  private tasksGetter: (() => SniperTask[]) | null = null;
 
   private terraWorkflow: Observable<{
     result: NewTransactionResult;
@@ -27,35 +27,30 @@ export class TerraTasksProcessor implements TasksProcessor {
   constructor(config: TerraTasksProcessorConfig) {
     this.terraWorkflow = createTerraWorkflow(config, {
       getFiltersSource: () => this.getFilters(),
-      getTasks: () => this.tasks,
+      getTasks: () => this.tasksGetter?.() || [],
       updateTask: (params) => this.updateTask(params),
     });
   }
 
-  subscribe: TasksProcessor['subscribe'] = (tasks, handler) => {
-    this.updateTasks(tasks);
-    this.processorUpdater = handler;
+  subscribe: TasksProcessor['subscribe'] = (tasksGetter, updater) => {
+    console.log('Terra Tasks Processor: START');
+    this.tasksGetter = tasksGetter;
+    this.processorUpdater = updater;
+    this.subscription = this.terraWorkflow.subscribe(console.log);
 
     return {
       unsubscribe: () => {
-        this.updateTasks([]);
+        console.log('Terra Tasks Processor: STOP');
+        this.tasksGetter = null;
         this.processorUpdater = null;
+        this.subscription?.unsubscribe();
+        this.subscription = null;
       },
     };
   };
 
-  updateTasks: TasksProcessor['updateTasks'] = (tasks) => {
-    this.tasks = tasks;
-    if (this.tasks.length) {
-      this.subscription = this.subscription || this.terraWorkflow.subscribe(console.log);
-    } else {
-      this.subscription?.unsubscribe();
-      this.subscription = null;
-    }
-  };
-
   private getFilters() {
-    return from(this.tasks).pipe(
+    return from(this.tasksGetter?.() || []).pipe(
       filter((t) => t.status === 'active'),
       map(
         (t): TransactionFilter => ({

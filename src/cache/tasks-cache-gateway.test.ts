@@ -1,4 +1,4 @@
-import { SniperTaskNew } from './sniper-task';
+import { SniperTaskNew } from '../core/sniper-task';
 import { TasksCacheGateway } from './tasks-cache-gateway';
 
 const NEW_TASK: SniperTaskNew = {
@@ -25,17 +25,13 @@ it('should update task status', () => {
 });
 
 it('should add multiple tasks and notify once', () => {
-  const gatewayClientFn = jest.fn();
-
-  gateway.subscribeToUpdates(gatewayClientFn);
   gateway.addNewTasks([
     { ...NEW_TASK, contract: 'first' },
     { ...NEW_TASK, contract: 'second' },
   ]);
 
-  expect(gatewayClientFn).toHaveBeenCalledWith([
+  expect(gateway.getAll()).toEqual([
     expect.objectContaining({ ...NEW_TASK, contract: 'first', status: 'active' }),
     expect.objectContaining({ ...NEW_TASK, contract: 'second', status: 'active' }),
   ]);
-  expect(gatewayClientFn).toHaveBeenCalledTimes(1);
 });

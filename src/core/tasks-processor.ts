@@ -12,8 +12,7 @@ export type TasksProcessorSubscription = {
 
 export type TasksProcessor = {
   subscribe: (
-    initialTasks: SniperTask[],
+    tasksGetter: () => SniperTask[],
     updater: TasksProcessorUpdater,
   ) => TasksProcessorSubscription;
-  updateTasks: (tasks: SniperTask[]) => void;
 };

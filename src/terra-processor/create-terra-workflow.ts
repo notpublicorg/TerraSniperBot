@@ -2,8 +2,8 @@ import { Coin, LCDClient, MnemonicKey } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import { map, mergeMap, mergeWith, Observable, of, tap } from 'rxjs';
 
-import { SniperTask } from '../sniper-task';
-import { TasksProcessorUpdater } from '../tasks-processor';
+import { SniperTask } from '../core/sniper-task';
+import { TasksProcessorUpdater } from '../core/tasks-processor';
 import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
 import {
   createNewTransactionPreparationFlow,
