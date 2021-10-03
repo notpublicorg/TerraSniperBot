@@ -26,7 +26,6 @@
     "@babel/node": "^7.14.7",
     "@babel/preset-env": "^7.14.8",
     "@babel/preset-typescript": "^7.14.5",
-    "@types/config": "^0.0.39",
     "@types/jest": "^27.0.2",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.28.2",
@@ -43,7 +42,6 @@
   },
   "dependencies": {
     "@terra-money/terra.js": "^2.0.14",
-    "config": "^3.3.6",
     "rxjs": "^7.3.0"
   }
 }

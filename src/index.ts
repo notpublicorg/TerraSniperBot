@@ -1,5 +1,4 @@
-import config from 'config';
-
+import config from '../config.json';
 import tasks from '../tasks.json';
 import { TasksCacheGateway } from './cache/tasks-cache-gateway';
 import { tasksWatcherFactory } from './core/tasks-watcher';
@@ -10,14 +9,14 @@ const gateway = new TasksCacheGateway(generateIdFromDate);
 gateway.addNewTasks(tasks.tasks);
 
 const terraProcessor = new TerraTasksProcessor({
-  tendermintApiUrl: config.get('tendermintApiUrl'),
-  tendermintWebsocketUrl: config.get('tendermintWebsocketUrl'),
-  lcdUrl: config.get('lcdUrl'),
-  lcdChainId: config.get('lcdChainId'),
-  walletMnemonic: config.get('walletMnemonic'),
-  gasAdjustment: config.get('gasAdjustment'),
-  block: config.get('block'),
-  mempool: config.get('mempool'),
+  tendermintApiUrl: config.tendermintApiUrl,
+  tendermintWebsocketUrl: config.tendermintWebsocketUrl,
+  lcdUrl: config.lcdUrl,
+  lcdChainId: config.lcdChainId,
+  walletMnemonic: config.walletMnemonic,
+  gasAdjustment: config.gasAdjustment,
+  block: config.block,
+  mempool: config.mempool,
 });
 
 const tasksWatcher = tasksWatcherFactory(gateway, terraProcessor);
