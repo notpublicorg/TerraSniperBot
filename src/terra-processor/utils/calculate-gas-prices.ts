@@ -2,6 +2,8 @@ import { Coin, StdFee } from '@terra-money/terra.js';
 
 import { Denom } from '../utils/denom';
 
+const SUPPORTED_DENOMS = [Denom.USD, Denom.LUNA];
+
 export function createGasPriceCalculator(options: {
   defaultDenom: string;
   defaultPrice: number;
@@ -14,11 +16,14 @@ export function createGasPriceCalculator(options: {
   };
 
   return (liquidityFee: StdFee.Data): Coin[] => {
-    const feeCoins = liquidityFee?.amount
-      ? liquidityFee.amount.filter((c) => [Denom.USD, Denom.LUNA].includes(c.denom))
-      : [];
+    const feeCoins = liquidityFee?.amount || [];
 
-    if (!feeCoins.length) return [new Coin(options.defaultDenom, options.defaultPrice)];
+    if (
+      !feeCoins.length ||
+      feeCoins.length > 2 ||
+      feeCoins.some((c) => !SUPPORTED_DENOMS.includes(c.denom))
+    )
+      return [new Coin(options.defaultDenom, options.defaultPrice)];
 
     const maxGas = +liquidityFee.gas;
 

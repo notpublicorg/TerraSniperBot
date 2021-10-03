@@ -12,10 +12,35 @@ const OPTIONS = {
 
 const calculateGasPrices = createGasPriceCalculator(OPTIONS);
 
-it('should return default gas price if there is fee', () => {
+it('should return default gas price if there is no fee', () => {
   const gasPrices = calculateGasPrices({
     gas: '30000',
     amount: [],
+  });
+
+  expect(gasPrices).toEqual([new Coin(OPTIONS.defaultDenom, OPTIONS.defaultPrice)]);
+});
+
+it('should return default gas price if there are more than 2 coins', () => {
+  const gasPrices = calculateGasPrices({
+    gas: '30000',
+    amount: [
+      { denom: Denom.USD, amount: '1000000' },
+      { denom: Denom.LUNA, amount: '100000000' },
+      { denom: Denom.LUNA, amount: '100000000' },
+    ],
+  });
+
+  expect(gasPrices).toEqual([new Coin(OPTIONS.defaultDenom, OPTIONS.defaultPrice)]);
+});
+
+it('should return default gas price if there is unsupported denom', () => {
+  const gasPrices = calculateGasPrices({
+    gas: '30000',
+    amount: [
+      { denom: Denom.LUNA, amount: '100000000' },
+      { denom: Denom.UKR, amount: '100000000' },
+    ],
   });
 
   expect(gasPrices).toEqual([new Coin(OPTIONS.defaultDenom, OPTIONS.defaultPrice)]);
@@ -34,7 +59,6 @@ it('should calculate gas price for LUNA and USD', () => {
         amount: USD_FEE_AMOUNT.toString(),
       },
       { denom: Denom.LUNA, amount: LUNA_FEE_AMOUNT.toString() },
-      { denom: Denom.EUR, amount: '10000000' },
     ],
   };
 
@@ -59,7 +83,6 @@ it('should set minimal values if result of calculation is lower', () => {
         amount: USD_FEE_AMOUNT.toString(),
       },
       { denom: Denom.LUNA, amount: LUNA_FEE_AMOUNT.toString() },
-      { denom: Denom.EUR, amount: '10000000' },
     ],
   };
 

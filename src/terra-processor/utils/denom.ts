@@ -1,7 +1,7 @@
 export const Denom = {
   LUNA: 'uluna',
   USD: 'uusd',
-  EUR: 'eur',
+  UKR: 'ukrw',
 };
 
 export const CurrencyDenomMap: Record<string, string> = {
