@@ -24,6 +24,11 @@ const tasksWatcher = tasksWatcherFactory(gateway, terraProcessor);
 
 tasksWatcher.start();
 
+function stop() {
+  tasksWatcher.start();
+  process.exit(0);
+}
+
 // Enable graceful stop
-process.once('SIGINT', () => tasksWatcher.stop());
-process.once('SIGTERM', () => tasksWatcher.stop());
+process.once('SIGINT', stop);
+process.once('SIGTERM', stop);

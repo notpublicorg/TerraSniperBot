@@ -34,7 +34,7 @@ export function createTransactionsSource(lcdApi: APIRequester, config: { websock
           metaJournal,
         }))
         .catch((e) => {
-          console.log('ERROR on getting txInfo: ', e.response?.data || e.message);
+          console.log('ERROR on decoding tx: ', e.response?.data || e.message);
           return null;
         }),
     ),
