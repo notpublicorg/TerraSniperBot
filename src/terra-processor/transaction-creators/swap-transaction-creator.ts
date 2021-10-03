@@ -35,10 +35,12 @@ export const swapTransactionCreator =
       [new Coin(buyDenom, buyAmount)],
     );
 
+    const gasPrices = gasPricesGetter();
     const tx = await wallet.createAndSignTx({
       msgs: [execute],
       gasAdjustment: config.gasAdjustment,
-      gasPrices: gasPricesGetter(),
+      gasPrices: gasPrices,
+      feeDenoms: gasPrices.map((p) => p.denom),
     });
 
     const txBroadcastingInfo = await terra.tx.broadcastSync(tx);
