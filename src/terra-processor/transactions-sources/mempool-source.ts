@@ -9,7 +9,7 @@ export function createMempoolSource(deps: { tendermintApi: APIRequester }) {
   const $source = new Observable<{ tx: string; metaJournal: TransactionMetaJournal }>(
     (subscriber) => {
       deps.tendermintApi
-        .getRaw<UnconfirmedTxsResponse>('/unconfirmed_txs')
+        .getRaw<UnconfirmedTxsResponse>('/unconfirmed_txs', { limit: 100 })
         .then((mempoolResponse) => {
           mempoolResponse.result.txs.forEach((tx) =>
             subscriber.next({ tx, metaJournal: new TransactionMetaJournal('mempool') }),
