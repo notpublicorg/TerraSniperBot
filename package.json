@@ -42,6 +42,7 @@
   },
   "dependencies": {
     "@terra-money/terra.js": "^2.0.14",
+    "@terra-money/terra.proto": "^0.1.7",
     "rxjs": "^7.3.0"
   }
 }
