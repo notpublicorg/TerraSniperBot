@@ -34,7 +34,7 @@ export function createTerraWorkflow(
   const walletMnemonicKey = new MnemonicKey({
     mnemonic: config.walletMnemonic,
   });
-  const lcdApi = new APIRequester(config.lcdUrl);
+  // const lcdApi = new APIRequester(config.lcdUrl);
   const tendermintApi = new APIRequester(config.tendermintApiUrl);
   const calculateGasPrices = createGasPriceCalculator({
     defaultDenom: config.mempool.defaultGasPriceDenom,
@@ -47,7 +47,6 @@ export function createTerraWorkflow(
 
   const $mempoolSource = createMempoolSource({
     tendermintApi,
-    lcdApi,
   }).pipe(
     mergeMap(({ txValue, metaJournal }) =>
       of(txValue).pipe(
@@ -72,7 +71,7 @@ export function createTerraWorkflow(
     ),
   );
 
-  const $blockSource = createBlockSource(terra, {
+  const $blockSource = createBlockSource({
     websocketUrl: config.tendermintWebsocketUrl,
   }).pipe(
     mergeMap(({ txValue, metaJournal }) =>

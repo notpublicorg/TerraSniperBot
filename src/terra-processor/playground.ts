@@ -1,7 +1,8 @@
-import { Coin, Denom, LCDClient, MnemonicKey } from '@terra-money/terra.js';
+import { Coin, LCDClient, MnemonicKey } from '@terra-money/terra.js';
 
 import { swapTransactionCreator } from './transaction-creators/swap-transaction-creator';
 import { NewTransactionInfo } from './types/new-transaction-info';
+import { Denom } from './utils/denom';
 import { MILLION } from './utils/terra-types-converter';
 
 const configuration = {

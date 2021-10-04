@@ -1,17 +1,18 @@
-import { LCDClient, WebSocketClient } from '@terra-money/terra.js';
-import { filter, mergeMap, Observable } from 'rxjs';
+import { WebSocketClient } from '@terra-money/terra.js';
+import { filter, map, Observable } from 'rxjs';
 
 import { TendermintTxResponse } from '../types/tendermint-response';
+import { decodeTransaction } from '../utils/decoders';
 import { TransactionMetaJournal } from '../utils/transaction-meta-journal';
 
-export function createBlockSource(terra: LCDClient, config: { websocketUrl: string }) {
+export function createBlockSource(config: { websocketUrl: string }) {
   const wsclient = new WebSocketClient(config.websocketUrl);
 
   const $source = new Observable<{ tx: string; metaJournal: TransactionMetaJournal }>(
     (subscriber) => {
       wsclient.subscribeTx({}, (response) => {
         subscriber.next({
-          tx: (response as TendermintTxResponse).value.TxResult.txhash,
+          tx: (response as TendermintTxResponse).value.TxResult.tx,
           metaJournal: new TransactionMetaJournal('block'),
         });
       });
@@ -25,18 +26,11 @@ export function createBlockSource(terra: LCDClient, config: { websocketUrl: stri
   );
 
   return $source.pipe(
-    mergeMap(({ tx, metaJournal }) =>
-      terra.tx
-        .txInfo(tx)
-        .then((txInfo) => ({
-          txValue: txInfo.toData().tx.value,
-          metaJournal,
-        }))
-        .catch((e) => {
-          console.log('ERROR on getting txInfo: ', e.response?.data || e.message);
-          return null;
-        }),
-    ),
+    map(({ tx, metaJournal }) => {
+      const decodedTx = decodeTransaction(tx);
+
+      return decodedTx ? { txValue: decodedTx.toData().value, metaJournal } : null;
+    }),
     filter(Boolean),
   );
 }
