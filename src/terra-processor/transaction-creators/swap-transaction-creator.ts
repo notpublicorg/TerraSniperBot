@@ -1,13 +1,18 @@
 import { Coin, LCDClient, MnemonicKey, MsgExecuteContract } from '@terra-money/terra.js';
+import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 
 import { TransactionSender } from '../new-transaction-workflow';
 import { NewTransactionCreationInfo, NewTransactionInfo } from '../types/new-transaction-info';
+import { BroadcastResultResponse } from '../types/tendermint-responses';
 
 export const swapTransactionCreator =
   (
-    terra: LCDClient,
     config: { walletMnemonic: MnemonicKey; gasAdjustment: string },
-    gasPricesGetter: () => Coin[],
+    deps: {
+      terra: LCDClient;
+      gasPricesGetter: () => Coin[];
+      tendermintApi: APIRequester;
+    },
   ): TransactionSender =>
   async ({
     taskId,
@@ -15,7 +20,7 @@ export const swapTransactionCreator =
     buyAmount,
     buyDenom,
   }: NewTransactionInfo): Promise<NewTransactionCreationInfo> => {
-    const wallet = terra.wallet(config.walletMnemonic);
+    const wallet = deps.terra.wallet(config.walletMnemonic);
 
     const execute = new MsgExecuteContract(
       wallet.key.accAddress,
@@ -35,7 +40,7 @@ export const swapTransactionCreator =
       [new Coin(buyDenom, buyAmount)],
     );
 
-    const gasPrices = gasPricesGetter();
+    const gasPrices = deps.gasPricesGetter();
     const tx = await wallet.createAndSignTx({
       msgs: [execute],
       gasAdjustment: config.gasAdjustment,
@@ -43,13 +48,15 @@ export const swapTransactionCreator =
       feeDenoms: gasPrices.map((p) => p.denom),
     });
 
-    const txBroadcastingInfo = await terra.tx.broadcastSync(tx);
+    const encodedTx = await deps.terra.tx.encode(tx);
+    const txBroadcastingResponse = await deps.tendermintApi.postRaw<BroadcastResultResponse>('/', {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'broadcast_tx_sync',
+      params: { tx: encodedTx },
+    });
 
-    console.log(txBroadcastingInfo);
-    // TODO: что-то он неправильно вычисляет походу
+    // TODO: broadcast info (при успехе code=0, а не undefined. Проверять и то, и то ?
 
-    // if (isTxError(txBroadcastingInfo))
-    //   throw new Error(`${txBroadcastingInfo.txhash} - ${txBroadcastingInfo.raw_log}`);
-
-    return { taskId, info: txBroadcastingInfo };
+    return { taskId, info: txBroadcastingResponse.result };
   };

@@ -56,12 +56,15 @@ export function createTerraWorkflow(
         tap(metaJournal.onStartTransactionSending.bind(metaJournal)),
         newTransactionWorkflow(
           swapTransactionCreator(
-            terra,
             {
               walletMnemonic: walletMnemonicKey,
               gasAdjustment: config.gasAdjustment,
             },
-            () => calculateGasPrices(txValue.fee),
+            {
+              terra,
+              gasPricesGetter: () => calculateGasPrices(txValue.fee),
+              tendermintApi,
+            },
           ),
           getTx,
           deps.updateTask,
@@ -82,12 +85,17 @@ export function createTerraWorkflow(
         tap(metaJournal.onStartTransactionSending.bind(metaJournal)),
         newTransactionWorkflow(
           swapTransactionCreator(
-            terra,
             {
               walletMnemonic: walletMnemonicKey,
               gasAdjustment: config.gasAdjustment,
             },
-            () => [new Coin(config.block.defaultGasPriceDenom, config.block.defaultGasPrice)],
+            {
+              terra,
+              gasPricesGetter: () => [
+                new Coin(config.block.defaultGasPriceDenom, config.block.defaultGasPrice),
+              ],
+              tendermintApi,
+            },
           ),
           getTx,
           deps.updateTask,

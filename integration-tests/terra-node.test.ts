@@ -1,6 +1,6 @@
 import { LCDClient, MsgExecuteContract, WebSocketClient } from '@terra-money/terra.js';
 
-import { TendermintTxResponse } from '../src/terra-processor/types/tendermint-response';
+import { WebsocketTxResponse } from '../src/terra-processor/types/tendermint-responses';
 
 jest.setTimeout(10000);
 
@@ -12,11 +12,11 @@ const terra = new LCDClient({
 });
 
 function getWsResponse() {
-  return new Promise<TendermintTxResponse>((resolve) => {
+  return new Promise<WebsocketTxResponse>((resolve) => {
     wsclient.subscribeTx({}, (response) => {
       wsclient.destroy();
 
-      resolve(response as TendermintTxResponse);
+      resolve(response as WebsocketTxResponse);
     });
 
     wsclient['start']();

@@ -1,4 +1,5 @@
 import { Coin, LCDClient, MnemonicKey } from '@terra-money/terra.js';
+import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 
 import { swapTransactionCreator } from './transaction-creators/swap-transaction-creator';
 import { NewTransactionInfo } from './types/new-transaction-info';
@@ -10,6 +11,7 @@ const configuration = {
   LCD_CHAIN_ID: 'bombay-12',
   WALLET_MNEMONIC_KEY:
     'clown lawsuit shoe hurt feed daring ugly already smile art reveal rail impact alter home fresh gadget prevent code guitar unusual tape dizzy this',
+  TENDERMINT_API_URL: 'http://162.55.245.183:26657',
 
   GAS_ADJUSTMENT: '1.5',
   DEFAULT_GAS_PRICE_DENOM: 'uusd',
@@ -33,14 +35,19 @@ new MnemonicKey({
 });
 
 const sendTransaction = swapTransactionCreator(
-  terra,
   {
     walletMnemonic: new MnemonicKey({
       mnemonic: configuration.WALLET_MNEMONIC_KEY,
     }),
     gasAdjustment: configuration.GAS_ADJUSTMENT,
   },
-  () => [new Coin(configuration.DEFAULT_GAS_PRICE_DENOM, configuration.DEFAULT_GAS_PRICE)],
+  {
+    terra,
+    gasPricesGetter: () => [
+      new Coin(configuration.DEFAULT_GAS_PRICE_DENOM, configuration.DEFAULT_GAS_PRICE),
+    ],
+    tendermintApi: new APIRequester(configuration.TENDERMINT_API_URL),
+  },
 );
 
 console.log('Ready to send!');

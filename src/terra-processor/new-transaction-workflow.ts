@@ -54,8 +54,9 @@ export const newTransactionWorkflow = (
         }),
       ),
     ),
+    tap((v) => console.log('Send transaction result', v)),
     mergeMap(({ taskId, info }) =>
-      of(info.txhash).pipe(
+      of(info.hash).pipe(
         mergeMap((txhash) => txInfoGetter(txhash)),
         retryAndContinue({
           retryCount: 7,

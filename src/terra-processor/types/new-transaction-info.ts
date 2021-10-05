@@ -1,4 +1,4 @@
-import { AsyncTxBroadcastResult } from '@terra-money/terra.js';
+import { BroadcastResultResponse } from './tendermint-responses';
 
 export type NewTransactionInfo = {
   taskId: string;
@@ -10,7 +10,7 @@ export type NewTransactionInfo = {
 
 export type NewTransactionCreationInfo = {
   taskId: string;
-  info: AsyncTxBroadcastResult;
+  info: BroadcastResultResponse['result'];
 };
 
 export type NewTransactionResult = {

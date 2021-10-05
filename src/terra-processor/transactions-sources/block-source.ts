@@ -1,7 +1,7 @@
 import { WebSocketClient } from '@terra-money/terra.js';
 import { filter, map, Observable } from 'rxjs';
 
-import { TendermintTxResponse } from '../types/tendermint-response';
+import { WebsocketTxResponse } from '../types/tendermint-responses';
 import { decodeTransaction } from '../utils/decoders';
 import { TransactionMetaJournal } from '../utils/transaction-meta-journal';
 
@@ -12,7 +12,7 @@ export function createBlockSource(config: { websocketUrl: string }) {
     (subscriber) => {
       wsclient.subscribeTx({}, (response) => {
         subscriber.next({
-          tx: (response as TendermintTxResponse).value.TxResult.tx,
+          tx: (response as WebsocketTxResponse).value.TxResult.tx,
           metaJournal: new TransactionMetaJournal('block'),
         });
       });

@@ -2,7 +2,7 @@ import { StdTx } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import { Observable, repeat } from 'rxjs';
 
-import { UnconfirmedTxsResponse } from '../types/mempool-response';
+import { UnconfirmedTxsResponse } from '../types/tendermint-responses';
 import { decodeTransaction } from '../utils/decoders';
 import { TransactionMetaJournal } from '../utils/transaction-meta-journal';
 

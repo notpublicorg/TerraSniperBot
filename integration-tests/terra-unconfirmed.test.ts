@@ -1,6 +1,6 @@
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 
-import { UnconfirmedTxsResponse } from '../src/terra-processor/types/mempool-response';
+import { UnconfirmedTxsResponse } from '../src/terra-processor/types/tendermint-responses';
 
 jest.setTimeout(10000);
 
