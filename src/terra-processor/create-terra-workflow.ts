@@ -43,6 +43,10 @@ export function createTerraWorkflow(
 
   const getTx: TxInfoGetter = (txHash) => terra.tx.txInfo(txHash);
 
+  // NOTE: we also have had websocket integration for pulling block transactions
+  // you can find it's removal commit here
+  // https://github.com/notpublicorg/TerraSniperBot/commit/b5fc4ba0bad032f3f98aa90aa88bf8cd067415b3
+
   const $mempoolSource = createMempoolSource({
     tendermintApi,
   }).pipe(
