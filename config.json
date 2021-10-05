@@ -6,8 +6,6 @@
   "gasAdjustment": "1.5",
   "mempool": {
     "defaultGasPriceDenom": "uusd",
-    "defaultGasPrice": 2.9,
-    "minUusdPrice": 0.2,
-    "minLunaPrice": 0.015
+    "defaultGasPrice": 2.9
   }
 }

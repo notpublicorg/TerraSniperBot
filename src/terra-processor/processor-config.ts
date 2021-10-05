@@ -7,7 +7,5 @@ export type TerraTasksProcessorConfig = {
   mempool: {
     defaultGasPriceDenom: string;
     defaultGasPrice: number;
-    minUusdPrice: number;
-    minLunaPrice: number;
   };
 };

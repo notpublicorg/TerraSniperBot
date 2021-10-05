@@ -1,4 +1,4 @@
-import { LCDClient, MnemonicKey } from '@terra-money/terra.js';
+import { Coin, LCDClient, MnemonicKey } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import { map, mergeMap, Observable, of, tap } from 'rxjs';
 
@@ -14,7 +14,6 @@ import { TerraTasksProcessorConfig } from './processor-config';
 import { swapTransactionCreator } from './transaction-creators/swap-transaction-creator';
 import { createMempoolSource } from './transactions-sources/mempool-source';
 import { TransactionFilter } from './types/transaction-filter';
-import { createGasPriceCalculator } from './utils/calculate-gas-prices';
 
 export type TerraWorflowFactoryDeps = {
   getFiltersSource: () => Observable<TransactionFilter>;
@@ -34,12 +33,6 @@ export function createTerraWorkflow(
     mnemonic: config.walletMnemonic,
   });
   const tendermintApi = new APIRequester(config.tendermintApiUrl);
-  const calculateGasPrices = createGasPriceCalculator({
-    defaultDenom: config.mempool.defaultGasPriceDenom,
-    defaultPrice: config.mempool.defaultGasPrice,
-    minUusdPrice: config.mempool.minUusdPrice,
-    minLunaPrice: config.mempool.minLunaPrice,
-  });
 
   const getTx: TxInfoGetter = (txHash) => terra.tx.txInfo(txHash);
 
@@ -64,7 +57,11 @@ export function createTerraWorkflow(
             },
             {
               terra,
-              gasPricesGetter: () => calculateGasPrices(txValue.fee),
+              // there is a createGasPriceCalculator in utils/calculate-gas-prices
+              // gasPricesGetter: () => calculateGasPrices(txValue.fee),
+              gasPricesGetter: () => [
+                new Coin(config.mempool.defaultGasPriceDenom, config.mempool.defaultGasPrice),
+              ],
               tendermintApi,
             },
           ),
