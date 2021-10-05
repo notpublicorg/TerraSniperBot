@@ -13,7 +13,6 @@ const terraProcessor = new TerraTasksProcessor({
   lcdUrl: config.lcdUrl,
   lcdChainId: config.lcdChainId,
   walletMnemonic: config.walletMnemonic,
-  gasAdjustment: config.gasAdjustment,
   mempool: config.mempool,
 });
 

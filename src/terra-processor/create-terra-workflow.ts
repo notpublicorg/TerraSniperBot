@@ -1,4 +1,4 @@
-import { Coin, LCDClient, MnemonicKey } from '@terra-money/terra.js';
+import { Coin, LCDClient, MnemonicKey, StdFee } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import { concatMap, filter, map, Observable, of, repeat, take, tap } from 'rxjs';
 
@@ -57,15 +57,14 @@ export function createTerraWorkflow(
           swapTransactionCreator(
             {
               walletMnemonic: walletMnemonicKey,
-              gasAdjustment: config.gasAdjustment,
+              fee: new StdFee(config.mempool.defaultGas, [
+                new Coin(config.mempool.defaultFeeDenom, config.mempool.defaultFee),
+              ]),
             },
             {
               terra,
               // there is a createGasPriceCalculator in utils/calculate-gas-prices
               // gasPricesGetter: () => calculateGasPrices(txValue.fee),
-              gasPricesGetter: () => [
-                new Coin(config.mempool.defaultGasPriceDenom, config.mempool.defaultGasPrice),
-              ],
               tendermintApi,
             },
           ),

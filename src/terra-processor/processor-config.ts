@@ -3,9 +3,9 @@ export type TerraTasksProcessorConfig = {
   lcdUrl: string;
   lcdChainId: string;
   walletMnemonic: string;
-  gasAdjustment: string;
   mempool: {
-    defaultGasPriceDenom: string;
-    defaultGasPrice: number;
+    defaultGas: number;
+    defaultFeeDenom: string;
+    defaultFee: number;
   };
 };

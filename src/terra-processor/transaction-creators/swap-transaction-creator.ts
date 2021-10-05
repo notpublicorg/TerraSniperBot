@@ -1,4 +1,4 @@
-import { Coin, LCDClient, MnemonicKey, MsgExecuteContract } from '@terra-money/terra.js';
+import { Coin, LCDClient, MnemonicKey, MsgExecuteContract, StdFee } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 
 import { TransactionSender } from '../new-transaction-workflow';
@@ -7,10 +7,9 @@ import { BroadcastResultResponse } from '../types/tendermint-responses';
 
 export const swapTransactionCreator =
   (
-    config: { walletMnemonic: MnemonicKey; gasAdjustment: string },
+    config: { walletMnemonic: MnemonicKey; fee: StdFee },
     deps: {
       terra: LCDClient;
-      gasPricesGetter: () => Coin[];
       tendermintApi: APIRequester;
     },
   ): TransactionSender =>
@@ -40,12 +39,9 @@ export const swapTransactionCreator =
       [new Coin(buyDenom, buyAmount)],
     );
 
-    const gasPrices = deps.gasPricesGetter();
     const tx = await wallet.createAndSignTx({
       msgs: [execute],
-      gasAdjustment: config.gasAdjustment,
-      gasPrices: gasPrices,
-      feeDenoms: gasPrices.map((p) => p.denom),
+      fee: config.fee,
     });
 
     const encodedTx = await deps.terra.tx.encode(tx);
