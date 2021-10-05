@@ -1,14 +1,12 @@
-import { StdTx } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
-import { Observable, repeat } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import { UnconfirmedTxsResponse } from '../types/tendermint-responses';
-import { decodeTransaction } from '../utils/decoders';
 import { TransactionMetaJournal } from '../utils/transaction-meta-journal';
 
 export function createMempoolSource(deps: { tendermintApi: APIRequester }) {
   const $source = new Observable<{
-    txValue: StdTx.Data['value'];
+    tx: string;
     metaJournal: TransactionMetaJournal;
   }>((subscriber) => {
     deps.tendermintApi
@@ -16,10 +14,7 @@ export function createMempoolSource(deps: { tendermintApi: APIRequester }) {
       .then(({ result }) => {
         result.txs.forEach((tx) => {
           const metaJournal = new TransactionMetaJournal('mempool');
-          const decodedTx = decodeTransaction(tx);
-          if (decodedTx) {
-            subscriber.next({ txValue: decodedTx.toData().value, metaJournal });
-          }
+          subscriber.next({ tx, metaJournal });
         });
         subscriber.complete();
       })
@@ -29,5 +24,5 @@ export function createMempoolSource(deps: { tendermintApi: APIRequester }) {
       });
   });
 
-  return $source.pipe(repeat());
+  return $source;
 }

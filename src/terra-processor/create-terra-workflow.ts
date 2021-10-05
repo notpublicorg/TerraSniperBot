@@ -1,6 +1,6 @@
 import { Coin, LCDClient, MnemonicKey } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
-import { map, mergeMap, Observable, of, tap } from 'rxjs';
+import { concatMap, filter, map, Observable, of, repeat, take, tap } from 'rxjs';
 
 import { SniperTask } from '../core/sniper-task';
 import { TasksProcessorUpdater } from '../core/tasks-processor';
@@ -14,6 +14,7 @@ import { TerraTasksProcessorConfig } from './processor-config';
 import { swapTransactionCreator } from './transaction-creators/swap-transaction-creator';
 import { createMempoolSource } from './transactions-sources/mempool-source';
 import { TransactionFilter } from './types/transaction-filter';
+import { decodeTransaction } from './utils/decoders';
 
 export type TerraWorflowFactoryDeps = {
   getFiltersSource: () => Observable<TransactionFilter>;
@@ -43,8 +44,11 @@ export function createTerraWorkflow(
   const $mempoolSource = createMempoolSource({
     tendermintApi,
   }).pipe(
-    mergeMap(({ txValue, metaJournal }) =>
-      of(txValue).pipe(
+    concatMap(({ tx, metaJournal }) =>
+      of(tx).pipe(
+        map((tx) => decodeTransaction(tx)),
+        filter(Boolean),
+        map((tx) => tx.toData().value),
         createLiquidityFilterWorkflow(deps.getFiltersSource),
         tap(metaJournal.onFiltrationDone.bind(metaJournal)),
         createNewTransactionPreparationFlow(deps.getTasks, deps.updateTask),
@@ -71,6 +75,8 @@ export function createTerraWorkflow(
         map((result) => ({ result, metaJournal })),
       ),
     ),
+    take(1),
+    repeat(),
   );
 
   return $mempoolSource;
