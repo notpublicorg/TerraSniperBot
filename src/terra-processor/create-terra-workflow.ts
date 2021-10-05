@@ -1,6 +1,6 @@
-import { Coin, LCDClient, MnemonicKey } from '@terra-money/terra.js';
+import { LCDClient, MnemonicKey } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
-import { map, mergeMap, mergeWith, Observable, of, tap } from 'rxjs';
+import { map, mergeMap, Observable, of, tap } from 'rxjs';
 
 import { SniperTask } from '../core/sniper-task';
 import { TasksProcessorUpdater } from '../core/tasks-processor';
@@ -12,7 +12,6 @@ import {
 } from './new-transaction-workflow';
 import { TerraTasksProcessorConfig } from './processor-config';
 import { swapTransactionCreator } from './transaction-creators/swap-transaction-creator';
-import { createBlockSource } from './transactions-sources/block-source';
 import { createMempoolSource } from './transactions-sources/mempool-source';
 import { TransactionFilter } from './types/transaction-filter';
 import { createGasPriceCalculator } from './utils/calculate-gas-prices';
@@ -34,7 +33,6 @@ export function createTerraWorkflow(
   const walletMnemonicKey = new MnemonicKey({
     mnemonic: config.walletMnemonic,
   });
-  // const lcdApi = new APIRequester(config.lcdUrl);
   const tendermintApi = new APIRequester(config.tendermintApiUrl);
   const calculateGasPrices = createGasPriceCalculator({
     defaultDenom: config.mempool.defaultGasPriceDenom,
@@ -74,36 +72,5 @@ export function createTerraWorkflow(
     ),
   );
 
-  const $blockSource = createBlockSource({
-    websocketUrl: config.tendermintWebsocketUrl,
-  }).pipe(
-    mergeMap(({ txValue, metaJournal }) =>
-      of(txValue).pipe(
-        createLiquidityFilterWorkflow(deps.getFiltersSource),
-        tap(metaJournal.onFiltrationDone.bind(metaJournal)),
-        createNewTransactionPreparationFlow(deps.getTasks, deps.updateTask),
-        tap(metaJournal.onStartTransactionSending.bind(metaJournal)),
-        newTransactionWorkflow(
-          swapTransactionCreator(
-            {
-              walletMnemonic: walletMnemonicKey,
-              gasAdjustment: config.gasAdjustment,
-            },
-            {
-              terra,
-              gasPricesGetter: () => [
-                new Coin(config.block.defaultGasPriceDenom, config.block.defaultGasPrice),
-              ],
-              tendermintApi,
-            },
-          ),
-          getTx,
-          deps.updateTask,
-        ),
-        map((result) => ({ result, metaJournal })),
-      ),
-    ),
-  );
-
-  return $blockSource.pipe(mergeWith($mempoolSource));
+  return $mempoolSource;
 }

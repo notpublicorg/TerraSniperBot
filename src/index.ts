@@ -10,12 +10,10 @@ gateway.addNewTasks(tasks.tasks);
 
 const terraProcessor = new TerraTasksProcessor({
   tendermintApiUrl: config.tendermintApiUrl,
-  tendermintWebsocketUrl: config.tendermintWebsocketUrl,
   lcdUrl: config.lcdUrl,
   lcdChainId: config.lcdChainId,
   walletMnemonic: config.walletMnemonic,
   gasAdjustment: config.gasAdjustment,
-  block: config.block,
   mempool: config.mempool,
 });
 
