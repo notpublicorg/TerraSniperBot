@@ -47,9 +47,8 @@ const sendTransaction = swapTransactionCreator(
   {
     terra,
     tendermintApi: new APIRequester(configuration.TENDERMINT_API_URL),
-    metaJournal: new TransactionMetaJournal('mempool'),
   },
-);
+)(new TransactionMetaJournal('mempool'));
 
 console.log('Ready to send!');
 console.log('CONFIG: ', configuration);

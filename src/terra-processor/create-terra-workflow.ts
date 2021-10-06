@@ -1,20 +1,18 @@
 import { Coin, LCDClient, MnemonicKey, StdFee } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
-import { concatMap, filter, map, Observable, of, repeat, take, tap } from 'rxjs';
+import { concatMap, filter, map, mergeMap, Observable, of, repeat, take, tap } from 'rxjs';
 
 import { SniperTask } from '../core/sniper-task';
 import { TasksProcessorUpdater } from '../core/tasks-processor';
 import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
-import {
-  createNewTransactionPreparationFlow,
-  newTransactionWorkflow,
-  TxInfoGetter,
-} from './new-transaction-workflow';
+import { newTransactionWorkflow, TxInfoGetter } from './new-transaction-workflow';
 import { TerraTasksProcessorConfig } from './processor-config';
 import { swapTransactionCreator } from './transaction-creators/swap-transaction-creator';
 import { createMempoolSource } from './transactions-sources/mempool-source';
+import { NewTransactionInfo } from './types/new-transaction-info';
 import { TransactionFilter } from './types/transaction-filter';
 import { decodeTransaction } from './utils/decoders';
+import { TransactionMetaJournal } from './utils/transaction-meta-journal';
 
 export type TerraWorflowFactoryDeps = {
   getFiltersSource: () => Observable<TransactionFilter>;
@@ -36,6 +34,15 @@ export function createTerraWorkflow(
   const tendermintApi = new APIRequester(config.tendermintApiUrl);
 
   const getTx: TxInfoGetter = (txHash) => terra.tx.txInfo(txHash);
+  const sendTransaction = swapTransactionCreator(
+    {
+      walletMnemonic: walletMnemonicKey,
+      fee: new StdFee(config.mempool.defaultGas, [
+        new Coin(config.mempool.defaultFeeDenom, config.mempool.defaultFee),
+      ]),
+    },
+    { terra, tendermintApi },
+  );
 
   // NOTE: we also have had websocket integration for pulling block transactions
   // you can find it's removal commit here
@@ -55,38 +62,40 @@ export function createTerraWorkflow(
           tap(metaJournal.onFiltrationDone),
         )
         .pipe(
-          createNewTransactionPreparationFlow(deps.getTasks),
-          tap(({ taskId }) => deps.updateTask({ taskId, newStatus: 'blocked' })),
-          tap(metaJournal.onNewTransactionPrepared),
-          newTransactionWorkflow(
-            swapTransactionCreator(
-              {
-                walletMnemonic: walletMnemonicKey,
-                fee: new StdFee(config.mempool.defaultGas, [
-                  new Coin(config.mempool.defaultFeeDenom, config.mempool.defaultFee),
-                ]),
-              },
-              {
-                terra,
-                // there is a createGasPriceCalculator in utils/calculate-gas-prices
-                // gasPricesGetter: () => calculateGasPrices(txValue.fee),
-                tendermintApi,
-                metaJournal,
-              },
-            ),
-            getTx,
-            deps.updateTask,
-          ),
-          tap(({ taskId, success }) =>
-            deps.updateTask({
+          map(
+            ({
               taskId,
-              newStatus: success && config.closeTaskAfterPurchase ? 'closed' : 'active',
+              satisfiedBuyCondition,
+              liquidity,
+            }): { info: NewTransactionInfo; metaJournal: TransactionMetaJournal } => ({
+              info: {
+                taskId,
+                isTaskActive: deps.getTasks().find((t) => t.id === taskId)?.status === 'active',
+                buyDenom: satisfiedBuyCondition.denom,
+                buyAmount: satisfiedBuyCondition.buy,
+                pairContract: liquidity.pairContract,
+              },
+              metaJournal,
             }),
           ),
-          map((result) => ({ result, metaJournal: metaJournal.build() })),
+          filter(({ info: { isTaskActive } }) => isTaskActive),
+          tap(({ info: { taskId } }) => deps.updateTask({ taskId, newStatus: 'blocked' })),
+          tap(metaJournal.onNewTransactionPrepared),
         ),
     ),
     take(1),
+    mergeMap(({ info, metaJournal }) =>
+      of(info).pipe(
+        newTransactionWorkflow(sendTransaction(metaJournal), getTx, deps.updateTask),
+        tap(({ taskId, success }) =>
+          deps.updateTask({
+            taskId,
+            newStatus: success && config.closeTaskAfterPurchase ? 'closed' : 'active',
+          }),
+        ),
+        map((result) => ({ result, metaJournal: metaJournal.build() })),
+      ),
+    ),
     repeat(),
   );
 

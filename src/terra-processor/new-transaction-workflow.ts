@@ -1,7 +1,6 @@
 import { TxInfo } from '@terra-money/terra.js';
-import { filter, map, mergeMap, of, pipe, tap } from 'rxjs';
+import { map, mergeMap, of, pipe, tap } from 'rxjs';
 
-import { SniperTask } from '../core/sniper-task';
 import { TasksProcessorUpdater } from '../core/tasks-processor';
 import {
   NewTransactionCreationInfo,
@@ -12,20 +11,6 @@ import { retryAndContinue } from './utils/retry-and-continue';
 
 export type TransactionSender = (info: NewTransactionInfo) => Promise<NewTransactionCreationInfo>;
 export type TxInfoGetter = (hash: string) => Promise<TxInfo>;
-
-export const createNewTransactionPreparationFlow = (tasksGetter: () => SniperTask[]) =>
-  pipe(
-    map(
-      ({ taskId, satisfiedBuyCondition, liquidity }): NewTransactionInfo => ({
-        taskId,
-        isTaskActive: tasksGetter().find((t) => t.id === taskId)?.status === 'active',
-        buyDenom: satisfiedBuyCondition.denom,
-        buyAmount: satisfiedBuyCondition.buy,
-        pairContract: liquidity.pairContract,
-      }),
-    ),
-    filter(({ isTaskActive }) => isTaskActive),
-  );
 
 export const newTransactionWorkflow = (
   transactionSender: TransactionSender,

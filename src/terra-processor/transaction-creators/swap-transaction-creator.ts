@@ -12,9 +12,9 @@ export const swapTransactionCreator =
     deps: {
       terra: LCDClient;
       tendermintApi: APIRequester;
-      metaJournal: TransactionMetaJournal;
     },
-  ): TransactionSender =>
+  ) =>
+  (metaJournal: TransactionMetaJournal): TransactionSender =>
   async ({
     taskId,
     pairContract,
@@ -45,10 +45,10 @@ export const swapTransactionCreator =
       msgs: [execute],
       fee: config.fee,
     });
-    deps.metaJournal.onNewTransactionSigned();
+    metaJournal.onNewTransactionSigned();
 
     const encodedTx = await deps.terra.tx.encode(tx);
-    deps.metaJournal.onNewTransactionEncoded();
+    metaJournal.onNewTransactionEncoded();
 
     const txBroadcastingResponse = await deps.tendermintApi.postRaw<BroadcastResultResponse>('/', {
       jsonrpc: '2.0',
