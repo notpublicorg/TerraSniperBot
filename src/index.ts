@@ -14,6 +14,7 @@ const terraProcessor = new TerraTasksProcessor({
   lcdChainId: config.lcdChainId,
   walletMnemonic: config.walletMnemonic,
   mempool: config.mempool,
+  closeTaskAfterPurchase: config.closeTaskAfterPurchase,
 });
 
 const tasksWatcher = tasksWatcherFactory(gateway, terraProcessor);

@@ -8,4 +8,6 @@ export type TerraTasksProcessorConfig = {
     defaultFeeDenom: string;
     defaultFee: number;
   };
+
+  closeTaskAfterPurchase: boolean;
 };

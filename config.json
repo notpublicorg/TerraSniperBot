@@ -7,5 +7,7 @@
     "defaultGas": 300000,
     "defaultFeeDenom": "uusd",
     "defaultFee": 2000000
-  }
+  },
+
+  "closeTaskAfterPurchase": true
 }

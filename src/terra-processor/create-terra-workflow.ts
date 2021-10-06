@@ -78,7 +78,10 @@ export function createTerraWorkflow(
             deps.updateTask,
           ),
           tap(({ taskId, success }) =>
-            deps.updateTask({ taskId, newStatus: success ? 'closed' : 'active' }),
+            deps.updateTask({
+              taskId,
+              newStatus: success && config.closeTaskAfterPurchase ? 'closed' : 'active',
+            }),
           ),
           map((result) => ({ result, metaJournal: metaJournal.build() })),
         ),
