@@ -47,12 +47,13 @@ export function createTerraWorkflow(
     concatMap(({ tx, metaJournal }) =>
       of(tx).pipe(
         map((tx) => decodeTransaction(tx)),
+        tap(metaJournal.onDecodingDone),
         filter(Boolean),
         map((tx) => tx.toData().value),
         createLiquidityFilterWorkflow(deps.getFiltersSource),
-        tap(metaJournal.onFiltrationDone.bind(metaJournal)),
+        tap(metaJournal.onFiltrationDone),
         createNewTransactionPreparationFlow(deps.getTasks, deps.updateTask),
-        tap(metaJournal.onStartTransactionSending.bind(metaJournal)),
+        tap(metaJournal.onStartTransactionSending),
         newTransactionWorkflow(
           swapTransactionCreator(
             {
@@ -71,7 +72,7 @@ export function createTerraWorkflow(
           getTx,
           deps.updateTask,
         ),
-        map((result) => ({ result, metaJournal })),
+        map((result) => ({ result, metaJournal: metaJournal.build() })),
       ),
     ),
     take(1),
