@@ -4,6 +4,7 @@ import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester
 import { TransactionSender } from '../new-transaction-workflow';
 import { NewTransactionCreationInfo, NewTransactionInfo } from '../types/new-transaction-info';
 import { BroadcastResultResponse } from '../types/tendermint-responses';
+import { TransactionMetaJournal } from '../utils/transaction-meta-journal';
 
 export const swapTransactionCreator =
   (
@@ -11,6 +12,7 @@ export const swapTransactionCreator =
     deps: {
       terra: LCDClient;
       tendermintApi: APIRequester;
+      metaJournal: TransactionMetaJournal;
     },
   ): TransactionSender =>
   async ({
@@ -43,8 +45,11 @@ export const swapTransactionCreator =
       msgs: [execute],
       fee: config.fee,
     });
+    deps.metaJournal.onNewTransactionSigned();
 
     const encodedTx = await deps.terra.tx.encode(tx);
+    deps.metaJournal.onNewTransactionEncoded();
+
     const txBroadcastingResponse = await deps.tendermintApi.postRaw<BroadcastResultResponse>('/', {
       jsonrpc: '2.0',
       id: 1,

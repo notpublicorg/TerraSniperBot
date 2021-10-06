@@ -12,7 +12,7 @@ import { NewTransactionResult } from './types/new-transaction-info';
 import { TransactionFilter } from './types/transaction-filter';
 import { CurrencyDenomMap } from './utils/denom';
 import { terraAmountConverter } from './utils/terra-types-converter';
-import { TransactionMetaJournal } from './utils/transaction-meta-journal';
+import { MetaJournalData } from './utils/transaction-meta-journal';
 
 export class TerraTasksProcessor implements TasksProcessor {
   private processorUpdater: TasksProcessorUpdater | null = null;
@@ -20,7 +20,7 @@ export class TerraTasksProcessor implements TasksProcessor {
 
   private terraWorkflow: Observable<{
     result: NewTransactionResult;
-    metaJournal: TransactionMetaJournal;
+    metaJournal: MetaJournalData;
   }>;
   private subscription: Subscription | null = null;
 

@@ -45,35 +45,43 @@ export function createTerraWorkflow(
     tendermintApi,
   }).pipe(
     concatMap(({ tx, metaJournal }) =>
-      of(tx).pipe(
-        map((tx) => decodeTransaction(tx)),
-        tap(metaJournal.onDecodingDone),
-        filter(Boolean),
-        map((tx) => tx.toData().value),
-        createLiquidityFilterWorkflow(deps.getFiltersSource),
-        tap(metaJournal.onFiltrationDone),
-        createNewTransactionPreparationFlow(deps.getTasks, deps.updateTask),
-        tap(metaJournal.onStartTransactionSending),
-        newTransactionWorkflow(
-          swapTransactionCreator(
-            {
-              walletMnemonic: walletMnemonicKey,
-              fee: new StdFee(config.mempool.defaultGas, [
-                new Coin(config.mempool.defaultFeeDenom, config.mempool.defaultFee),
-              ]),
-            },
-            {
-              terra,
-              // there is a createGasPriceCalculator in utils/calculate-gas-prices
-              // gasPricesGetter: () => calculateGasPrices(txValue.fee),
-              tendermintApi,
-            },
+      of(tx)
+        .pipe(
+          map((tx) => decodeTransaction(tx)),
+          tap(metaJournal.onDecodingDone),
+          filter(Boolean),
+          map((tx) => tx.toData().value),
+          createLiquidityFilterWorkflow(deps.getFiltersSource),
+          tap(metaJournal.onFiltrationDone),
+        )
+        .pipe(
+          createNewTransactionPreparationFlow(deps.getTasks),
+          tap(({ taskId }) => deps.updateTask({ taskId, newStatus: 'blocked' })),
+          tap(metaJournal.onNewTransactionPrepared),
+          newTransactionWorkflow(
+            swapTransactionCreator(
+              {
+                walletMnemonic: walletMnemonicKey,
+                fee: new StdFee(config.mempool.defaultGas, [
+                  new Coin(config.mempool.defaultFeeDenom, config.mempool.defaultFee),
+                ]),
+              },
+              {
+                terra,
+                // there is a createGasPriceCalculator in utils/calculate-gas-prices
+                // gasPricesGetter: () => calculateGasPrices(txValue.fee),
+                tendermintApi,
+                metaJournal,
+              },
+            ),
+            getTx,
+            deps.updateTask,
           ),
-          getTx,
-          deps.updateTask,
+          tap(({ taskId, success }) =>
+            deps.updateTask({ taskId, newStatus: success ? 'closed' : 'active' }),
+          ),
+          map((result) => ({ result, metaJournal: metaJournal.build() })),
         ),
-        map((result) => ({ result, metaJournal: metaJournal.build() })),
-      ),
     ),
     take(1),
     repeat(),

@@ -2,7 +2,7 @@ import { TxInfo } from '@terra-money/terra.js';
 import { filter, map, mergeMap, of, pipe, tap } from 'rxjs';
 
 import { SniperTask } from '../core/sniper-task';
-import { TasksProcessorUpdateParams, TasksProcessorUpdater } from '../core/tasks-processor';
+import { TasksProcessorUpdater } from '../core/tasks-processor';
 import {
   NewTransactionCreationInfo,
   NewTransactionInfo,
@@ -13,10 +13,7 @@ import { retryAndContinue } from './utils/retry-and-continue';
 export type TransactionSender = (info: NewTransactionInfo) => Promise<NewTransactionCreationInfo>;
 export type TxInfoGetter = (hash: string) => Promise<TxInfo>;
 
-export const createNewTransactionPreparationFlow = (
-  tasksGetter: () => SniperTask[],
-  taskUpdater: (params: TasksProcessorUpdateParams) => void,
-) =>
+export const createNewTransactionPreparationFlow = (tasksGetter: () => SniperTask[]) =>
   pipe(
     map(
       ({ taskId, satisfiedBuyCondition, liquidity }): NewTransactionInfo => ({
@@ -28,7 +25,6 @@ export const createNewTransactionPreparationFlow = (
       }),
     ),
     filter(({ isTaskActive }) => isTaskActive),
-    tap(({ taskId }) => taskUpdater({ taskId, newStatus: 'blocked' })),
   );
 
 export const newTransactionWorkflow = (
@@ -81,5 +77,4 @@ export const newTransactionWorkflow = (
         ),
       ),
     ),
-    tap(({ taskId, success }) => taskUpdater({ taskId, newStatus: success ? 'closed' : 'active' })),
   );

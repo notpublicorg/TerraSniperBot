@@ -5,6 +5,7 @@ import { swapTransactionCreator } from './transaction-creators/swap-transaction-
 import { NewTransactionInfo } from './types/new-transaction-info';
 import { Denom } from './utils/denom';
 import { MILLION } from './utils/terra-types-converter';
+import { TransactionMetaJournal } from './utils/transaction-meta-journal';
 
 const configuration = {
   LCD_URL: 'https://bombay-lcd.terra.dev',
@@ -46,6 +47,7 @@ const sendTransaction = swapTransactionCreator(
   {
     terra,
     tendermintApi: new APIRequester(configuration.TENDERMINT_API_URL),
+    metaJournal: new TransactionMetaJournal('mempool'),
   },
 );
 
