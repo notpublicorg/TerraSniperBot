@@ -1,7 +1,7 @@
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import { Observable } from 'rxjs';
 
-import { UnconfirmedTxsResponse } from '../types/tendermint-responses';
+import { StatusResponse, UnconfirmedTxsResponse } from '../types/tendermint-responses';
 import { TransactionMetaJournal } from '../utils/transaction-meta-journal';
 
 export function createMempoolSource(deps: { tendermintApi: APIRequester }) {
@@ -11,10 +11,17 @@ export function createMempoolSource(deps: { tendermintApi: APIRequester }) {
   }>((subscriber) => {
     deps.tendermintApi
       .getRaw<UnconfirmedTxsResponse>('/unconfirmed_txs', { limit: 100 })
-      .then(({ result }) => {
+      .then(async ({ result }) => {
+        const currentTerraStatus = await deps.tendermintApi.getRaw<StatusResponse>('/status');
         result.txs.forEach((tx) => {
-          const metaJournal = new TransactionMetaJournal('mempool');
-          subscriber.next({ tx, metaJournal });
+          const metaJournal = new TransactionMetaJournal(
+            'mempool',
+            currentTerraStatus.result.sync_info.latest_block_height,
+          );
+          subscriber.next({
+            tx,
+            metaJournal,
+          });
         });
         subscriber.complete();
       })

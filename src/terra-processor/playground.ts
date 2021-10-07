@@ -14,6 +14,8 @@ const configuration = {
     'clown lawsuit shoe hurt feed daring ugly already smile art reveal rail impact alter home fresh gadget prevent code guitar unusual tape dizzy this',
   TENDERMINT_API_URL: 'http://162.55.245.183:26657',
 
+  CURRENT_BLOCK_HEIGHT: '6037508',
+
   DEFAULT_FEE_DENOM: 'uusd',
   DEFAULT_FEE: '1000000',
   DEFAULT_GAS: 200000,
@@ -31,9 +33,10 @@ const terra = new LCDClient({
   URL: configuration.LCD_URL,
   chainID: configuration.LCD_CHAIN_ID,
 });
-new MnemonicKey({
-  mnemonic: configuration.WALLET_MNEMONIC_KEY,
-});
+
+const tendermintApi = new APIRequester(configuration.TENDERMINT_API_URL);
+
+tendermintApi.getRaw('/status').then(console.log);
 
 const sendTransaction = swapTransactionCreator(
   {
@@ -43,12 +46,13 @@ const sendTransaction = swapTransactionCreator(
     fee: new StdFee(configuration.DEFAULT_GAS, [
       new Coin(configuration.DEFAULT_FEE_DENOM, configuration.DEFAULT_FEE),
     ]),
+    timeoutHeightConstant: 1000,
   },
   {
     terra,
-    tendermintApi: new APIRequester(configuration.TENDERMINT_API_URL),
+    tendermintApi,
   },
-)(new TransactionMetaJournal('mempool'));
+)(new TransactionMetaJournal('mempool', configuration.CURRENT_BLOCK_HEIGHT));
 
 console.log('Ready to send!');
 console.log('CONFIG: ', configuration);

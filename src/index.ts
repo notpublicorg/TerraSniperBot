@@ -15,6 +15,7 @@ const terraProcessor = new TerraTasksProcessor({
   walletMnemonic: config.walletMnemonic,
   mempool: config.mempool,
   closeTaskAfterPurchase: config.closeTaskAfterPurchase,
+  timeoutHeightConstant: config.timeoutHeightConstant,
 });
 
 const tasksWatcher = tasksWatcherFactory(gateway, terraProcessor);

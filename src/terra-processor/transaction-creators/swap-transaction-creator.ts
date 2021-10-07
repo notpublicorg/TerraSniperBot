@@ -8,7 +8,7 @@ import { TransactionMetaJournal } from '../utils/transaction-meta-journal';
 
 export const swapTransactionCreator =
   (
-    config: { walletMnemonic: MnemonicKey; fee: StdFee },
+    config: { walletMnemonic: MnemonicKey; fee: StdFee; timeoutHeightConstant: number },
     deps: {
       terra: LCDClient;
       tendermintApi: APIRequester;
@@ -44,6 +44,7 @@ export const swapTransactionCreator =
     const tx = await wallet.createAndSignTx({
       msgs: [execute],
       fee: config.fee,
+      timeout_height: +metaJournal.currentBlockHeight + config.timeoutHeightConstant,
     });
     metaJournal.onNewTransactionSigned();
 

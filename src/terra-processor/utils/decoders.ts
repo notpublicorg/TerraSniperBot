@@ -30,8 +30,6 @@ export function decodeTransaction(encodedTx: string) {
   try {
     const { authInfo, body } = TxProto.decode(Buffer.from(encodedTx, 'base64'));
 
-    console.log(authInfo?.signerInfos[0].modeInfo);
-
     return body
       ? new StdTx(
           body.messages

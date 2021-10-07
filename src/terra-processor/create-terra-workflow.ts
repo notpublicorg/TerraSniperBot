@@ -40,6 +40,7 @@ export function createTerraWorkflow(
       fee: new StdFee(config.mempool.defaultGas, [
         new Coin(config.mempool.defaultFeeDenom, config.mempool.defaultFee),
       ]),
+      timeoutHeightConstant: config.timeoutHeightConstant,
     },
     { terra, tendermintApi },
   );

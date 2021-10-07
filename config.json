@@ -9,5 +9,6 @@
     "defaultFee": 2000000
   },
 
-  "closeTaskAfterPurchase": true
+  "closeTaskAfterPurchase": true,
+  "timeoutHeightConstant": 1
 }

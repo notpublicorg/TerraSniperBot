@@ -21,7 +21,7 @@ export class TransactionMetaJournal {
   public newTransactionSignedTime = 0;
   public newTransactionEncodedTime = 0;
 
-  constructor(public source: 'block' | 'mempool') {
+  constructor(public source: 'block' | 'mempool', public currentBlockHeight: string) {
     this.history.push(`receivedDateTime - ${new Date().toLocaleString()}`);
     this.receivedTime = Date.now();
   }
