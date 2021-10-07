@@ -4,6 +4,7 @@ import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester
 import { TransactionSender } from '../new-transaction-workflow';
 import { NewTransactionCreationInfo, NewTransactionInfo } from '../types/new-transaction-info';
 import { BroadcastResultResponse } from '../types/tendermint-responses';
+import { encodeTransaction } from '../utils/decoders';
 import { TransactionMetaJournal } from '../utils/transaction-meta-journal';
 
 export const swapTransactionCreator =
@@ -47,7 +48,8 @@ export const swapTransactionCreator =
     });
     metaJournal.onNewTransactionSigned();
 
-    const encodedTx = await deps.terra.tx.encode(tx);
+    // const encodedTx = await deps.terra.tx.encode(tx);
+    const encodedTx = encodeTransaction(tx);
     metaJournal.onNewTransactionEncoded();
 
     const txBroadcastingResponse = await deps.tendermintApi.postRaw<BroadcastResultResponse>('/', {
