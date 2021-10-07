@@ -55,6 +55,7 @@ export function createTerraWorkflow(
     concatMap(({ tx, metaJournal }) =>
       of(tx)
         .pipe(
+          tap(metaJournal.onStartHandling),
           map((tx) => decodeTransaction(tx)),
           tap(metaJournal.onDecodingDone),
           filter(Boolean),

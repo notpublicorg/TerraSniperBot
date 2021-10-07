@@ -4,6 +4,7 @@ export type MetaJournalData = {
   taskId: string;
   history: string[];
   elapsedStatusReceivingSeconds: number;
+  elapsedBeforeStartHandlingSeconds: number;
   elapsedDecodingSeconds: number;
   elapsedFiltrationSeconds: number;
   elapsedPreparationSeconds: number;
@@ -18,6 +19,7 @@ export class TransactionMetaJournal {
 
   public receivedTime = 0;
   public statusRecivedTime = 0;
+  public startHandlingTime = 0;
   public decodedTime = 0;
   public filtrationDoneTime = 0;
   public newTransactionPreparedDoneTime = 0;
@@ -33,7 +35,9 @@ export class TransactionMetaJournal {
     this.currentBlockHeight = currentBlockHeight;
     this.statusRecivedTime = Date.now();
   };
-
+  onStartHandling = () => {
+    this.startHandlingTime = Date.now();
+  };
   onDecodingDone = () => {
     this.decodedTime = Date.now();
   };
@@ -56,7 +60,8 @@ export class TransactionMetaJournal {
       taskId: this.taskId,
       history: this.history,
       elapsedStatusReceivingSeconds: (this.statusRecivedTime - this.receivedTime) / 1000,
-      elapsedDecodingSeconds: (this.decodedTime - this.statusRecivedTime) / 1000,
+      elapsedBeforeStartHandlingSeconds: (this.startHandlingTime - this.statusRecivedTime) / 1000,
+      elapsedDecodingSeconds: (this.decodedTime - this.startHandlingTime) / 1000,
       elapsedFiltrationSeconds: (this.filtrationDoneTime - this.decodedTime) / 1000,
       elapsedPreparationSeconds:
         (this.newTransactionPreparedDoneTime - this.filtrationDoneTime) / 1000,
