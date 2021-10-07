@@ -38,6 +38,9 @@ const tendermintApi = new APIRequester(configuration.TENDERMINT_API_URL);
 
 tendermintApi.getRaw('/status').then(console.log);
 
+const metaJournal = new TransactionMetaJournal('mempool');
+metaJournal.onStatusReceived(configuration.CURRENT_BLOCK_HEIGHT);
+
 const sendTransaction = swapTransactionCreator(
   {
     walletMnemonic: new MnemonicKey({
@@ -52,7 +55,7 @@ const sendTransaction = swapTransactionCreator(
     terra,
     tendermintApi,
   },
-)(new TransactionMetaJournal('mempool', configuration.CURRENT_BLOCK_HEIGHT));
+)(metaJournal);
 
 console.log('Ready to send!');
 console.log('CONFIG: ', configuration);

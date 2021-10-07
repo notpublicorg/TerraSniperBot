@@ -12,12 +12,12 @@ export function createMempoolSource(deps: { tendermintApi: APIRequester }) {
     deps.tendermintApi
       .getRaw<UnconfirmedTxsResponse>('/unconfirmed_txs', { limit: 100 })
       .then(async ({ result }) => {
+        const metaJournal = new TransactionMetaJournal('mempool');
+
         const currentTerraStatus = await deps.tendermintApi.getRaw<StatusResponse>('/status');
+        metaJournal.onStatusReceived(currentTerraStatus.result.sync_info.latest_block_height);
+
         result.txs.forEach((tx) => {
-          const metaJournal = new TransactionMetaJournal(
-            'mempool',
-            currentTerraStatus.result.sync_info.latest_block_height,
-          );
           subscriber.next({
             tx,
             metaJournal,
