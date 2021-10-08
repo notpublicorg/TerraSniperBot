@@ -1,4 +1,4 @@
-import { filter, from, map, Subscription } from 'rxjs';
+import { Connectable, filter, from, map, Observable, Subscription } from 'rxjs';
 
 import { SniperTask } from '../core/sniper-task';
 import {
@@ -8,6 +8,7 @@ import {
 } from '../core/tasks-processor';
 import { createTerraWorkflow } from './create-terra-workflow';
 import { TerraTasksProcessorConfig } from './processor-config';
+import { NewBlockInfo, TerraFlowResult } from './types/terra-flow';
 import { TransactionFilter } from './types/transaction-filter';
 import { CurrencyDenomMap } from './utils/denom';
 import { terraAmountConverter } from './utils/terra-types-converter';
@@ -16,30 +17,38 @@ export class TerraTasksProcessor implements TasksProcessor {
   private processorUpdater: TasksProcessorUpdater | null = null;
   private tasksGetter: (() => SniperTask[]) | null = null;
 
-  private terraWorkflow: ReturnType<typeof createTerraWorkflow>;
-  private subscription: Subscription | null = null;
+  private transactionsFlow: Observable<TerraFlowResult>;
+  private transactionsFlowSubscription: Subscription | null = null;
+
+  private newBlockFlow: Connectable<NewBlockInfo>;
+  private newBlockFlowSubscription: Subscription | null = null;
 
   constructor(config: TerraTasksProcessorConfig) {
-    this.terraWorkflow = createTerraWorkflow(config, {
+    const { $mempoolSource, $newBlockSource } = createTerraWorkflow(config, {
       getFiltersSource: () => this.getFilters(),
       getTasks: () => this.tasksGetter?.() || [],
       updateTask: (params) => this.updateTask(params),
     });
+    this.transactionsFlow = $mempoolSource;
+    this.newBlockFlow = $newBlockSource;
   }
 
   subscribe: TasksProcessor['subscribe'] = (tasksGetter, updater) => {
     console.log('Terra Tasks Processor: START');
     this.tasksGetter = tasksGetter;
     this.processorUpdater = updater;
-    this.subscription = this.terraWorkflow.subscribe(console.log);
+    this.newBlockFlowSubscription = this.newBlockFlow.connect();
+    this.transactionsFlowSubscription = this.transactionsFlow.subscribe(console.log);
 
     return {
       unsubscribe: () => {
         console.log('Terra Tasks Processor: STOP');
         this.tasksGetter = null;
         this.processorUpdater = null;
-        this.subscription?.unsubscribe();
-        this.subscription = null;
+        this.newBlockFlowSubscription?.unsubscribe();
+        this.newBlockFlowSubscription = null;
+        this.transactionsFlowSubscription?.unsubscribe();
+        this.transactionsFlowSubscription = null;
       },
     };
   };

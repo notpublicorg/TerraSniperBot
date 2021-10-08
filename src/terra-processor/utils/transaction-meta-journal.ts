@@ -1,24 +1,11 @@
+import { MetaJournalData } from '../types/terra-flow';
 import { FiltrationResult } from '../types/transaction-filter';
-
-export type MetaJournalData = {
-  taskId: string;
-  history: string[];
-  elapsedStatusReceivingSeconds: number;
-  elapsedBeforeStartHandlingSeconds: number;
-  elapsedDecodingSeconds: number;
-  elapsedFiltrationSeconds: number;
-  elapsedPreparationSeconds: number;
-  elapsedCreatingAndSigningSeconds: number;
-  elapsedEncodingSeconds: number;
-};
 
 export class TransactionMetaJournal {
   public taskId = '';
   public history: string[] = [];
-  public latestReleasedBlockHeight = '';
 
   public receivedTime = 0;
-  public statusRecivedTime = 0;
   public startHandlingTime = 0;
   public decodedTime = 0;
   public filtrationDoneTime = 0;
@@ -31,10 +18,6 @@ export class TransactionMetaJournal {
     this.receivedTime = Date.now();
   }
 
-  onStatusReceived = (latestReleasedBlockHeight: string) => {
-    this.latestReleasedBlockHeight = latestReleasedBlockHeight;
-    this.statusRecivedTime = Date.now();
-  };
   onStartHandling = () => {
     this.startHandlingTime = Date.now();
   };
@@ -59,8 +42,7 @@ export class TransactionMetaJournal {
     return {
       taskId: this.taskId,
       history: this.history,
-      elapsedStatusReceivingSeconds: (this.statusRecivedTime - this.receivedTime) / 1000,
-      elapsedBeforeStartHandlingSeconds: (this.startHandlingTime - this.statusRecivedTime) / 1000,
+      elapsedBeforeStartHandlingSeconds: (this.startHandlingTime - this.receivedTime) / 1000,
       elapsedDecodingSeconds: (this.decodedTime - this.startHandlingTime) / 1000,
       elapsedFiltrationSeconds: (this.filtrationDoneTime - this.decodedTime) / 1000,
       elapsedPreparationSeconds:

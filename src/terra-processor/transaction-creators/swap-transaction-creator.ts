@@ -2,7 +2,6 @@ import { Coin, LCDClient, MnemonicKey, MsgExecuteContract, StdFee } from '@terra
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 
 import { TransactionSender } from '../new-transaction-workflow';
-import { NewTransactionCreationInfo, NewTransactionInfo } from '../types/new-transaction-info';
 import { BroadcastResultResponse } from '../types/tendermint-responses';
 import { TransactionMetaJournal } from '../utils/transaction-meta-journal';
 
@@ -15,12 +14,7 @@ export const swapTransactionCreator =
     },
   ) =>
   (metaJournal: TransactionMetaJournal): TransactionSender =>
-  async ({
-    taskId,
-    pairContract,
-    buyAmount,
-    buyDenom,
-  }: NewTransactionInfo): Promise<NewTransactionCreationInfo> => {
+  async ([{ taskId, pairContract, buyAmount, buyDenom }, { currentBlockHeight }]) => {
     const wallet = deps.terra.wallet(config.walletMnemonic);
 
     const execute = new MsgExecuteContract(
@@ -44,7 +38,7 @@ export const swapTransactionCreator =
     const tx = await wallet.createAndSignTx({
       msgs: [execute],
       fee: config.fee,
-      timeout_height: +metaJournal.latestReleasedBlockHeight + 1 + config.validBlockHeightOffset,
+      timeout_height: (+currentBlockHeight || 0) + 1 + config.validBlockHeightOffset,
     });
     metaJournal.onNewTransactionSigned();
 

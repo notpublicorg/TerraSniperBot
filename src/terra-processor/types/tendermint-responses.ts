@@ -9,6 +9,16 @@ export type WebsocketTxResponse = {
     };
   };
 };
+export type WebsocketNewBlockResponse = {
+  type: 'tendermint/event/NewBlock';
+  value: {
+    block: {
+      header: {
+        height: string; // '6051152';
+      };
+    };
+  };
+};
 export type UnconfirmedTxsResponse = {
   id: number;
   jsonrpc: string;
