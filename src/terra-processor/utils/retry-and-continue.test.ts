@@ -1,10 +1,9 @@
-import { firstValueFrom, map, mergeMap, of, toArray } from 'rxjs';
+import { catchError, firstValueFrom, map, mergeMap, of, toArray } from 'rxjs';
 
 import { retryAndContinue } from './retry-and-continue';
 
 test('retry only inner observable / with delay', async () => {
-  const notifyAboutError = jest.fn();
-
+  const RETRY_ERROR = new Error('retry attempts exceeded');
   await expect(
     firstValueFrom(
       of(1, 2, 3, 4).pipe(
@@ -15,22 +14,22 @@ test('retry only inner observable / with delay', async () => {
             map(() => {
               if (count < timesToThrowError) {
                 count++;
-                throw new Error();
+                throw RETRY_ERROR;
               }
 
               return `${timesToThrowError}-${count}`;
             }),
             retryAndContinue({
               retryCount: 2,
-              onError: notifyAboutError,
               // delay: 1000,
+            }),
+            catchError((error) => {
+              return of(error);
             }),
           );
         }),
         toArray(),
       ),
     ),
-  ).resolves.toEqual(['1-1', '2-2']);
-
-  expect(notifyAboutError).toHaveBeenCalledTimes(2);
+  ).resolves.toEqual(['1-1', '2-2', RETRY_ERROR, RETRY_ERROR]);
 });

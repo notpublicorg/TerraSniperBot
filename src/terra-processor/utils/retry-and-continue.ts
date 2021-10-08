@@ -1,8 +1,6 @@
 import {
-  catchError,
   concatWith,
   delay,
-  EMPTY,
   MonoTypeOperatorFunction,
   pipe,
   retry,
@@ -13,7 +11,6 @@ import {
 
 export const retryAndContinue = <T>(options: {
   retryCount: number;
-  onError: (e: Error) => void;
   delay?: number;
 }): MonoTypeOperatorFunction<T> =>
   pipe(
@@ -26,8 +23,4 @@ export const retryAndContinue = <T>(options: {
           ),
         )
       : retry(options.retryCount),
-    catchError((error) => {
-      options.onError(error);
-      return EMPTY;
-    }),
   );

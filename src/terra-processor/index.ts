@@ -1,4 +1,4 @@
-import { filter, from, map, Observable, Subscription } from 'rxjs';
+import { filter, from, map, Subscription } from 'rxjs';
 
 import { SniperTask } from '../core/sniper-task';
 import {
@@ -8,20 +8,15 @@ import {
 } from '../core/tasks-processor';
 import { createTerraWorkflow } from './create-terra-workflow';
 import { TerraTasksProcessorConfig } from './processor-config';
-import { NewTransactionResult } from './types/new-transaction-info';
 import { TransactionFilter } from './types/transaction-filter';
 import { CurrencyDenomMap } from './utils/denom';
 import { terraAmountConverter } from './utils/terra-types-converter';
-import { MetaJournalData } from './utils/transaction-meta-journal';
 
 export class TerraTasksProcessor implements TasksProcessor {
   private processorUpdater: TasksProcessorUpdater | null = null;
   private tasksGetter: (() => SniperTask[]) | null = null;
 
-  private terraWorkflow: Observable<{
-    result: NewTransactionResult;
-    metaJournal: MetaJournalData;
-  }>;
+  private terraWorkflow: ReturnType<typeof createTerraWorkflow>;
   private subscription: Subscription | null = null;
 
   constructor(config: TerraTasksProcessorConfig) {

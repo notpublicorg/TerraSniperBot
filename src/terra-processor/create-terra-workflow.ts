@@ -1,6 +1,17 @@
 import { Coin, LCDClient, MnemonicKey, StdFee } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
-import { concatMap, filter, map, mergeMap, Observable, of, repeat, take, tap } from 'rxjs';
+import {
+  catchError,
+  concatMap,
+  filter,
+  map,
+  mergeMap,
+  Observable,
+  of,
+  repeat,
+  take,
+  tap,
+} from 'rxjs';
 
 import { SniperTask } from '../core/sniper-task';
 import { TasksProcessorUpdater } from '../core/tasks-processor';
@@ -94,7 +105,7 @@ export function createTerraWorkflow(
     take(1),
     mergeMap(({ info, metaJournal }) =>
       of(info).pipe(
-        newTransactionWorkflow(sendTransaction(metaJournal), getTx, deps.updateTask),
+        newTransactionWorkflow(sendTransaction(metaJournal), getTx),
         tap(({ taskId, success }) =>
           deps.updateTask({
             taskId,
@@ -102,6 +113,10 @@ export function createTerraWorkflow(
           }),
         ),
         map((result) => ({ result, metaJournal: metaJournal.build() })),
+        catchError((error) => {
+          deps.updateTask({ taskId: info.taskId, newStatus: 'active' });
+          return of({ error, metaJournal: metaJournal.build() });
+        }),
       ),
     ),
     repeat(),
