@@ -10,5 +10,5 @@ export type TerraTasksProcessorConfig = {
   };
 
   closeTaskAfterPurchase: boolean;
-  timeoutHeightConstant: number;
+  validBlockHeightOffset: number;
 };

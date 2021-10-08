@@ -21,26 +21,32 @@ export type TerraWorflowFactoryDeps = {
 };
 
 export function createTerraWorkflow(
-  config: TerraTasksProcessorConfig,
+  {
+    lcdUrl,
+    lcdChainId,
+    walletMnemonic,
+    tendermintApiUrl,
+    mempool,
+    validBlockHeightOffset,
+    closeTaskAfterPurchase,
+  }: TerraTasksProcessorConfig,
   deps: TerraWorflowFactoryDeps,
 ) {
   const terra = new LCDClient({
-    URL: config.lcdUrl,
-    chainID: config.lcdChainId,
+    URL: lcdUrl,
+    chainID: lcdChainId,
   });
   const walletMnemonicKey = new MnemonicKey({
-    mnemonic: config.walletMnemonic,
+    mnemonic: walletMnemonic,
   });
-  const tendermintApi = new APIRequester(config.tendermintApiUrl);
+  const tendermintApi = new APIRequester(tendermintApiUrl);
 
   const getTx: TxInfoGetter = (txHash) => terra.tx.txInfo(txHash);
   const sendTransaction = swapTransactionCreator(
     {
       walletMnemonic: walletMnemonicKey,
-      fee: new StdFee(config.mempool.defaultGas, [
-        new Coin(config.mempool.defaultFeeDenom, config.mempool.defaultFee),
-      ]),
-      timeoutHeightConstant: config.timeoutHeightConstant,
+      fee: new StdFee(mempool.defaultGas, [new Coin(mempool.defaultFeeDenom, mempool.defaultFee)]),
+      validBlockHeightOffset,
     },
     { terra, tendermintApi },
   );
@@ -92,7 +98,7 @@ export function createTerraWorkflow(
         tap(({ taskId, success }) =>
           deps.updateTask({
             taskId,
-            newStatus: success && config.closeTaskAfterPurchase ? 'closed' : 'active',
+            newStatus: success && closeTaskAfterPurchase ? 'closed' : 'active',
           }),
         ),
         map((result) => ({ result, metaJournal: metaJournal.build() })),

@@ -18,10 +18,7 @@ export function createMempoolSource(deps: { tendermintApi: APIRequester }) {
         metaJournal.onStatusReceived(currentTerraStatus.result.sync_info.latest_block_height);
 
         result.txs.forEach((tx) => {
-          subscriber.next({
-            tx,
-            metaJournal,
-          });
+          subscriber.next({ tx, metaJournal });
         });
         subscriber.complete();
       })

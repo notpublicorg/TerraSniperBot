@@ -49,7 +49,7 @@ const sendTransaction = swapTransactionCreator(
     fee: new StdFee(configuration.DEFAULT_GAS, [
       new Coin(configuration.DEFAULT_FEE_DENOM, configuration.DEFAULT_FEE),
     ]),
-    timeoutHeightConstant: 1000,
+    validBlockHeightOffset: 1000,
   },
   {
     terra,

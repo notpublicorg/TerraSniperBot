@@ -10,5 +10,5 @@
   },
 
   "closeTaskAfterPurchase": true,
-  "timeoutHeightConstant": 1
+  "validBlockHeightOffset": 0
 }

@@ -8,15 +8,7 @@ import { TerraTasksProcessor } from './terra-processor';
 const gateway = new TasksCacheGateway(generateIdFromDate);
 gateway.addNewTasks(tasks.tasks);
 
-const terraProcessor = new TerraTasksProcessor({
-  tendermintApiUrl: config.tendermintApiUrl,
-  lcdUrl: config.lcdUrl,
-  lcdChainId: config.lcdChainId,
-  walletMnemonic: config.walletMnemonic,
-  mempool: config.mempool,
-  closeTaskAfterPurchase: config.closeTaskAfterPurchase,
-  timeoutHeightConstant: config.timeoutHeightConstant,
-});
+const terraProcessor = new TerraTasksProcessor(config);
 
 const tasksWatcher = tasksWatcherFactory(gateway, terraProcessor);
 

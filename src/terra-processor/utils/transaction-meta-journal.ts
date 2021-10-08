@@ -15,7 +15,7 @@ export type MetaJournalData = {
 export class TransactionMetaJournal {
   public taskId = '';
   public history: string[] = [];
-  public currentBlockHeight = '';
+  public latestReleasedBlockHeight = '';
 
   public receivedTime = 0;
   public statusRecivedTime = 0;
@@ -31,8 +31,8 @@ export class TransactionMetaJournal {
     this.receivedTime = Date.now();
   }
 
-  onStatusReceived = (currentBlockHeight: string) => {
-    this.currentBlockHeight = currentBlockHeight;
+  onStatusReceived = (latestReleasedBlockHeight: string) => {
+    this.latestReleasedBlockHeight = latestReleasedBlockHeight;
     this.statusRecivedTime = Date.now();
   };
   onStartHandling = () => {
