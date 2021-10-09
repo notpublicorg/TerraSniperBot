@@ -1,4 +1,4 @@
-import { Coin, LCDClient, MnemonicKey, StdFee } from '@terra-money/terra.js';
+import { Coin, StdFee } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import {
   catchError,
@@ -19,13 +19,9 @@ import { TasksProcessorUpdater } from '../core/tasks-processor';
 import { createMempoolSource } from './data-sources/mempool-source';
 import { createNewBlockSource } from './data-sources/new-block-source';
 import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
-import {
-  createTransactionCheckerSource,
-  createTransactionSenderSource,
-  TxInfoGetter,
-} from './new-transaction-workflow';
+import { createTransactionSenderSource } from './new-transaction-workflow';
 import { TerraTasksProcessorConfig } from './processor-config';
-import { swapTransactionCreator } from './transaction-creators/swap-transaction-creator';
+import { swapTransactionWithScript } from './transaction-creators/swap-transaction-with-script';
 import { NewTransactionInfo } from './types/new-transaction-info';
 import { TerraFlowErrorResult, TerraFlowSuccessResult } from './types/terra-flow';
 import { TransactionFilter } from './types/transaction-filter';
@@ -40,9 +36,9 @@ export type TerraWorflowFactoryDeps = {
 
 export function createTerraWorkflow(
   {
-    lcdUrl,
+    // lcdUrl,
     lcdChainId,
-    walletMnemonic,
+    // walletMnemonic,
     tendermintApiUrl,
     tendermintWebsocketUrl,
     mempool,
@@ -51,24 +47,29 @@ export function createTerraWorkflow(
   }: TerraTasksProcessorConfig,
   deps: TerraWorflowFactoryDeps,
 ) {
-  const terra = new LCDClient({
-    URL: lcdUrl,
-    chainID: lcdChainId,
-  });
-  const walletMnemonicKey = new MnemonicKey({
-    mnemonic: walletMnemonic,
-  });
+  // const terra = new LCDClient({
+  //   URL: lcdUrl,
+  //   chainID: lcdChainId,
+  // });
+  // const walletMnemonicKey = new MnemonicKey({
+  //   mnemonic: walletMnemonic,
+  // });
   const tendermintApi = new APIRequester(tendermintApiUrl);
 
-  const getTx: TxInfoGetter = (txHash) => terra.tx.txInfo(txHash);
-  const sendTransaction = swapTransactionCreator(
-    {
-      walletMnemonic: walletMnemonicKey,
-      fee: new StdFee(mempool.defaultGas, [new Coin(mempool.defaultFeeDenom, mempool.defaultFee)]),
-      validBlockHeightOffset,
-    },
-    { terra, tendermintApi },
-  );
+  // const getTx: TxInfoGetter = (txHash) => terra.tx.txInfo(txHash);
+  // const sendTransaction = swapTransactionCreator(
+  //   {
+  //     walletMnemonic: walletMnemonicKey,
+  //     fee: new StdFee(mempool.defaultGas, [new Coin(mempool.defaultFeeDenom, mempool.defaultFee)]),
+  //     validBlockHeightOffset,
+  //   },
+  //   { terra, tendermintApi },
+  // );
+  const sendTransaction = swapTransactionWithScript({
+    fee: new StdFee(mempool.defaultGas, [new Coin(mempool.defaultFeeDenom, mempool.defaultFee)]),
+    validBlockHeightOffset,
+    chainId: lcdChainId,
+  });
 
   const $newBlockSource = createNewBlockSource(tendermintWebsocketUrl, tendermintApi);
 
@@ -112,16 +113,27 @@ export function createTerraWorkflow(
     mergeMap(({ info, metaJournal }) =>
       of(info).pipe(
         withLatestFrom($newBlockSource),
-        mergeMap(createTransactionSenderSource(sendTransaction(metaJournal))),
+        mergeMap(createTransactionSenderSource(sendTransaction)),
         tap((v) => console.log('Send transaction result', v)),
-        mergeMap(createTransactionCheckerSource(getTx)),
-        tap(({ taskId, success }) =>
+        // mergeMap(createTransactionCheckerSource(getTx)),
+        // tap(({ taskId, success }) =>
+        //   deps.updateTask({
+        //     taskId,
+        //     newStatus: success && closeTaskAfterPurchase ? 'closed' : 'active',
+        //   }),
+        // ),
+        tap(({ taskId }) =>
           deps.updateTask({
             taskId,
-            newStatus: success && closeTaskAfterPurchase ? 'closed' : 'active',
+            newStatus: closeTaskAfterPurchase ? 'closed' : 'active',
           }),
         ),
-        map((result): TerraFlowSuccessResult => ({ result, metaJournal: metaJournal.build() })),
+        map(
+          (result): TerraFlowSuccessResult => ({
+            stdout: result.stdout,
+            metaJournal: metaJournal.build(),
+          }),
+        ),
         catchError((error): Observable<TerraFlowErrorResult> => {
           deps.updateTask({ taskId: info.taskId, newStatus: 'active' });
           return of({ error, metaJournal: metaJournal.build() });

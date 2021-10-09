@@ -10,7 +10,8 @@ export type NewTransactionInfo = {
 
 export type NewTransactionCreationInfo = {
   taskId: string;
-  info: BroadcastResultResponse['result'];
+  stdout?: string;
+  info?: BroadcastResultResponse['result'];
 };
 
 export type NewTransactionResult = {

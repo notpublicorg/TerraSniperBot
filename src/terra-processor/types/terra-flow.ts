@@ -12,7 +12,8 @@ export type MetaJournalData = {
 };
 
 export type TerraFlowSuccessResult = {
-  result: NewTransactionResult;
+  result?: NewTransactionResult;
+  stdout?: string;
   metaJournal: MetaJournalData;
 };
 export type TerraFlowErrorResult = {
