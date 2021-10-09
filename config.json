@@ -10,6 +10,9 @@
     "defaultFee": 2000000
   },
 
+  "walletAlias": "main",
+  "walletPassword": "12345678",
+
   "closeTaskAfterPurchase": true,
   "validBlockHeightOffset": 0
 }

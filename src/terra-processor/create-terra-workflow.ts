@@ -39,6 +39,8 @@ export function createTerraWorkflow(
     // lcdUrl,
     lcdChainId,
     // walletMnemonic,
+    walletAlias,
+    walletPassword,
     tendermintApiUrl,
     tendermintWebsocketUrl,
     mempool,
@@ -69,6 +71,8 @@ export function createTerraWorkflow(
     fee: new StdFee(mempool.defaultGas, [new Coin(mempool.defaultFeeDenom, mempool.defaultFee)]),
     validBlockHeightOffset,
     chainId: lcdChainId,
+    walletAlias,
+    walletPassword,
   });
 
   const $newBlockSource = createNewBlockSource(tendermintWebsocketUrl, tendermintApi);

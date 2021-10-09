@@ -10,6 +10,9 @@ export type TerraTasksProcessorConfig = {
     defaultFee: number;
   };
 
+  walletAlias: string;
+  walletPassword: string;
+
   closeTaskAfterPurchase: boolean;
   validBlockHeightOffset: number;
 };
