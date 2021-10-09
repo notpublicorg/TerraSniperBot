@@ -14,5 +14,5 @@
   "walletPassword": "12345678",
 
   "closeTaskAfterPurchase": true,
-  "validBlockHeightOffset": 0
+  "validBlockHeightOffset": 1
 }
