@@ -11,16 +11,23 @@ import {
   repeat,
   take,
   tap,
+  withLatestFrom,
 } from 'rxjs';
 
 import { SniperTask } from '../core/sniper-task';
 import { TasksProcessorUpdater } from '../core/tasks-processor';
+import { createMempoolSource } from './data-sources/mempool-source';
+import { createNewBlockSource } from './data-sources/new-block-source';
 import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
-import { newTransactionWorkflow, TxInfoGetter } from './new-transaction-workflow';
+import {
+  createTransactionCheckerSource,
+  createTransactionSenderSource,
+  TxInfoGetter,
+} from './new-transaction-workflow';
 import { TerraTasksProcessorConfig } from './processor-config';
 import { swapTransactionCreator } from './transaction-creators/swap-transaction-creator';
-import { createMempoolSource } from './transactions-sources/mempool-source';
 import { NewTransactionInfo } from './types/new-transaction-info';
+import { TerraFlowErrorResult, TerraFlowSuccessResult } from './types/terra-flow';
 import { TransactionFilter } from './types/transaction-filter';
 import { decodeTransaction } from './utils/decoders';
 import { TransactionMetaJournal } from './utils/transaction-meta-journal';
@@ -37,6 +44,7 @@ export function createTerraWorkflow(
     lcdChainId,
     walletMnemonic,
     tendermintApiUrl,
+    tendermintWebsocketUrl,
     mempool,
     validBlockHeightOffset,
     closeTaskAfterPurchase,
@@ -62,9 +70,7 @@ export function createTerraWorkflow(
     { terra, tendermintApi },
   );
 
-  // NOTE: we also have had websocket integration for pulling block transactions
-  // you can find it's removal commit here
-  // https://github.com/notpublicorg/TerraSniperBot/commit/b5fc4ba0bad032f3f98aa90aa88bf8cd067415b3
+  const $newBlockSource = createNewBlockSource(tendermintWebsocketUrl, tendermintApi);
 
   const $mempoolSource = createMempoolSource({
     tendermintApi,
@@ -105,15 +111,18 @@ export function createTerraWorkflow(
     take(1),
     mergeMap(({ info, metaJournal }) =>
       of(info).pipe(
-        newTransactionWorkflow(sendTransaction(metaJournal), getTx),
+        withLatestFrom($newBlockSource),
+        mergeMap(createTransactionSenderSource(sendTransaction(metaJournal))),
+        tap((v) => console.log('Send transaction result', v)),
+        mergeMap(createTransactionCheckerSource(getTx)),
         tap(({ taskId, success }) =>
           deps.updateTask({
             taskId,
             newStatus: success && closeTaskAfterPurchase ? 'closed' : 'active',
           }),
         ),
-        map((result) => ({ result, metaJournal: metaJournal.build() })),
-        catchError((error) => {
+        map((result): TerraFlowSuccessResult => ({ result, metaJournal: metaJournal.build() })),
+        catchError((error): Observable<TerraFlowErrorResult> => {
           deps.updateTask({ taskId: info.taskId, newStatus: 'active' });
           return of({ error, metaJournal: metaJournal.build() });
         }),
@@ -122,5 +131,8 @@ export function createTerraWorkflow(
     repeat(),
   );
 
-  return $mempoolSource;
+  return {
+    $newBlockSource,
+    $mempoolSource,
+  };
 }

@@ -39,7 +39,6 @@ const tendermintApi = new APIRequester(configuration.TENDERMINT_API_URL);
 tendermintApi.getRaw('/status').then(console.log);
 
 const metaJournal = new TransactionMetaJournal('mempool');
-metaJournal.onStatusReceived(configuration.CURRENT_BLOCK_HEIGHT);
 
 const sendTransaction = swapTransactionCreator(
   {
@@ -63,7 +62,10 @@ console.log('TRANSACTION_INFO: ', transactionInfo);
 
 process.stdin.on('data', async () => {
   try {
-    const result = await sendTransaction(transactionInfo);
+    const result = await sendTransaction([
+      transactionInfo,
+      { currentBlockHeight: configuration.CURRENT_BLOCK_HEIGHT },
+    ]);
     console.log(result);
   } catch (e) {
     console.log(e);
