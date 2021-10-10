@@ -8,6 +8,7 @@ export type MetaJournalData = {
   elapsedDecodingSeconds: number;
   elapsedFiltrationSeconds: number;
   elapsedPreparationSeconds: number;
+  elapsedBlockFetcingSeconds: number;
 };
 
 export type TerraFlowSuccessResult = {
@@ -19,7 +20,3 @@ export type TerraFlowErrorResult = {
   metaJournal: MetaJournalData;
 };
 export type TerraFlowResult = TerraFlowSuccessResult | TerraFlowErrorResult;
-
-export type NewBlockInfo = {
-  currentBlockHeight: string;
-};

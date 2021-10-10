@@ -11,13 +11,11 @@ import {
   repeat,
   take,
   tap,
-  withLatestFrom,
 } from 'rxjs';
 
 import { SniperTask } from '../core/sniper-task';
 import { TasksProcessorUpdater } from '../core/tasks-processor';
 import { createMempoolSource } from './data-sources/mempool-source';
-import { createNewBlockSource } from './data-sources/new-block-source';
 import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
 import {
   createTransactionCheckerSource,
@@ -45,7 +43,6 @@ export function createTerraWorkflow(
     walletAlias,
     walletPassword,
     tendermintApiUrl,
-    tendermintWebsocketUrl,
     mempool,
     validBlockHeightOffset,
     closeTaskAfterPurchase,
@@ -65,9 +62,8 @@ export function createTerraWorkflow(
     chainId: lcdChainId,
     walletAlias,
     walletPassword,
+    tendermintApi,
   });
-
-  const $newBlockSource = createNewBlockSource(tendermintWebsocketUrl, tendermintApi);
 
   const $mempoolSource = createMempoolSource({
     tendermintApi,
@@ -108,7 +104,6 @@ export function createTerraWorkflow(
     take(1),
     mergeMap(({ info, metaJournal }) =>
       of(info).pipe(
-        withLatestFrom($newBlockSource),
         mergeMap(createTransactionSenderSource(sendTransaction(metaJournal))),
         tap((v) => console.log('Send transaction result', v)),
         mergeMap(createTransactionCheckerSource(getTx)),
@@ -128,5 +123,5 @@ export function createTerraWorkflow(
     repeat(),
   );
 
-  return { $newBlockSource, $mempoolSource };
+  return $mempoolSource;
 }

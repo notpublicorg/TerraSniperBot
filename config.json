@@ -1,6 +1,5 @@
 {
   "tendermintApiUrl": "http://127.0.0.1:26657",
-  "tendermintWebsocketUrl": "ws://127.0.0.1:26657/websocket",
   "lcdUrl": "https://bombay-lcd.terra.dev",
   "lcdChainId": "bombay-12",
   "mempool": {

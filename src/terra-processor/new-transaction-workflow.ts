@@ -6,16 +6,13 @@ import {
   NewTransactionInfo,
   NewTransactionResult,
 } from './types/new-transaction-info';
-import { NewBlockInfo } from './types/terra-flow';
 import { retryAndContinue } from './utils/retry-and-continue';
 
-export type TransactionSender = (
-  data: [NewTransactionInfo, NewBlockInfo],
-) => Promise<NewTransactionCreationInfo>;
+export type TransactionSender = (data: NewTransactionInfo) => Promise<NewTransactionCreationInfo>;
 export type TxInfoGetter = (hash: string) => Promise<TxInfo>;
 
 export const createTransactionSenderSource =
-  (transactionSender: TransactionSender) => (data: [NewTransactionInfo, NewBlockInfo]) =>
+  (transactionSender: TransactionSender) => (data: NewTransactionInfo) =>
     of(data).pipe(
       mergeMap(transactionSender),
       retryAndContinue({ retryCount: 2 }),

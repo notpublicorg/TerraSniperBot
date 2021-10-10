@@ -1,6 +1,5 @@
 export type TerraTasksProcessorConfig = {
   tendermintApiUrl: string;
-  tendermintWebsocketUrl: string;
   lcdUrl: string;
   lcdChainId: string;
   mempool: {
