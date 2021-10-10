@@ -3,7 +3,6 @@ export type TerraTasksProcessorConfig = {
   tendermintWebsocketUrl: string;
   lcdUrl: string;
   lcdChainId: string;
-  walletMnemonic: string;
   mempool: {
     defaultGas: number;
     defaultFeeDenom: string;

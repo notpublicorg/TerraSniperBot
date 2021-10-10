@@ -42,7 +42,6 @@ export function createTerraWorkflow(
   {
     lcdUrl,
     lcdChainId,
-    // walletMnemonic,
     walletAlias,
     walletPassword,
     tendermintApiUrl,
@@ -57,20 +56,9 @@ export function createTerraWorkflow(
     URL: lcdUrl,
     chainID: lcdChainId,
   });
-  // const walletMnemonicKey = new MnemonicKey({
-  //   mnemonic: walletMnemonic,
-  // });
   const tendermintApi = new APIRequester(tendermintApiUrl);
 
   const getTx: TxInfoGetter = (txHash) => terra.tx.txInfo(txHash);
-  // const sendTransaction = swapTransactionCreator(
-  //   {
-  //     walletMnemonic: walletMnemonicKey,
-  //     fee: new StdFee(mempool.defaultGas, [new Coin(mempool.defaultFeeDenom, mempool.defaultFee)]),
-  //     validBlockHeightOffset,
-  //   },
-  //   { terra, tendermintApi },
-  // );
   const sendTransaction = swapTransactionWithScript({
     fee: new StdFee(mempool.defaultGas, [new Coin(mempool.defaultFeeDenom, mempool.defaultFee)]),
     validBlockHeightOffset,
@@ -121,7 +109,7 @@ export function createTerraWorkflow(
     mergeMap(({ info, metaJournal }) =>
       of(info).pipe(
         withLatestFrom($newBlockSource),
-        mergeMap(createTransactionSenderSource(sendTransaction)),
+        mergeMap(createTransactionSenderSource(sendTransaction(metaJournal))),
         tap((v) => console.log('Send transaction result', v)),
         mergeMap(createTransactionCheckerSource(getTx)),
         tap(({ taskId, success }) =>

@@ -8,8 +8,6 @@ export type MetaJournalData = {
   elapsedDecodingSeconds: number;
   elapsedFiltrationSeconds: number;
   elapsedPreparationSeconds: number;
-  elapsedCreatingAndSigningSeconds: number;
-  elapsedEncodingSeconds: number;
 };
 
 export type TerraFlowSuccessResult = {

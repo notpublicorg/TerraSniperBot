@@ -11,8 +11,6 @@ export class TransactionMetaJournal {
   public decodedTime = 0;
   public filtrationDoneTime = 0;
   public newTransactionPreparedDoneTime = 0;
-  public newTransactionSignedTime = 0;
-  public newTransactionEncodedTime = 0;
 
   constructor(public source: 'block' | 'mempool') {
     this.history.push(`receivedDateTime - ${new Date().toLocaleString()}`);
@@ -37,13 +35,6 @@ export class TransactionMetaJournal {
     this.execScript = execScript;
   };
 
-  onNewTransactionSigned = () => {
-    this.newTransactionSignedTime = Date.now();
-  };
-  onNewTransactionEncoded = () => {
-    this.newTransactionEncodedTime = Date.now();
-  };
-
   build = (): MetaJournalData => {
     return {
       taskId: this.taskId,
@@ -54,10 +45,6 @@ export class TransactionMetaJournal {
       elapsedFiltrationSeconds: (this.filtrationDoneTime - this.decodedTime) / 1000,
       elapsedPreparationSeconds:
         (this.newTransactionPreparedDoneTime - this.filtrationDoneTime) / 1000,
-      elapsedCreatingAndSigningSeconds:
-        (this.newTransactionSignedTime - this.newTransactionPreparedDoneTime) / 1000,
-      elapsedEncodingSeconds:
-        (this.newTransactionEncodedTime - this.newTransactionSignedTime) / 1000,
     };
   };
 }
