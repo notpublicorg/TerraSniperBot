@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'TerraBot',
+      name: 'tb',
       script: './dist/index.js',
       autorestart: true,
       exec_mode: 'fork',

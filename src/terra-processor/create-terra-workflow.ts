@@ -1,4 +1,4 @@
-import { Coin, StdFee } from '@terra-money/terra.js';
+import { Coin, LCDClient, StdFee } from '@terra-money/terra.js';
 import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import {
   catchError,
@@ -19,7 +19,11 @@ import { TasksProcessorUpdater } from '../core/tasks-processor';
 import { createMempoolSource } from './data-sources/mempool-source';
 import { createNewBlockSource } from './data-sources/new-block-source';
 import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
-import { createTransactionSenderSource } from './new-transaction-workflow';
+import {
+  createTransactionCheckerSource,
+  createTransactionSenderSource,
+  TxInfoGetter,
+} from './new-transaction-workflow';
 import { TerraTasksProcessorConfig } from './processor-config';
 import { swapTransactionWithScript } from './transaction-creators/swap-transaction-with-script';
 import { NewTransactionInfo } from './types/new-transaction-info';
@@ -36,7 +40,7 @@ export type TerraWorflowFactoryDeps = {
 
 export function createTerraWorkflow(
   {
-    // lcdUrl,
+    lcdUrl,
     lcdChainId,
     // walletMnemonic,
     walletAlias,
@@ -49,16 +53,16 @@ export function createTerraWorkflow(
   }: TerraTasksProcessorConfig,
   deps: TerraWorflowFactoryDeps,
 ) {
-  // const terra = new LCDClient({
-  //   URL: lcdUrl,
-  //   chainID: lcdChainId,
-  // });
+  const terra = new LCDClient({
+    URL: lcdUrl,
+    chainID: lcdChainId,
+  });
   // const walletMnemonicKey = new MnemonicKey({
   //   mnemonic: walletMnemonic,
   // });
   const tendermintApi = new APIRequester(tendermintApiUrl);
 
-  // const getTx: TxInfoGetter = (txHash) => terra.tx.txInfo(txHash);
+  const getTx: TxInfoGetter = (txHash) => terra.tx.txInfo(txHash);
   // const sendTransaction = swapTransactionCreator(
   //   {
   //     walletMnemonic: walletMnemonicKey,
@@ -85,8 +89,8 @@ export function createTerraWorkflow(
         .pipe(
           tap(metaJournal.onStartHandling),
           map((tx) => decodeTransaction(tx)),
-          tap(metaJournal.onDecodingDone),
           filter(Boolean),
+          tap(metaJournal.onDecodingDone),
           map((tx) => tx.toData().value),
           createLiquidityFilterWorkflow(deps.getFiltersSource),
           tap(metaJournal.onFiltrationDone),
@@ -119,25 +123,14 @@ export function createTerraWorkflow(
         withLatestFrom($newBlockSource),
         mergeMap(createTransactionSenderSource(sendTransaction)),
         tap((v) => console.log('Send transaction result', v)),
-        // mergeMap(createTransactionCheckerSource(getTx)),
-        // tap(({ taskId, success }) =>
-        //   deps.updateTask({
-        //     taskId,
-        //     newStatus: success && closeTaskAfterPurchase ? 'closed' : 'active',
-        //   }),
-        // ),
-        tap(({ taskId }) =>
+        mergeMap(createTransactionCheckerSource(getTx)),
+        tap(({ taskId, success }) =>
           deps.updateTask({
             taskId,
-            newStatus: closeTaskAfterPurchase ? 'closed' : 'active',
+            newStatus: success && closeTaskAfterPurchase ? 'closed' : 'active',
           }),
         ),
-        map(
-          (result): TerraFlowSuccessResult => ({
-            stdout: result.stdout,
-            metaJournal: metaJournal.build(),
-          }),
-        ),
+        map((result): TerraFlowSuccessResult => ({ result, metaJournal: metaJournal.build() })),
         catchError((error): Observable<TerraFlowErrorResult> => {
           deps.updateTask({ taskId: info.taskId, newStatus: 'active' });
           return of({ error, metaJournal: metaJournal.build() });
@@ -147,8 +140,5 @@ export function createTerraWorkflow(
     repeat(),
   );
 
-  return {
-    $newBlockSource,
-    $mempoolSource,
-  };
+  return { $newBlockSource, $mempoolSource };
 }

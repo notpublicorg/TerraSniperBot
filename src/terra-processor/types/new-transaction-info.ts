@@ -1,5 +1,3 @@
-import { BroadcastResultResponse } from './tendermint-responses';
-
 export type NewTransactionInfo = {
   taskId: string;
   isTaskActive: boolean;
@@ -10,8 +8,7 @@ export type NewTransactionInfo = {
 
 export type NewTransactionCreationInfo = {
   taskId: string;
-  stdout?: string;
-  info?: BroadcastResultResponse['result'];
+  hash: string;
 };
 
 export type NewTransactionResult = {

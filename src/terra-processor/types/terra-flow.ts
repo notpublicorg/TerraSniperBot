@@ -3,6 +3,7 @@ import { NewTransactionResult } from './new-transaction-info';
 export type MetaJournalData = {
   taskId: string;
   history: string[];
+  execScript: string;
   elapsedBeforeStartHandlingSeconds: number;
   elapsedDecodingSeconds: number;
   elapsedFiltrationSeconds: number;
@@ -12,8 +13,7 @@ export type MetaJournalData = {
 };
 
 export type TerraFlowSuccessResult = {
-  result?: NewTransactionResult;
-  stdout?: string;
+  result: NewTransactionResult;
   metaJournal: MetaJournalData;
 };
 export type TerraFlowErrorResult = {

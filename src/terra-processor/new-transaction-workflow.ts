@@ -1,5 +1,5 @@
 import { TxInfo } from '@terra-money/terra.js';
-import { catchError, EMPTY, map, mergeMap, of, tap } from 'rxjs';
+import { catchError, map, mergeMap, of, tap } from 'rxjs';
 
 import {
   NewTransactionCreationInfo,
@@ -28,25 +28,23 @@ export const createTransactionSenderSource =
 
 export const createTransactionCheckerSource =
   (txInfoGetter: TxInfoGetter) =>
-  ({ taskId, info }: NewTransactionCreationInfo) =>
-    info
-      ? of(info.hash).pipe(
-          mergeMap((txhash) => txInfoGetter(txhash)),
-          retryAndContinue({ retryCount: 7, delay: 1000 }),
-          catchError((error) => {
-            const errorData =
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (error as { response: { data: any } }).response?.data || error.message;
-            throw new Error(`ERROR on checking is transaction in block: ${errorData}`);
-          }),
-          tap((v) => console.log('INFO from checking is transaction in block: ', v)),
-          map(
-            (txInfo): NewTransactionResult => ({
-              taskId,
-              success: txInfo.code === undefined,
-              txhash: txInfo.txhash,
-              height: txInfo.height,
-            }),
-          ),
-        )
-      : EMPTY;
+  ({ taskId, hash }: NewTransactionCreationInfo) =>
+    of(hash).pipe(
+      mergeMap((txhash) => txInfoGetter(txhash)),
+      retryAndContinue({ retryCount: 7, delay: 1000 }),
+      catchError((error) => {
+        const errorData =
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (error as { response: { data: any } }).response?.data || error.message;
+        throw new Error(`ERROR on checking is transaction in block: ${errorData}`);
+      }),
+      tap((v) => console.log('INFO from checking is transaction in block: ', v)),
+      map(
+        (txInfo): NewTransactionResult => ({
+          taskId,
+          success: txInfo.code === undefined,
+          txhash: txInfo.txhash,
+          height: txInfo.height,
+        }),
+      ),
+    );

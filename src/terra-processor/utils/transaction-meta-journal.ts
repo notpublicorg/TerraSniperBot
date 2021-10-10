@@ -4,6 +4,7 @@ import { FiltrationResult } from '../types/transaction-filter';
 export class TransactionMetaJournal {
   public taskId = '';
   public history: string[] = [];
+  public execScript = '';
 
   public receivedTime = 0;
   public startHandlingTime = 0;
@@ -31,6 +32,11 @@ export class TransactionMetaJournal {
   onNewTransactionPrepared = () => {
     this.newTransactionPreparedDoneTime = Date.now();
   };
+
+  onScriptExecutingStart = (execScript: string) => {
+    this.execScript = execScript;
+  };
+
   onNewTransactionSigned = () => {
     this.newTransactionSignedTime = Date.now();
   };
@@ -42,6 +48,7 @@ export class TransactionMetaJournal {
     return {
       taskId: this.taskId,
       history: this.history,
+      execScript: this.execScript,
       elapsedBeforeStartHandlingSeconds: (this.startHandlingTime - this.receivedTime) / 1000,
       elapsedDecodingSeconds: (this.decodedTime - this.startHandlingTime) / 1000,
       elapsedFiltrationSeconds: (this.filtrationDoneTime - this.decodedTime) / 1000,

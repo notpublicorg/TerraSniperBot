@@ -54,5 +54,5 @@ export const swapTransactionCreator =
 
     // TODO: broadcast info (при успехе code=0, а не undefined. Проверять и то, и то ?
 
-    return { taskId, info: txBroadcastingResponse.result };
+    return { taskId, hash: txBroadcastingResponse.result.hash };
   };
