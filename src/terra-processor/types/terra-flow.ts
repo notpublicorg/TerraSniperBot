@@ -3,12 +3,12 @@ import { NewTransactionResult } from './new-transaction-info';
 export type MetaJournalData = {
   taskId: string;
   history: string[];
+  execScript: string;
   elapsedBeforeStartHandlingSeconds: number;
   elapsedDecodingSeconds: number;
   elapsedFiltrationSeconds: number;
   elapsedPreparationSeconds: number;
-  elapsedCreatingAndSigningSeconds: number;
-  elapsedEncodingSeconds: number;
+  elapsedBlockFetcingSeconds: number;
 };
 
 export type TerraFlowSuccessResult = {
@@ -20,7 +20,3 @@ export type TerraFlowErrorResult = {
   metaJournal: MetaJournalData;
 };
 export type TerraFlowResult = TerraFlowSuccessResult | TerraFlowErrorResult;
-
-export type NewBlockInfo = {
-  currentBlockHeight: string;
-};

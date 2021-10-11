@@ -1,4 +1,4 @@
-import { Connectable, filter, from, map, Observable, Subscription } from 'rxjs';
+import { filter, from, map, Observable, Subscription } from 'rxjs';
 
 import { SniperTask } from '../core/sniper-task';
 import {
@@ -8,7 +8,7 @@ import {
 } from '../core/tasks-processor';
 import { createTerraWorkflow } from './create-terra-workflow';
 import { TerraTasksProcessorConfig } from './processor-config';
-import { NewBlockInfo, TerraFlowResult } from './types/terra-flow';
+import { TerraFlowResult } from './types/terra-flow';
 import { TransactionFilter } from './types/transaction-filter';
 import { CurrencyDenomMap } from './utils/denom';
 import { terraAmountConverter } from './utils/terra-types-converter';
@@ -20,24 +20,18 @@ export class TerraTasksProcessor implements TasksProcessor {
   private transactionsFlow: Observable<TerraFlowResult>;
   private transactionsFlowSubscription: Subscription | null = null;
 
-  private newBlockFlow: Connectable<NewBlockInfo>;
-  private newBlockFlowSubscription: Subscription | null = null;
-
   constructor(config: TerraTasksProcessorConfig) {
-    const { $mempoolSource, $newBlockSource } = createTerraWorkflow(config, {
+    this.transactionsFlow = createTerraWorkflow(config, {
       getFiltersSource: () => this.getFilters(),
       getTasks: () => this.tasksGetter?.() || [],
       updateTask: (params) => this.updateTask(params),
     });
-    this.transactionsFlow = $mempoolSource;
-    this.newBlockFlow = $newBlockSource;
   }
 
   subscribe: TasksProcessor['subscribe'] = (tasksGetter, updater) => {
     console.log('Terra Tasks Processor: START');
     this.tasksGetter = tasksGetter;
     this.processorUpdater = updater;
-    this.newBlockFlowSubscription = this.newBlockFlow.connect();
     this.transactionsFlowSubscription = this.transactionsFlow.subscribe(console.log);
 
     return {
@@ -45,8 +39,6 @@ export class TerraTasksProcessor implements TasksProcessor {
         console.log('Terra Tasks Processor: STOP');
         this.tasksGetter = null;
         this.processorUpdater = null;
-        this.newBlockFlowSubscription?.unsubscribe();
-        this.newBlockFlowSubscription = null;
         this.transactionsFlowSubscription?.unsubscribe();
         this.transactionsFlowSubscription = null;
       },
