@@ -60,103 +60,19 @@ class TransactionBuilder {
       gas_used: '107686',
       gas_wanted: '154000',
       height: '4622906', // NOTE: height of the transaction's block
-      logs: [
-        {
-          events: [
-            {
-              attributes: [
-                {
-                  key: 'voter',
-                  value: 'terravaloper1kprce6kc08a6l03gzzh99hfpazfjeczfpzkkau',
-                },
-                {
-                  key: 'exchange_rates',
-                  value:
-                    '27.500000000000000000uusd,34070.000000000000000000ukrw,19.407960000000002765usdr,78079.039115000006859191umnt,23.442512499999999420ueur,20.158874999999998323ugbp,177.905832500000002483ucny,3012.116250000000036380ujpy,2032.731277500000032887uinr,35.199175000000003877ucad,25.379337499999998329uchf,214.110874999999992951uhkd,37.952694999999998515uaud,37.174637499999995782usgd,918.981387499999982538uthb,238.610350000000011050usek,174.317027499999994689udkk,391749.875000000000000000uidr,1382.703162499999962165uphp',
-                },
-                {
-                  key: 'feeder',
-                  value: 'terra1t0r8ugz3kdg4ucwurppx9vymwkldlexdfvzlyt',
-                },
-              ],
-              type: 'aggregate_vote',
-            },
-            {
-              attributes: [
-                {
-                  key: 'action',
-                  value: 'aggregateexchangeratevote',
-                },
-                {
-                  key: 'module',
-                  value: 'oracle',
-                },
-              ],
-              type: 'message',
-            },
-          ],
-          log: '',
-          msg_index: 0,
-        },
-        {
-          events: [
-            {
-              attributes: [
-                {
-                  key: 'voter',
-                  value: 'terravaloper1kprce6kc08a6l03gzzh99hfpazfjeczfpzkkau',
-                },
-                {
-                  key: 'feeder',
-                  value: 'terra1t0r8ugz3kdg4ucwurppx9vymwkldlexdfvzlyt',
-                },
-              ],
-              type: 'aggregate_prevote',
-            },
-            {
-              attributes: [
-                {
-                  key: 'action',
-                  value: 'aggregateexchangerateprevote',
-                },
-                {
-                  key: 'module',
-                  value: 'oracle',
-                },
-              ],
-              type: 'message',
-            },
-          ],
-          log: '',
-          msg_index: 1,
-        },
-      ],
+      logs: [],
       raw_log: '',
       timestamp: '',
       tx: {
         type: 'core/StdTx',
         value: {
           fee: {
-            amount: [
-              {
-                amount: '0',
-                denom: 'ukrw',
-              },
-            ],
+            amount: [{ amount: '0', denom: 'ukrw' }],
             gas: '154000',
           },
           memo: '',
           msg: this.msgs,
-          signatures: [
-            {
-              pub_key: {
-                type: 'tendermint/PubKeySecp256k1',
-                value: 'A4RDdgjQPNWfgJswEBNY59qEk6HUFGw17J9h7t/HhUCW',
-              },
-              signature:
-                'C0cS4Df0HLft3AJhM81dK1/vWqqAW5bMEi2BXtaeYw9ub4/W/JJcHU120K9r+BClrv6k4wHJvp09jGNVoncU9Q==',
-            },
-          ],
+          signatures: [],
           timeout_height: 'NaN',
         },
       },
