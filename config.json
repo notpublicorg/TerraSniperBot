@@ -1,16 +1,16 @@
 {
   "tendermintApiUrl": "http://127.0.0.1:26657",
-  "lcdUrl": "https://bombay-lcd.terra.dev",
-  "lcdChainId": "bombay-12",
+  "lcdUrl": "https://lcd.terra.dev",
+  "lcdChainId": "columbus-5",
   "mempool": {
-    "defaultGas": 300000,
+    "defaultGas": 400000,
     "defaultFeeDenom": "uusd",
-    "defaultFee": 2000000
+    "defaultFee": 210321
   },
 
-  "walletAlias": "main",
+  "walletAlias": "test",
   "walletPassword": "12345678",
 
-  "closeTaskAfterPurchase": true,
-  "validBlockHeightOffset": 1
+  "closeTaskAfterPurchase": false,
+  "validBlockHeightOffset": 0
 }
