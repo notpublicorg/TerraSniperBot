@@ -1,20 +1,20 @@
 {
   "tasks": [
     {
-      "contract": "terra1e8u08z7kksgxftryfafn7lz42jp45srpza2yu0",
+      "contract": "terra1nef5jf6c7js9x6gkntlehgywvjlpytm7pcgkn4",
       "conditions": [
         {
           "currency": "ust",
-          "greaterOrEqual": "20",
-          "buy": "20"
+          "greaterOrEqual": "1000",
+          "buy": "1"
         },
         {
           "currency": "ust",
-          "greaterOrEqual": "10",
-          "buy": "10"
+          "greaterOrEqual": "1",
+          "buy": "0.5"
         }
       ],
-      "maxTokenPrice": "100"
+      "maxTokenPrice": "2"
     }
   ]
 }
