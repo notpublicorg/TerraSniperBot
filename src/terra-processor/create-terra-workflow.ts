@@ -46,6 +46,7 @@ export function createTerraWorkflow(
     mempool,
     validBlockHeightOffset,
     closeTaskAfterPurchase,
+    maxEncodedTransactionTextLength,
   }: TerraTasksProcessorConfig,
   deps: TerraWorflowFactoryDeps,
 ) {
@@ -68,6 +69,7 @@ export function createTerraWorkflow(
   const $mempoolSource = createMempoolSource({
     tendermintApi,
   }).pipe(
+    filter(({ tx }) => tx.length <= maxEncodedTransactionTextLength),
     concatMap(({ tx, metaJournal }) =>
       of(tx)
         .pipe(

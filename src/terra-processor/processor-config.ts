@@ -13,4 +13,6 @@ export type TerraTasksProcessorConfig = {
 
   closeTaskAfterPurchase: boolean;
   validBlockHeightOffset: number;
+
+  maxEncodedTransactionTextLength: number;
 };

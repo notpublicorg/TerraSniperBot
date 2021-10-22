@@ -12,5 +12,7 @@
   "walletPassword": "12345678",
 
   "closeTaskAfterPurchase": false,
-  "validBlockHeightOffset": 0
+  "validBlockHeightOffset": 0,
+
+  "maxEncodedTransactionTextLength": 100
 }
