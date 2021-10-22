@@ -13,7 +13,7 @@ export function createMempoolSource(deps: { tendermintApi: APIRequester }) {
       .getRaw<UnconfirmedTxsResponse>('/unconfirmed_txs', { limit: 100 })
       .then(({ result }) => {
         result.txs.forEach((tx) => {
-          subscriber.next({ tx, metaJournal: new TransactionMetaJournal('mempool') });
+          subscriber.next({ tx, metaJournal: new TransactionMetaJournal('mempool', tx) });
         });
         subscriber.complete();
       })

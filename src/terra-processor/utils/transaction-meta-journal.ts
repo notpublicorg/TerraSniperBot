@@ -14,7 +14,7 @@ export class TransactionMetaJournal {
   public newTransactionBlockInfoFetchingStartTime = 0;
   public newTransactionScriptExecutionStartTime = 0;
 
-  constructor(public source: 'block' | 'mempool') {
+  constructor(public source: 'block' | 'mempool', public encodedTx: string) {
     this.history.push(`receivedDateTime - ${new Date().toLocaleString()}`);
     this.receivedTime = Date.now();
   }
@@ -42,6 +42,7 @@ export class TransactionMetaJournal {
 
   build = (): MetaJournalData => {
     return {
+      encodedTx: this.encodedTx,
       taskId: this.taskId,
       history: this.history,
       execScript: this.execScript,
