@@ -1,8 +1,9 @@
 import { MetaJournalData } from '../types/terra-flow';
-import { FiltrationResult } from '../types/transaction-filter';
+import { FiltrationResult, ParsedLiquidity } from '../types/transaction-filter';
 
 export class TransactionMetaJournal {
   public taskId = '';
+  public liquidity: ParsedLiquidity | null = null;
   public history: string[] = [];
   public execScript = '';
 
@@ -25,8 +26,9 @@ export class TransactionMetaJournal {
   onDecodingDone = () => {
     this.decodedTime = Date.now();
   };
-  onFiltrationDone = ({ taskId }: FiltrationResult) => {
+  onFiltrationDone = ({ taskId, liquidity }: FiltrationResult) => {
     this.taskId = taskId;
+    this.liquidity = liquidity;
     this.filtrationDoneTime = Date.now();
   };
   onNewTransactionPrepared = () => {
@@ -43,6 +45,7 @@ export class TransactionMetaJournal {
   build = (): MetaJournalData => {
     return {
       taskId: this.taskId,
+      liquidity: this.liquidity,
       history: this.history,
       execScript: this.execScript,
       elapsedBeforeStartHandlingSeconds: (this.startHandlingTime - this.receivedTime) / 1000,

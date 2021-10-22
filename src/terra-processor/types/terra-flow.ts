@@ -1,7 +1,9 @@
 import { NewTransactionResult } from './new-transaction-info';
+import { ParsedLiquidity } from './transaction-filter';
 
 export type MetaJournalData = {
   taskId: string;
+  liquidity: ParsedLiquidity | null;
   history: string[];
   execScript: string;
   elapsedBeforeStartHandlingSeconds: number;
