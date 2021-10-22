@@ -44,8 +44,10 @@ export class TransactionMetaJournal {
 
   build = (): MetaJournalData => {
     return {
+      pairContract: this.liquidity?.pairContract,
+      liquidityToken: this.liquidity?.token,
+      liquidityCurrency: this.liquidity?.currency,
       taskId: this.taskId,
-      liquidity: this.liquidity,
       history: this.history,
       execScript: this.execScript,
       elapsedBeforeStartHandlingSeconds: (this.startHandlingTime - this.receivedTime) / 1000,
