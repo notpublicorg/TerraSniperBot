@@ -46,6 +46,8 @@ export function createTerraWorkflow(
   //   tendermintApi,
   // });
 
+  const handledTxsCache: string[] = [];
+
   const $mempoolSource = createMempoolSource({
     tendermintApi,
   }).pipe(
@@ -60,6 +62,8 @@ export function createTerraWorkflow(
           map((tx) => tx.toData().value),
           createLiquidityFilterWorkflow(deps.getFiltersSource),
           tap(metaJournal.onFiltrationDone),
+          filter(() => !handledTxsCache.includes(tx)),
+          tap(() => handledTxsCache.push(tx)),
           map((): TerraFlowSuccessResult => ({ metaJournal: metaJournal.build() })),
         ),
       // .pipe(
