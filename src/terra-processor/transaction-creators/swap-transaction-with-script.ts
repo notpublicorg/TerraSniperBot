@@ -17,7 +17,7 @@ export const swapTransactionWithScript =
     tendermintApi,
   }: {
     fee: StdFee;
-    validBlockHeightOffset: number;
+    validBlockHeightOffset: number | false;
     chainId: string;
     walletAlias: string;
     walletPassword: string;
@@ -43,9 +43,13 @@ export const swapTransactionWithScript =
 
     const statusResponse = await tendermintApi.getRaw<StatusResponse>('/status');
     const currentBlockHeight = statusResponse.result.sync_info.latest_block_height;
-    const timeout_height = (+currentBlockHeight || 0) + 1 + validBlockHeightOffset;
+    const timeoutHeight =
+      typeof validBlockHeightOffset === 'number'
+        ? (+currentBlockHeight || 0) + 1 + validBlockHeightOffset
+        : undefined;
 
-    const scriptArgs = `--from=${walletAlias} --chain-id=${chainId} --gas=${fee.gas} --fees=${fees} --timeout-height=${timeout_height} -y`;
+    const timeoutHeightArg = timeoutHeight ? `--timeout-height=${timeoutHeight}` : '';
+    const scriptArgs = `--from=${walletAlias} --chain-id=${chainId} --gas=${fee.gas} --fees=${fees} ${timeoutHeightArg} -y`;
     const execScript = `echo "${walletPassword}" | terrad tx wasm execute ${pairContract} '${executeMsg}' ${buyAmount}${buyDenom} ${scriptArgs}`;
 
     metaJournal.onScriptExecutingStart(execScript);

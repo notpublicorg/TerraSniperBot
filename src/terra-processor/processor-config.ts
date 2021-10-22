@@ -12,7 +12,7 @@ export type TerraTasksProcessorConfig = {
   walletPassword: string;
 
   closeTaskAfterPurchase: boolean;
-  validBlockHeightOffset: number;
+  validBlockHeightOffset: number | false;
 
   maxEncodedTransactionTextLength: number;
 };
