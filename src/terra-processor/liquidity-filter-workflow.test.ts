@@ -209,7 +209,7 @@ test.only.each([
   [
     { greaterOrEqual: 10, toBuy: 10, maxTokenPrice: 2 },
     { token: 10, currency: 10 },
-    { satisfiedConditionCount: 1 },
+    { satisfiedConditionCount: 0 },
   ],
 ])('max token price with %s and %s', async (condition, liquidity, result) => {
   const FILTER = aTransactionFilter()
