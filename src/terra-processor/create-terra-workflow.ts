@@ -45,6 +45,7 @@ export function createTerraWorkflow(
     tendermintApiUrl,
     mempool,
     validBlockHeightOffset,
+    requestBlockHeigthRetryCount,
     closeTaskAfterPurchase,
     maxEncodedTransactionTextLength,
   }: TerraTasksProcessorConfig,
@@ -60,6 +61,7 @@ export function createTerraWorkflow(
   const sendTransaction = swapTransactionWithScript({
     fee: new StdFee(mempool.defaultGas, [new Coin(mempool.defaultFeeDenom, mempool.defaultFee)]),
     validBlockHeightOffset,
+    requestBlockHeigthRetryCount,
     chainId: lcdChainId,
     walletAlias,
     walletPassword,

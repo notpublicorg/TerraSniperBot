@@ -13,6 +13,7 @@
 
   "closeTaskAfterPurchase": false,
   "validBlockHeightOffset": 0,
+  "requestBlockHeigthRetryCount": 2,
 
   "maxEncodedTransactionTextLength": 100
 }
