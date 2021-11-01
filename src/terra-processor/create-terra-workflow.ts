@@ -25,12 +25,12 @@ import {
 } from './new-transaction-workflow';
 import { TerraTasksProcessorConfig } from './processor-config';
 import { swapTransactionWithScript } from './transaction-creators/swap-transaction-with-script';
+import { TransactionMetaJournal } from './transaction-meta-journal';
 import { NewTransactionInfo } from './types/new-transaction-info';
 import { TerraFlowErrorResult, TerraFlowSuccessResult } from './types/terra-flow';
 import { TransactionFilter } from './types/transaction-filter';
 import { decodeTransaction } from './utils/decoders';
 import { filterAsync } from './utils/filter-async';
-import { TransactionMetaJournal } from './utils/transaction-meta-journal';
 
 export type TerraWorflowFactoryDeps = {
   getFiltersSource: () => Observable<TransactionFilter>;

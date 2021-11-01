@@ -3,8 +3,8 @@ import { StdFee } from '@terra-money/terra.js';
 import { sendTransaction } from '../external/send-transaction';
 import { TendermintAPILocal } from '../external/tendermintAPI';
 import { TransactionSender } from '../new-transaction-workflow';
+import { TransactionMetaJournal } from '../transaction-meta-journal';
 import { retryAction } from '../utils/retry-and-continue';
-import { TransactionMetaJournal } from '../utils/transaction-meta-journal';
 
 export const getTimeoutHeight =
   (

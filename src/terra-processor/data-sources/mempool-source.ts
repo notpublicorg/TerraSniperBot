@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 
 import { TendermintAPILocal } from '../external/tendermintAPI';
-import { TransactionMetaJournal } from '../utils/transaction-meta-journal';
+import { TransactionMetaJournal } from '../transaction-meta-journal';
 
 export function createMempoolSource(deps: { tendermintApi: TendermintAPILocal }) {
   const $source = new Observable<{

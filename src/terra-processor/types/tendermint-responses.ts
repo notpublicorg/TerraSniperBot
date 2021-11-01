@@ -9,16 +9,6 @@ export type WebsocketTxResponse = {
     };
   };
 };
-export type WebsocketNewBlockResponse = {
-  type: 'tendermint/event/NewBlock';
-  value: {
-    block: {
-      header: {
-        height: string; // '6051152';
-      };
-    };
-  };
-};
 export type UnconfirmedTxsResponse = {
   id: number;
   jsonrpc: string;
@@ -44,16 +34,5 @@ export type StatusResponse = {
       earliest_block_time: string; // '2021-09-28T09:00:00Z';
       catching_up: boolean; // false;
     };
-  };
-};
-export type BroadcastResultResponse = {
-  jsonrpc: string;
-  id: number;
-  result: {
-    code: number; // 0;
-    data: string; // '';
-    log: string; // '[]';
-    codespace: string; // '';
-    hash: string; // '4953170ADC6CBA9E37C7F08BFA05D7FC1ABC815C5DAF7EAF37372D5F54870348';
   };
 };

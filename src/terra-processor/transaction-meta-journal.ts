@@ -1,5 +1,5 @@
-import { MetaJournalData } from '../types/terra-flow';
-import { FiltrationResult, ParsedLiquidity } from '../types/transaction-filter';
+import { MetaJournalData } from './types/terra-flow';
+import { FiltrationResult, ParsedLiquidity } from './types/transaction-filter';
 
 export class TransactionMetaJournal {
   public taskId = '';
