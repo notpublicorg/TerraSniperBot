@@ -1,5 +1,4 @@
 import { Coin, LCDClient, StdFee } from '@terra-money/terra.js';
-import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 import {
   catchError,
   concatMap,
@@ -16,6 +15,8 @@ import {
 import { SniperTask } from '../core/sniper-task';
 import { TasksProcessorUpdater } from '../core/tasks-processor';
 import { createMempoolSource } from './data-sources/mempool-source';
+import { TendermintAPILocal } from './external/tendermintAPI';
+import { isLiquidityValid } from './external/validate-liquidity';
 import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
 import {
   createTransactionCheckerSource,
@@ -23,7 +24,6 @@ import {
   TxInfoGetter,
 } from './new-transaction-workflow';
 import { TerraTasksProcessorConfig } from './processor-config';
-import { queryContractStore } from './scripts';
 import { swapTransactionWithScript } from './transaction-creators/swap-transaction-with-script';
 import { NewTransactionInfo } from './types/new-transaction-info';
 import { TerraFlowErrorResult, TerraFlowSuccessResult } from './types/terra-flow';
@@ -57,7 +57,7 @@ export function createTerraWorkflow(
     URL: lcdUrl,
     chainID: lcdChainId,
   });
-  const tendermintApi = new APIRequester(tendermintApiUrl);
+  const tendermintApi = new TendermintAPILocal(tendermintApiUrl);
 
   const getTx: TxInfoGetter = (txHash) => terra.tx.txInfo(txHash);
   const sendTransaction = swapTransactionWithScript({
@@ -110,11 +110,7 @@ export function createTerraWorkflow(
     take(1),
     mergeMap(({ info, metaJournal }) =>
       of(info).pipe(
-        filterAsync(async ({ pairContract }) => {
-          const response = await queryContractStore(walletPassword, pairContract);
-
-          return response.query_result.assets.every((a) => !a.amount || a.amount === '0');
-        }),
+        filterAsync(({ pairContract }) => isLiquidityValid(walletPassword, pairContract)),
         mergeMap(createTransactionSenderSource(sendTransaction(metaJournal))),
         tap((v) => console.log('Send transaction result', v)),
         mergeMap(createTransactionCheckerSource(getTx)),

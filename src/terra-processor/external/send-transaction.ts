@@ -1,24 +1,7 @@
 import { StdFee } from '@terra-money/terra.js';
 
-import { executeScript } from './utils/execute-script';
-import { parseSendScriptStdout } from './utils/parse-stdout';
-
-type TerraContractQueryScriptResponse = {
-  query_result: {
-    assets: Array<{
-      amount: string;
-    }>;
-  };
-};
-
-export async function queryContractStore(
-  walletPassword: string,
-  pairContract: string,
-): Promise<TerraContractQueryScriptResponse> {
-  const script = `echo "${walletPassword}" | terrad query wasm contract-store ${pairContract} '{"pool":{}}' -o=json`;
-  const stdout = await executeScript(script);
-  return JSON.parse(stdout);
-}
+import { executeScript } from '../utils/execute-script';
+import { parseSendScriptStdout } from '../utils/parse-stdout';
 
 export async function sendTransaction({
   timeoutHeight,

@@ -1,29 +1,20 @@
 import { StdFee } from '@terra-money/terra.js';
-import { APIRequester } from '@terra-money/terra.js/dist/client/lcd/APIRequester';
 
+import { sendTransaction } from '../external/send-transaction';
+import { TendermintAPILocal } from '../external/tendermintAPI';
 import { TransactionSender } from '../new-transaction-workflow';
-import { sendTransaction } from '../scripts';
-import { StatusResponse } from '../types/tendermint-responses';
 import { retryAction } from '../utils/retry-and-continue';
 import { TransactionMetaJournal } from '../utils/transaction-meta-journal';
 
 export const getTimeoutHeight =
   (
-    tendermintApi: APIRequester,
+    tendermintApi: TendermintAPILocal,
     { validBlockHeightOffset }: { validBlockHeightOffset: number | false },
   ) =>
   async () => {
     if (typeof validBlockHeightOffset !== 'number') return;
 
-    const statusResponse = await tendermintApi.getRaw<StatusResponse>('/status');
-    const currentBlockHeight = +statusResponse.result.sync_info.latest_block_height;
-
-    if (!currentBlockHeight)
-      throw new Error(
-        `Something wrong with getting block height - ${
-          statusResponse.result.sync_info.latest_block_height
-        }. Response = ${JSON.stringify(statusResponse)}`,
-      );
+    const currentBlockHeight = await tendermintApi.getCurrentBlockHeight();
 
     return currentBlockHeight + 1 + validBlockHeightOffset;
   };
@@ -44,7 +35,7 @@ export const swapTransactionWithScript =
     chainId: string;
     walletAlias: string;
     walletPassword: string;
-    tendermintApi: APIRequester;
+    tendermintApi: TendermintAPILocal;
   }) =>
   (metaJournal: TransactionMetaJournal): TransactionSender =>
   async ({ taskId, pairContract, buyAmount, buyDenom }) => {
