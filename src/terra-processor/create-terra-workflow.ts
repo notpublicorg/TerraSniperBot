@@ -23,11 +23,13 @@ import {
   TxInfoGetter,
 } from './new-transaction-workflow';
 import { TerraTasksProcessorConfig } from './processor-config';
+import { queryContractStore } from './scripts';
 import { swapTransactionWithScript } from './transaction-creators/swap-transaction-with-script';
 import { NewTransactionInfo } from './types/new-transaction-info';
 import { TerraFlowErrorResult, TerraFlowSuccessResult } from './types/terra-flow';
 import { TransactionFilter } from './types/transaction-filter';
 import { decodeTransaction } from './utils/decoders';
+import { filterAsync } from './utils/filter-async';
 import { TransactionMetaJournal } from './utils/transaction-meta-journal';
 
 export type TerraWorflowFactoryDeps = {
@@ -108,6 +110,11 @@ export function createTerraWorkflow(
     take(1),
     mergeMap(({ info, metaJournal }) =>
       of(info).pipe(
+        filterAsync(async ({ pairContract }) => {
+          const response = await queryContractStore(walletPassword, pairContract);
+
+          return response.query_result.assets.every((a) => !a.amount || a.amount === '0');
+        }),
         mergeMap(createTransactionSenderSource(sendTransaction(metaJournal))),
         tap((v) => console.log('Send transaction result', v)),
         mergeMap(createTransactionCheckerSource(getTx)),

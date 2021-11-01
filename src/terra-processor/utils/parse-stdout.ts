@@ -2,7 +2,7 @@ type TerraExecuteScriptResponse = {
   txhash?: string;
 };
 
-export function parseStdout(stdout: string) {
+export function parseSendScriptStdout(stdout: string) {
   return stdout.split('\n').reduce((parsed, currentRow) => {
     const [prop, value] = currentRow.split(': ');
 
