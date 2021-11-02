@@ -16,4 +16,5 @@ export type TerraTasksProcessorConfig = {
   requestBlockHeigthRetryCount: number;
 
   maxEncodedTransactionTextLength: number;
+  liquidityCheckActivated: boolean;
 };

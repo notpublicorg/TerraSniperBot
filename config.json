@@ -15,5 +15,6 @@
   "validBlockHeightOffset": 0,
   "requestBlockHeigthRetryCount": 2,
 
-  "maxEncodedTransactionTextLength": 100
+  "maxEncodedTransactionTextLength": 100,
+  "liquidityCheckActivated": true
 }

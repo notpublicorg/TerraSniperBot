@@ -17,20 +17,26 @@ import { TasksProcessorUpdater } from '../core/tasks-processor';
 import { createMempoolSource } from './data-sources/mempool-source';
 import { TendermintAPILocal } from './external/tendermintAPI';
 import { isLiquidityValid } from './external/validate-liquidity';
-import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
+import { filterLiquidity } from './filter-liquidity';
+import { getTimeoutHeight } from './get-timeout-height';
 import {
   createTransactionCheckerSource,
   createTransactionSenderSource,
   TxInfoGetter,
 } from './new-transaction-workflow';
+import { tryGetLiquidityMsgs } from './parse-liquidity';
 import { TerraTasksProcessorConfig } from './processor-config';
-import { swapTransactionWithScript } from './transaction-creators/swap-transaction-with-script';
+import { swapTransactionWithScript } from './swap-transaction-with-script';
 import { TransactionMetaJournal } from './transaction-meta-journal';
-import { NewTransactionInfo } from './types/new-transaction-info';
-import { TerraFlowErrorResult, TerraFlowSuccessResult } from './types/terra-flow';
 import { TransactionFilter } from './types/transaction-filter';
+import {
+  NewTransactionData,
+  TerraFlowErrorResult,
+  TerraFlowSuccessResult,
+  ValidatedAndEnrichedNewTransactionData,
+} from './types/workflow';
 import { decodeTransaction } from './utils/decoders';
-import { filterAsync } from './utils/filter-async';
+import { retryAction } from './utils/retry-and-continue';
 
 export type TerraWorflowFactoryDeps = {
   getFiltersSource: () => Observable<TransactionFilter>;
@@ -50,6 +56,7 @@ export function createTerraWorkflow(
     requestBlockHeigthRetryCount,
     closeTaskAfterPurchase,
     maxEncodedTransactionTextLength,
+    liquidityCheckActivated,
   }: TerraTasksProcessorConfig,
   deps: TerraWorflowFactoryDeps,
 ) {
@@ -62,12 +69,9 @@ export function createTerraWorkflow(
   const getTx: TxInfoGetter = (txHash) => terra.tx.txInfo(txHash);
   const sendTransaction = swapTransactionWithScript({
     fee: new StdFee(mempool.defaultGas, [new Coin(mempool.defaultFeeDenom, mempool.defaultFee)]),
-    validBlockHeightOffset,
-    requestBlockHeigthRetryCount,
     chainId: lcdChainId,
     walletAlias,
     walletPassword,
-    tendermintApi,
   });
 
   const $mempoolSource = createMempoolSource({
@@ -82,7 +86,8 @@ export function createTerraWorkflow(
           filter(Boolean),
           tap(metaJournal.onDecodingDone),
           map((tx) => tx.toData().value),
-          createLiquidityFilterWorkflow(deps.getFiltersSource),
+          tryGetLiquidityMsgs,
+          mergeMap((l) => deps.getFiltersSource().pipe(filterLiquidity(l))),
           tap(metaJournal.onFiltrationDone),
         )
         .pipe(
@@ -91,7 +96,7 @@ export function createTerraWorkflow(
               taskId,
               satisfiedBuyCondition,
               liquidity,
-            }): { info: NewTransactionInfo; metaJournal: TransactionMetaJournal } => ({
+            }): { info: NewTransactionData; metaJournal: TransactionMetaJournal } => ({
               info: {
                 taskId,
                 isTaskActive: deps.getTasks().find((t) => t.id === taskId)?.status === 'active',
@@ -110,7 +115,17 @@ export function createTerraWorkflow(
     take(1),
     mergeMap(({ info, metaJournal }) =>
       of(info).pipe(
-        filterAsync(({ pairContract }) => isLiquidityValid(walletPassword, pairContract)),
+        tap(metaJournal.onNewTransactionValidationAndEnrichingStart),
+        mergeMap(
+          validateAndEnrichNewTransaction({
+            tendermintApi,
+            validBlockHeightOffset,
+            requestBlockHeigthRetryCount,
+            walletPassword,
+            liquidityCheckActivated,
+          }),
+        ),
+        filter(Boolean),
         mergeMap(createTransactionSenderSource(sendTransaction(metaJournal))),
         tap((v) => console.log('Send transaction result', v)),
         mergeMap(createTransactionCheckerSource(getTx)),
@@ -131,4 +146,45 @@ export function createTerraWorkflow(
   );
 
   return $mempoolSource;
+}
+
+function validateAndEnrichNewTransaction({
+  tendermintApi,
+  validBlockHeightOffset,
+  requestBlockHeigthRetryCount,
+  walletPassword,
+  liquidityCheckActivated,
+}: {
+  tendermintApi: TendermintAPILocal;
+  validBlockHeightOffset: number | false;
+  requestBlockHeigthRetryCount: number;
+  walletPassword: string;
+  liquidityCheckActivated: boolean;
+}) {
+  return async (
+    data: NewTransactionData,
+  ): Promise<ValidatedAndEnrichedNewTransactionData | null> => {
+    try {
+      const [timeoutHeight] = await Promise.all([
+        retryAction(
+          getTimeoutHeight(tendermintApi, {
+            validBlockHeightOffset,
+          }),
+          {
+            retryCount: requestBlockHeigthRetryCount,
+            errorLogger: console.log,
+          },
+        ),
+        liquidityCheckActivated
+          ? isLiquidityValid(walletPassword, data.pairContract).then((isValid) => {
+              if (!isValid) throw new Error('Liquidity check failed!');
+            })
+          : null,
+      ]);
+
+      return { ...data, timeoutHeight };
+    } catch (e) {
+      return null;
+    }
+  };
 }

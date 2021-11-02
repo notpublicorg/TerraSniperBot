@@ -2,17 +2,19 @@ import { TxInfo } from '@terra-money/terra.js';
 import { catchError, map, mergeMap, of, tap } from 'rxjs';
 
 import {
-  NewTransactionCreationInfo,
-  NewTransactionInfo,
-  NewTransactionResult,
-} from './types/new-transaction-info';
+  SendingInProgressTransaction,
+  SuccessfullySentTransaction,
+  ValidatedAndEnrichedNewTransactionData,
+} from './types/workflow';
 import { retryAndContinue } from './utils/retry-and-continue';
 
-export type TransactionSender = (data: NewTransactionInfo) => Promise<NewTransactionCreationInfo>;
+export type TransactionSender = (
+  data: ValidatedAndEnrichedNewTransactionData,
+) => Promise<SendingInProgressTransaction>;
 export type TxInfoGetter = (hash: string) => Promise<TxInfo>;
 
 export const createTransactionSenderSource =
-  (transactionSender: TransactionSender) => (data: NewTransactionInfo) =>
+  (transactionSender: TransactionSender) => (data: ValidatedAndEnrichedNewTransactionData) =>
     of(data).pipe(
       mergeMap(transactionSender),
       retryAndContinue({ retryCount: 2 }),
@@ -25,7 +27,7 @@ export const createTransactionSenderSource =
 
 export const createTransactionCheckerSource =
   (txInfoGetter: TxInfoGetter) =>
-  ({ taskId, hash }: NewTransactionCreationInfo) =>
+  ({ taskId, hash }: SendingInProgressTransaction) =>
     of(hash).pipe(
       mergeMap((txhash) => txInfoGetter(txhash)),
       retryAndContinue({ retryCount: 7, delay: 1000 }),
@@ -37,7 +39,7 @@ export const createTransactionCheckerSource =
       }),
       tap((v) => console.log('INFO from checking is transaction in block: ', v)),
       map(
-        (txInfo): NewTransactionResult => ({
+        (txInfo): SuccessfullySentTransaction => ({
           taskId,
           success: txInfo.code === undefined,
           txhash: txInfo.txhash,

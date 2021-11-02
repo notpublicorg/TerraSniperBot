@@ -1,5 +1,4 @@
-import { MetaJournalData } from './types/terra-flow';
-import { FiltrationResult, ParsedLiquidity } from './types/transaction-filter';
+import { FiltrationResult, MetaJournalData, ParsedLiquidity } from './types/workflow';
 
 export class TransactionMetaJournal {
   public taskId = '';
@@ -12,7 +11,7 @@ export class TransactionMetaJournal {
   public decodedTime = 0;
   public filtrationDoneTime = 0;
   public newTransactionPreparedDoneTime = 0;
-  public newTransactionBlockInfoFetchingStartTime = 0;
+  public newTransactionValidationAndEnrichingStart = 0;
   public newTransactionScriptExecutionStartTime = 0;
 
   constructor(public source: 'block' | 'mempool') {
@@ -34,8 +33,8 @@ export class TransactionMetaJournal {
   onNewTransactionPrepared = () => {
     this.newTransactionPreparedDoneTime = Date.now();
   };
-  onBlockInfoFetchingStart = () => {
-    this.newTransactionBlockInfoFetchingStartTime = Date.now();
+  onNewTransactionValidationAndEnrichingStart = () => {
+    this.newTransactionValidationAndEnrichingStart = Date.now();
   };
   onScriptExecutingStart = (execScript: string) => {
     this.newTransactionScriptExecutionStartTime = Date.now();
@@ -55,9 +54,9 @@ export class TransactionMetaJournal {
       elapsedFiltrationSeconds: (this.filtrationDoneTime - this.decodedTime) / 1000,
       elapsedPreparationSeconds:
         (this.newTransactionPreparedDoneTime - this.filtrationDoneTime) / 1000,
-      elapsedBlockFetcingSeconds:
+      elapsedValidationAndEnrichingSeconds:
         (this.newTransactionScriptExecutionStartTime -
-          this.newTransactionBlockInfoFetchingStartTime) /
+          this.newTransactionValidationAndEnrichingStart) /
         1000,
     };
   };

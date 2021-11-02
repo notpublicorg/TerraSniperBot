@@ -8,8 +8,8 @@ import {
 } from '../core/tasks-processor';
 import { createTerraWorkflow } from './create-terra-workflow';
 import { TerraTasksProcessorConfig } from './processor-config';
-import { TerraFlowResult } from './types/terra-flow';
 import { TransactionFilter } from './types/transaction-filter';
+import { TerraFlowResult } from './types/workflow';
 import { CurrencyDenomMap } from './utils/denom';
 import { terraAmountConverter } from './utils/terra-types-converter';
 

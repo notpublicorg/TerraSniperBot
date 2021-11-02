@@ -1,7 +1,8 @@
 import { TxInfo } from '@terra-money/terra.js';
-import { firstValueFrom, from, map, toArray } from 'rxjs';
+import { firstValueFrom, from, map, mergeMap, toArray } from 'rxjs';
 
-import { createLiquidityFilterWorkflow } from './liquidity-filter-workflow';
+import { filterLiquidity } from './filter-liquidity';
+import { tryGetLiquidityMsgs } from './parse-liquidity';
 import { TransactionFilter } from './types/transaction-filter';
 import { Denom } from './utils/denom';
 import { terraAmountConverter } from './utils/terra-types-converter';
@@ -17,7 +18,8 @@ function checkTransaction(transactionFilter: TransactionFilter[], transactions: 
   return firstValueFrom(
     from(transactions).pipe(
       map((t) => t.tx.value),
-      createLiquidityFilterWorkflow(() => from(transactionFilter)),
+      tryGetLiquidityMsgs,
+      mergeMap((l) => from(transactionFilter).pipe(filterLiquidity(l))),
       toArray(),
     ),
   );
