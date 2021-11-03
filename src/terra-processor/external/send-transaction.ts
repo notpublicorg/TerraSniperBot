@@ -1,7 +1,10 @@
 import { StdFee } from '@terra-money/terra.js';
 
 import { executeScript } from '../utils/execute-script';
-import { parseSendScriptStdout } from '../utils/parse-stdout';
+
+type TerraSendScriptResponse = {
+  txhash?: string;
+};
 
 export async function sendTransaction({
   timeoutHeight,
@@ -38,11 +41,13 @@ export async function sendTransaction({
   });
   const fees = fee.amount.map((c) => c.toString()).join(',');
   const timeoutHeightArg = timeoutHeight ? `--timeout-height=${timeoutHeight}` : '';
-  const scriptArgs = `--from=${walletAlias} --chain-id=${chainId} --gas=${fee.gas} --fees=${fees} ${timeoutHeightArg} -y`;
+  const scriptArgs = `--from=${walletAlias} --chain-id=${chainId} --gas=${fee.gas} --fees=${fees} ${timeoutHeightArg} -y -o=json`;
   const execScript = `echo "${walletPassword}" | terrad tx wasm execute ${pairContract} '${executeMsg}' ${buyAmount}${buyDenom} ${scriptArgs}`;
 
   onStart(execScript);
 
   const stdout = await executeScript(execScript);
-  return parseSendScriptStdout(stdout);
+  const response: TerraSendScriptResponse = JSON.parse(stdout);
+
+  return response;
 }
