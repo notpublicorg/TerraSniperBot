@@ -194,24 +194,24 @@ it('should accept transaction which satisfies second filter', async () => {
 
 test.only.each([
   [
-    { greaterOrEqual: 10000, toBuy: 10000, maxTokenPrice: 20 },
+    { greaterOrEqual: 10000, toBuy: 10000, maxTokenPrice: 19 },
     { token: 5000, currency: 100000 },
     { satisfiedConditionCount: 0 },
   ],
   [
-    { greaterOrEqual: 10000, toBuy: 10000, maxTokenPrice: 23 },
+    { greaterOrEqual: 10000, toBuy: 10000, maxTokenPrice: 20 },
     { token: 5000, currency: 100000 },
     { satisfiedConditionCount: 1 },
   ],
   [
-    { greaterOrEqual: 10, toBuy: 10, maxTokenPrice: 1 },
+    { greaterOrEqual: 10, toBuy: 10, maxTokenPrice: 0.9 },
     { token: 10, currency: 10 },
     { satisfiedConditionCount: 0 },
   ],
   [
-    { greaterOrEqual: 10, toBuy: 10, maxTokenPrice: 2 },
+    { greaterOrEqual: 10, toBuy: 10, maxTokenPrice: 1 },
     { token: 10, currency: 10 },
-    { satisfiedConditionCount: 0 },
+    { satisfiedConditionCount: 1 },
   ],
 ])('max token price with %s and %s', async (condition, liquidity, result) => {
   const FILTER = aTransactionFilter()

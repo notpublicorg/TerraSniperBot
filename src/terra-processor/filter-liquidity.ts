@@ -27,20 +27,5 @@ const isLiquiditySatisfiesCondition =
 
     if (!maxTokenPrice) return true;
 
-    return (
-      maxTokenPrice >= calculateAverageTokenPrice(token.amount, currency.amount, condition.buy)
-    );
+    return maxTokenPrice >= currency.amount / token.amount;
   };
-
-function calculateAverageTokenPrice(
-  totalToken: number,
-  totalCurrency: number,
-  currencyToBuy: number,
-) {
-  // TODO: выровнять количество нулей у token и currency
-  const bougthTokenAmount = (totalToken * currencyToBuy) / (totalCurrency + currencyToBuy);
-  const bougthTokenAmountWithCommission = bougthTokenAmount * 0.997;
-  const averageTokenPrice = currencyToBuy / bougthTokenAmountWithCommission;
-
-  return averageTokenPrice;
-}
