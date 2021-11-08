@@ -1,20 +1,41 @@
 {
-  "tendermintApiUrl": "http://127.0.0.1:26657",
-  "lcdUrl": "https://lcd.terra.dev",
-  "lcdChainId": "columbus-5",
-  "mempool": {
-    "defaultGas": 400000,
-    "defaultFeeDenom": "uusd",
-    "defaultFee": 210321
+  "defaults": {
+    "tendermintApiUrl": "http://127.0.0.1:26657",
+    "lcdUrl": "https://lcd.terra.dev",
+    "lcdChainId": "columbus-5",
+    "mempool": {
+      "defaultGas": 400000,
+      "defaultFeeDenom": "uusd",
+      "defaultFee": 210321
+    },
+
+    "walletAlias": "test",
+    "walletPassword": "12345678",
+
+    "closeTaskAfterPurchase": false,
+    "validBlockHeightOffset": 0,
+    "requestBlockHeigthRetryCount": 2,
+
+    "maxEncodedTransactionTextLength": 100,
+    "liquidityCheckActivated": true
   },
 
-  "walletAlias": "test",
-  "walletPassword": "12345678",
-
-  "closeTaskAfterPurchase": false,
-  "validBlockHeightOffset": 0,
-  "requestBlockHeigthRetryCount": 2,
-
-  "maxEncodedTransactionTextLength": 100,
-  "liquidityCheckActivated": true
+  "tasks": [
+    {
+      "contract": "terra1nef5jf6c7js9x6gkntlehgywvjlpytm7pcgkn4",
+      "conditions": [
+        {
+          "currency": "ust",
+          "greaterOrEqual": "1000",
+          "buy": "1"
+        },
+        {
+          "currency": "ust",
+          "greaterOrEqual": "1",
+          "buy": "0.5"
+        }
+      ],
+      "maxTokenPrice": "2"
+    }
+  ]
 }
