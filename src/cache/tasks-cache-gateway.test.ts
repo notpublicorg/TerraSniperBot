@@ -5,6 +5,7 @@ const NEW_TASK: SniperTaskNew = {
   contract: 'token contract',
   conditions: [{ currency: 'uluna', greaterOrEqual: '100', buy: '10' }],
   maxTokenPrice: '25',
+  maxSpread: '1',
 };
 
 let gateway: TasksCacheGateway;

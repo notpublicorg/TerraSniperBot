@@ -18,6 +18,7 @@ export type NewTransactionData = {
   pairContract: string;
   buyAmount: number;
   buyDenom: string;
+  maxSpread: string;
 };
 
 export type ValidatedAndEnrichedNewTransactionData = NewTransactionData & {

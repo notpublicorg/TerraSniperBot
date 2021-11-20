@@ -17,7 +17,7 @@ export const swapTransactionWithScript =
     walletPassword: string;
   }) =>
   (metaJournal: TransactionMetaJournal): TransactionSender =>
-  async ({ taskId, pairContract, buyAmount, buyDenom, timeoutHeight }) => {
+  async ({ taskId, pairContract, buyAmount, buyDenom, timeoutHeight, maxSpread }) => {
     const sendInfo = await sendTransaction({
       timeoutHeight,
       walletAlias,
@@ -27,6 +27,7 @@ export const swapTransactionWithScript =
       pairContract,
       buyDenom,
       buyAmount,
+      maxSpread,
       onStart: metaJournal.onScriptExecutingStart,
     });
 

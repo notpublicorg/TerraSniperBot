@@ -15,6 +15,7 @@ export async function sendTransaction({
   pairContract,
   buyDenom,
   buyAmount,
+  maxSpread,
   onStart,
 }: {
   timeoutHeight: number | undefined;
@@ -25,10 +26,12 @@ export async function sendTransaction({
   pairContract: string;
   buyDenom: string;
   buyAmount: number;
+  maxSpread: string;
   onStart: (scriptText: string) => void;
 }) {
   const executeMsg = JSON.stringify({
     swap: {
+      max_spread: maxSpread,
       offer_asset: {
         info: {
           native_token: {

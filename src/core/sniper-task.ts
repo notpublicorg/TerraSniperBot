@@ -7,6 +7,7 @@ export type SniperBuyCondition = {
 export type SniperTaskNew = {
   contract: string;
   conditions: SniperBuyCondition[];
+  maxSpread: string;
   maxTokenPrice?: string;
 };
 

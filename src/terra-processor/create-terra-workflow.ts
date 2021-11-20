@@ -96,16 +96,21 @@ export function createTerraWorkflow(
               taskId,
               satisfiedBuyCondition,
               liquidity,
-            }): { info: NewTransactionData; metaJournal: TransactionMetaJournal } => ({
-              info: {
-                taskId,
-                isTaskActive: deps.getTasks().find((t) => t.id === taskId)?.status === 'active',
-                buyDenom: satisfiedBuyCondition.denom,
-                buyAmount: satisfiedBuyCondition.buy,
-                pairContract: liquidity.pairContract,
-              },
-              metaJournal,
-            }),
+            }): { info: NewTransactionData; metaJournal: TransactionMetaJournal } => {
+              const currentTask = deps.getTasks().find((t) => t.id === taskId);
+
+              return {
+                info: {
+                  taskId,
+                  isTaskActive: currentTask?.status === 'active',
+                  maxSpread: currentTask?.maxSpread || '1',
+                  buyDenom: satisfiedBuyCondition.denom,
+                  buyAmount: satisfiedBuyCondition.buy,
+                  pairContract: liquidity.pairContract,
+                },
+                metaJournal,
+              };
+            },
           ),
           filter(({ info: { isTaskActive } }) => isTaskActive),
           tap(({ info: { taskId } }) => deps.updateTask({ taskId, newStatus: 'blocked' })),
