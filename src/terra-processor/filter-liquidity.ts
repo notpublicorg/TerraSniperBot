@@ -6,7 +6,11 @@ import { FiltrationResult, ParsedLiquidity } from './types/workflow';
 
 export const filterLiquidity = (liquidity: ParsedLiquidity) =>
   pipe(
-    filter((f: TransactionFilter) => f.contractToSpy === liquidity.token.contract),
+    filter((f: TransactionFilter) => f.tokenContractToSpy === liquidity.token.contract),
+    filter(
+      (f: TransactionFilter) =>
+        !f.allowedPairContract || f.allowedPairContract === liquidity.pairContract,
+    ),
     map(({ conditions, maxTokenPrice, taskId }): FiltrationResult | null => {
       const satisfiedBuyCondition = conditions.find(
         isLiquiditySatisfiesCondition(liquidity, maxTokenPrice),

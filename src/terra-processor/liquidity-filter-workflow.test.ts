@@ -62,7 +62,7 @@ it('should reject transaction without chosen coin', async () => {
   const TRANSACTION = aTransaction()
     .withMsgs([
       createWasmExecuteMsg(PAIR_CONTRACT, {
-        token: { contract: FILTER.contractToSpy, amount: 0 },
+        token: { contract: FILTER.tokenContractToSpy, amount: 0 },
         currency: { denom: Denom.USD, amount: 1000 },
       }),
     ])
@@ -84,7 +84,7 @@ it('should reject if coin amount is less than amount given in condition', async 
   const TRANSACTION = aTransaction()
     .withMsgs([
       createWasmExecuteMsg(PAIR_CONTRACT, {
-        token: { contract: FILTER.contractToSpy, amount: 5000 },
+        token: { contract: FILTER.tokenContractToSpy, amount: 5000 },
         currency: { denom: DEFAULT_COIN_DENOM, amount: 1000 },
       }),
     ])
@@ -109,11 +109,11 @@ it('should accept the transaction with 2 acceptable messages', async () => {
     ])
     .build();
   const SMALL_LIQUIDITY = createWasmExecuteMsg(PAIR_CONTRACT, {
-    token: { contract: FILTER.contractToSpy, amount: 5000 },
+    token: { contract: FILTER.tokenContractToSpy, amount: 5000 },
     currency: { denom: DEFAULT_COIN_DENOM, amount: 1000 },
   });
   const BIG_LIQUIDITY = createWasmExecuteMsg(PAIR_CONTRACT, {
-    token: { contract: FILTER.contractToSpy, amount: 5000 },
+    token: { contract: FILTER.tokenContractToSpy, amount: 5000 },
     currency: { denom: DEFAULT_COIN_DENOM, amount: 100000 },
   });
   const TRANSACTION = aTransaction().withMsgs([SMALL_LIQUIDITY, BIG_LIQUIDITY]).build();
@@ -130,7 +130,7 @@ it('should accept the transaction with 2 acceptable messages', async () => {
         pairContract: PAIR_CONTRACT,
         token: {
           amount: toTerraFormat(5000),
-          contract: FILTER.contractToSpy,
+          contract: FILTER.tokenContractToSpy,
         },
         currency: { amount: toTerraFormat(1000), denom: DEFAULT_COIN_DENOM },
       },
@@ -146,7 +146,7 @@ it('should accept the transaction with 2 acceptable messages', async () => {
         pairContract: PAIR_CONTRACT,
         token: {
           amount: toTerraFormat(5000),
-          contract: FILTER.contractToSpy,
+          contract: FILTER.tokenContractToSpy,
         },
         currency: { amount: toTerraFormat(100000), denom: DEFAULT_COIN_DENOM },
       },
@@ -157,7 +157,7 @@ it('should accept the transaction with 2 acceptable messages', async () => {
 it('should accept transaction which satisfies second filter', async () => {
   const ALTERNATIVE_FILTER = aTransactionFilter()
     .with('taskId', 'alternativeTaskId')
-    .with('contractToSpy', 'alternative')
+    .with('tokenContractToSpy', 'alternative')
     .with('conditions', [
       {
         denom: DEFAULT_COIN_DENOM,
@@ -168,7 +168,7 @@ it('should accept transaction which satisfies second filter', async () => {
     .build();
 
   const LIQUIDITY_MSG = createWasmExecuteMsg(PAIR_CONTRACT, {
-    token: { contract: ALTERNATIVE_FILTER.contractToSpy, amount: 5000 },
+    token: { contract: ALTERNATIVE_FILTER.tokenContractToSpy, amount: 5000 },
     currency: { denom: DEFAULT_COIN_DENOM, amount: 100000 },
   });
   const TRANSACTION = aTransaction().withMsgs([LIQUIDITY_MSG]).build();
@@ -185,7 +185,7 @@ it('should accept transaction which satisfies second filter', async () => {
       },
       liquidity: {
         pairContract: PAIR_CONTRACT,
-        token: { amount: toTerraFormat(5000), contract: ALTERNATIVE_FILTER.contractToSpy },
+        token: { amount: toTerraFormat(5000), contract: ALTERNATIVE_FILTER.tokenContractToSpy },
         currency: { amount: toTerraFormat(100000), denom: DEFAULT_COIN_DENOM },
       },
     },
@@ -227,7 +227,7 @@ test.only.each([
   const TRANSACTION = aTransaction()
     .withMsgs([
       createWasmExecuteMsg(PAIR_CONTRACT, {
-        token: { contract: FILTER.contractToSpy, amount: liquidity.token },
+        token: { contract: FILTER.tokenContractToSpy, amount: liquidity.token },
         currency: { denom: Denom.USD, amount: liquidity.currency },
       }),
     ])

@@ -22,7 +22,8 @@
 
   "tasks": [
     {
-      "contract": "terra1nef5jf6c7js9x6gkntlehgywvjlpytm7pcgkn4",
+      "tokenContract": "terra1nef5jf6c7js9x6gkntlehgywvjlpytm7pcgkn4",
+      "pairContract": "terra18njmwjlr0jc57rg0nc29z3g7lvjwd9594e7p2q",
       "conditions": [
         {
           "currency": "ust",

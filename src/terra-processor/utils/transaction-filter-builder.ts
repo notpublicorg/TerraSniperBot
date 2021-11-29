@@ -3,7 +3,7 @@ import { Denom } from './denom';
 
 class TransactionFilterBuilder {
   private filter: TransactionFilter = {
-    contractToSpy: 'knownSmartContractToken',
+    tokenContractToSpy: 'knownSmartContractToken',
     taskId: 'defaultTaskId',
     conditions: [{ denom: Denom.LUNA, greaterOrEqual: 100, buy: 10 }],
   };

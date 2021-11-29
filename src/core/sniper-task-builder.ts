@@ -2,7 +2,7 @@ import { SniperTask } from './sniper-task';
 
 class SniperTaskBuilder {
   private task: SniperTask = {
-    contract: 'token contract',
+    tokenContract: 'token contract',
     conditions: [{ currency: 'uluna', greaterOrEqual: '100', buy: '10' }],
     maxTokenPrice: '25',
     maxSpread: '1',

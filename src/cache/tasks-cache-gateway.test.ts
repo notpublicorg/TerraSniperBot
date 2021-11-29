@@ -2,7 +2,7 @@ import { SniperTaskNew } from '../core/sniper-task';
 import { TasksCacheGateway } from './tasks-cache-gateway';
 
 const NEW_TASK: SniperTaskNew = {
-  contract: 'token contract',
+  tokenContract: 'token contract',
   conditions: [{ currency: 'uluna', greaterOrEqual: '100', buy: '10' }],
   maxTokenPrice: '25',
   maxSpread: '1',
@@ -27,12 +27,12 @@ it('should update task status', () => {
 
 it('should add multiple tasks and notify once', () => {
   gateway.addNewTasks([
-    { ...NEW_TASK, contract: 'first' },
-    { ...NEW_TASK, contract: 'second' },
+    { ...NEW_TASK, tokenContract: 'first' },
+    { ...NEW_TASK, tokenContract: 'second' },
   ]);
 
   expect(gateway.getAll()).toEqual([
-    expect.objectContaining({ ...NEW_TASK, contract: 'first', status: 'active' }),
-    expect.objectContaining({ ...NEW_TASK, contract: 'second', status: 'active' }),
+    expect.objectContaining({ ...NEW_TASK, tokenContract: 'first', status: 'active' }),
+    expect.objectContaining({ ...NEW_TASK, tokenContract: 'second', status: 'active' }),
   ]);
 });

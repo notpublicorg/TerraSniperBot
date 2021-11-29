@@ -51,7 +51,8 @@ export class TerraTasksProcessor implements TasksProcessor {
       map(
         (t): TransactionFilter => ({
           taskId: t.id,
-          contractToSpy: t.contract,
+          tokenContractToSpy: t.tokenContract,
+          allowedPairContract: t.pairContract,
           maxTokenPrice: t.maxTokenPrice ? +t.maxTokenPrice : undefined,
           conditions: t.conditions.map((c) => ({
             denom: CurrencyDenomMap[c.currency],
