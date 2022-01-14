@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'tb',
-      script: './dist/index.js',
+      script: './dist/bot/index.js',
       autorestart: true,
       exec_mode: 'fork',
       watch: false,

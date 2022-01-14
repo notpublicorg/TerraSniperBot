@@ -1,4 +1,4 @@
-import config from '../config.json';
+import config from '../../config.json';
 import { TasksCacheGateway } from './cache/tasks-cache-gateway';
 import { tasksWatcherFactory } from './core/tasks-watcher';
 import { generateIdFromDate } from './id-generator-date';
