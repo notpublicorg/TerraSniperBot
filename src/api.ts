@@ -1,4 +1,5 @@
 import { ChildProcess, fork } from 'child_process';
+import cors from 'cors';
 import express from 'express';
 
 class BotProcessController {
@@ -18,9 +19,10 @@ class BotProcessController {
 }
 
 const bot = new BotProcessController();
+const port = 3000;
 
 const app = express();
-const port = 3000;
+app.use(cors());
 
 app.get('/start', (_, res) => {
   bot.start();
