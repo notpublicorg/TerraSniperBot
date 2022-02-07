@@ -9,8 +9,8 @@
     "build:api": "babel --extensions \".ts,.tsx\" src/api.ts -d dist",
     "build:clean": "rimraf dist",
     "build": "yarn build:clean && yarn build:bot && yarn build:api",
-    "start:bot:prod": "node dist/index.js",
-    "start:api:prod": "node dist/api.js",
+    "start:bot": "node dist/bot/index.js",
+    "start:api": "node dist/api.js",
     "lint": "eslint \"src/**/*.ts\" --max-warnings 0",
     "lint:fix": "yarn lint --fix",
     "ts:check": "tsc --noEmit",
@@ -46,6 +46,7 @@
     "@terra-money/terra.js": "^2.0.14",
     "@terra-money/terra.proto": "^0.1.7",
     "cors": "^2.8.5",
+    "express": "^4.17.2",
     "rxjs": "^7.3.0"
   }
 }

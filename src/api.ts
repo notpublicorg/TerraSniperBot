@@ -1,35 +1,25 @@
-import { ChildProcess, fork } from 'child_process';
+import { exec } from 'child_process';
 import cors from 'cors';
 import express from 'express';
 
-class BotProcessController {
-  private path = __dirname + '/bot/index.js';
-  private child: ChildProcess | null = null;
+const APPS_FILE = 'ecosystem.config.js';
 
-  start() {
-    this.child = fork(this.path);
-    this.child.on('close', (_, signal) => {
-      console.log('child process exited with signal ' + signal);
-      this.child = null;
-    });
-  }
-  stop() {
-    this.child?.kill();
-  }
-}
+const botController = {
+  start: () => exec(`pm2 start ${APPS_FILE}`),
+  stop: () => exec(`pm2 delete ${APPS_FILE}`),
+};
 
-const bot = new BotProcessController();
 const port = 3000;
 
 const app = express();
 app.use(cors());
 
 app.get('/start', (_, res) => {
-  bot.start();
+  botController.start();
   res.send('Starting');
 });
 app.get('/stop', (_, res) => {
-  bot.stop();
+  botController.stop();
   res.send('Stopping');
 });
 
@@ -39,7 +29,7 @@ const server = app.listen(port, () => {
 
 // Enable graceful stop
 function gracefulStop() {
-  bot.stop();
+  botController.stop();
   server.close();
 }
 
